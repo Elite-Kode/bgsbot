@@ -18,11 +18,9 @@ import * as zlib from 'zlib';
 import * as zmq from 'zmq';
 import * as ajv from 'ajv';
 
-// import {Journal} from './journal';
-
 export class Eddn {
     public static readonly relay = 'tcp://eddn-relay.elite-markets.net:9500';
-    public socket: zmq.Socket;
+    private socket: zmq.Socket;
 
     constructor() {
         this.socket = zmq.socket('sub');
