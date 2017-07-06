@@ -8,9 +8,9 @@
             "port": 9229,
             "address": "localhost",
             "restart": false,
-            "sourceMaps": false,
-            "outFiles": [],
-            "localRoot": "${workspaceRoot}",
+            "sourceMaps": true,
+            "outFiles": ["${workspaceRoot}/dist/**/*.js"],
+            "localRoot": "${workspaceRoot}/src/**/*.js",
             "remoteRoot": null,
             "protocol": "inspector"
         }

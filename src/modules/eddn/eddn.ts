@@ -39,7 +39,7 @@ export class Eddn {
 
     private listenToRelay(): void {
         this.socket.on('message', topic => {
-            let message = JSON.parse(JSON.stringify(zlib.inflateSync(topic)));
+            let message = JSON.parse(zlib.inflateSync(topic).toString());
             console.log(message);
         });
     }
