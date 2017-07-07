@@ -23,8 +23,7 @@ import * as cookieParser from 'cookie-parser';
 
 import IndexRouter from './routes/index';
 import { Eddn } from './modules/eddn/eddn';
-
-// require('./modules/eddn');
+import { DiscordClient } from './modules/discord/client';
 
 class App {
     public express: express.Application;
@@ -34,6 +33,7 @@ class App {
         this.middleware();
         this.routes();
         new Eddn();
+        new DiscordClient();
     }
 
     private middleware(): void {

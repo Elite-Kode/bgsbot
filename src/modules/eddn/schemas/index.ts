@@ -14,21 +14,8 @@
  * limitations under the License.
  */
 
-export class Shipyard {
-    public static readonly schemaId:string = "http://schemas.elite-markets.net/eddn/shipyard/2";
-    private systemName: string;
-    private stationName: string;
-    private timestamp: string;
-    private ships: string[];
-
-    constructor(message: any) {
-        this.systemName = message.systemName;
-        this.stationName = message.stationName;
-        this.timestamp = message.timestamp;
-        this.ships = message.ships;
-    }
-
-    public static test(): void {
-        console.log("Test Shipyard");
-    }
-}
+export * from './blackmarket';
+export * from './commodity';
+export * from './journal';
+export * from './outfitting';
+export * from './shipyard';

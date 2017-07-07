@@ -18,8 +18,10 @@ import * as zlib from 'zlib';
 import * as zmq from 'zmq';
 import * as ajv from 'ajv';
 
+import { Blackmarket, Commodity, Journal, Outfitting, Shipyard } from './schemas';
+
 export class Eddn {
-    public static readonly relay = 'tcp://eddn-relay.elite-markets.net:9500';
+    public static readonly relay = 'tcp://eddn.edcd.io:9500';
     private socket: zmq.Socket;
 
     constructor() {
@@ -39,6 +41,19 @@ export class Eddn {
         this.socket.on('message', topic => {
             let message = JSON.parse(zlib.inflateSync(topic).toString());
             console.log(message);
+            switch (message['$schemaRef']) {
+                case Blackmarket.schemaId: Blackmarket.test();
+                    break;
+                case Commodity.schemaId: Commodity.test();
+                    break;
+                case Journal.schemaId: Journal.test();
+                    break;
+                case Outfitting.schemaId: Outfitting.test();
+                    break;
+                case Shipyard.schemaId: Shipyard.test();
+                    break;
+                default: console.log("Schema not Found");
+            }
         });
     }
 }
