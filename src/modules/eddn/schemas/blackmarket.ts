@@ -16,6 +16,7 @@
 
 export class Blackmarket {
     public static readonly schemaId: string = "http://schemas.elite-markets.net/eddn/blackmarket/1";
+    private message: any;
     private systemName: string;
     private stationName: string;
     private timestamp: string;
@@ -24,6 +25,7 @@ export class Blackmarket {
     private prohibited: boolean;
 
     constructor(message: any) {
+        this.message = message;
         this.systemName = message.systemName;
         this.stationName = message.stationName;
         this.timestamp = message.timestamp;
@@ -32,7 +34,7 @@ export class Blackmarket {
         this.prohibited = message.prohibited;
     }
 
-    public static test(): void {
-        console.log("Test Blackmarket");
+    display(): void {
+        console.log(this.message);
     }
 }

@@ -14,23 +14,17 @@
  * limitations under the License.
  */
 
-export class Shipyard {
-    public static readonly schemaId:string = "http://schemas.elite-markets.net/eddn/shipyard/2";
-    private message: any;
-    private systemName: string;
-    private stationName: string;
-    private timestamp: string;
-    private ships: string[];
-
-    constructor(message: any) {
-        this.message = message;
-        this.systemName = message.systemName;
-        this.stationName = message.stationName;
-        this.timestamp = message.timestamp;
-        this.ships = message.ships;
-    }
-
-    display(): void {
-        console.log(this.message);
-    }
+export interface IGuild {
+    guildId: string,
+    bgsChannelId: string,
+    bgsRoleId: string,
+    createdAt: Date,
+    monitorSystems: [{
+        systemName: string,
+        systemPos: {
+            x: number,
+            y: number,
+            z: number
+        }
+    }]
 }

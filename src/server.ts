@@ -24,16 +24,21 @@ import * as cookieParser from 'cookie-parser';
 import IndexRouter from './routes/index';
 import { Eddn } from './modules/eddn/eddn';
 import { DiscordClient } from './modules/discord/client';
+import { DB } from './db';
 
 class App {
     public express: express.Application;
+    public db: DB;
+    public discordClient: DiscordClient;
+    public eddn: Eddn;
 
     constructor() {
         this.express = express();
         this.middleware();
         this.routes();
-        new Eddn();
-        new DiscordClient();
+        this.eddn = new Eddn();
+        this.discordClient = new DiscordClient();
+        this.db = new DB();
     }
 
     private middleware(): void {
@@ -48,4 +53,6 @@ class App {
     }
 }
 
-export default new App().express;
+let app = new App();
+
+export default app;

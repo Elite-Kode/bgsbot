@@ -14,23 +14,8 @@
  * limitations under the License.
  */
 
-export class Shipyard {
-    public static readonly schemaId:string = "http://schemas.elite-markets.net/eddn/shipyard/2";
-    private message: any;
-    private systemName: string;
-    private stationName: string;
-    private timestamp: string;
-    private ships: string[];
+import { Document } from 'mongoose';
+import { IGuild } from '../interfaces/guild';
 
-    constructor(message: any) {
-        this.message = message;
-        this.systemName = message.systemName;
-        this.stationName = message.stationName;
-        this.timestamp = message.timestamp;
-        this.ships = message.ships;
-    }
-
-    display(): void {
-        console.log(this.message);
-    }
+export interface IGuildModel extends Document, IGuild {
 }

@@ -15,7 +15,8 @@
  */
 
 export class Journal {
-    public static readonly schemaId:string = "http://schemas.elite-markets.net/eddn/journal/1";
+    public static readonly schemaId: string = "http://schemas.elite-markets.net/eddn/journal/1";
+    private message: any;
     private timestamp: string;
     private event: Event;
     private starSystem: string;
@@ -23,15 +24,24 @@ export class Journal {
     private misc: any;
 
     constructor(message: any) {
+        this.message = message;
         this.timestamp = message.timestamp;
         this.event = message.event;
         this.starSystem = message.StarSystem;
         this.starPos = message.StarPos;
-        this.misc = {};
+        this.initialiseMisc(message);
     }
 
-    public static test(): void {
-        console.log("Test Journal");
+    initialiseMisc(message): void {
+        delete message.timestamp;
+        delete message.event;
+        delete message.StarSystem;
+        delete message.StarPos;
+        this.misc = message;
+    }
+
+    display(): void {
+        console.log(this.message);
     }
 }
 

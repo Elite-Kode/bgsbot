@@ -16,20 +16,22 @@
 
 export class Commodity {
     public static readonly schemaId: string = "http://schemas.elite-markets.net/eddn/commodity/3";
+    private message: any;
     private systemName: string;
     private stationName: string;
     private timestamp: string;
     private commodities: SingleCommodity;
 
     constructor(message: any) {
+        this.message = message;
         this.systemName = message.systemName;
         this.stationName = message.stationName;
         this.timestamp = message.timestamp;
         this.commodities = new SingleCommodity(message.commodities);
     }
 
-    public static test(): void {
-        console.log("Test Commodity");
+    display(): void {
+        console.log(this.message);
     }
 }
 

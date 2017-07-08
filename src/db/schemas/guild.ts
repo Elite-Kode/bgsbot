@@ -14,23 +14,25 @@
  * limitations under the License.
  */
 
-export class Shipyard {
-    public static readonly schemaId:string = "http://schemas.elite-markets.net/eddn/shipyard/2";
-    private message: any;
-    private systemName: string;
-    private stationName: string;
-    private timestamp: string;
-    private ships: string[];
+import { Schema } from 'mongoose';
 
-    constructor(message: any) {
-        this.message = message;
-        this.systemName = message.systemName;
-        this.stationName = message.stationName;
-        this.timestamp = message.timestamp;
-        this.ships = message.ships;
-    }
-
-    display(): void {
-        console.log(this.message);
-    }
-}
+export let guildSchema: Schema = new Schema({
+    guildId: {
+        type: String,
+        unique: true
+    },
+    bgsChannelId: String,
+    bgsRoleId: String,
+    createdAt: {
+        type: Date,
+        default: Date.now
+    },
+    monitorSystems: [{
+        systemName: String,
+        systemPos: {
+            x: Number,
+            y: Number,
+            z: Number
+        }
+    }]
+});

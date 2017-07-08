@@ -21,7 +21,7 @@ import * as ajv from 'ajv';
 import { Blackmarket, Commodity, Journal, Outfitting, Shipyard } from './schemas';
 
 export class Eddn {
-    public static readonly relay = 'tcp://eddn.edcd.io:9500';
+    public static readonly relay: string = 'tcp://eddn.edcd.io:9500';
     private socket: zmq.Socket;
 
     constructor() {
@@ -40,19 +40,28 @@ export class Eddn {
     private listenToRelay(): void {
         this.socket.on('message', topic => {
             let message = JSON.parse(zlib.inflateSync(topic).toString());
-            console.log(message);
             switch (message['$schemaRef']) {
-                case Blackmarket.schemaId: Blackmarket.test();
+                case Blackmarket.schemaId:
+                    let blackmarket = new Blackmarket(message.message);
+                    // blackmarket.display();
                     break;
-                case Commodity.schemaId: Commodity.test();
+                case Commodity.schemaId:
+                    let commodity = new Commodity(message.message);
+                    // commodity.display();
                     break;
-                case Journal.schemaId: Journal.test();
+                case Journal.schemaId:
+                    let journal = new Journal(message.message);
+                    // journal.display();
                     break;
-                case Outfitting.schemaId: Outfitting.test();
+                case Outfitting.schemaId:
+                    let outfitting = new Outfitting(message.message);
+                    // outfitting.display();
                     break;
-                case Shipyard.schemaId: Shipyard.test();
+                case Shipyard.schemaId:
+                    let shipyard = new Shipyard(message.message);
+                    // shipyard.display();
                     break;
-                default: console.log("Schema not Found");
+                default: //console.log("Schema not Found");
             }
         });
     }

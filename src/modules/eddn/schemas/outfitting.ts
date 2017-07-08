@@ -16,19 +16,21 @@
 
 export class Outfitting {
     public static readonly schemaId:string = "http://schemas.elite-markets.net/eddn/outfitting/2";
+    private message: any;
     private systemName: string;
     private stationName: string;
     private timestamp: string;
     private modules: string[];
 
     constructor(message: any) {
+        this.message = message;
         this.systemName = message.systemName;
         this.stationName = message.stationName;
         this.timestamp = message.timestamp;
         this.modules = message.modules;
     }
 
-    public static test(): void {
-        console.log("Test Outfitting");
+    display(): void {
+        console.log(this.message);
     }
 }

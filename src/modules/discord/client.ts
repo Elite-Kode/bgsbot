@@ -15,18 +15,25 @@
  */
 
 import * as discord from 'discord.js';
+import { DiscordSecrets } from '../../secrets';
+import { Hi, MyGuild, BGSRole } from './commands';
+import { Responses } from './responseDict';
 
 export class DiscordClient {
     public client: discord.Client;
+    public responses: Responses;
+    private commandsMap = new Map();
 
     constructor() {
         this.client = new discord.Client();
         this.login();
         this.listen();
+        this.initiateCommands();
+        this.responses = new Responses();
     }
 
     public login() {
-        this.client.login('MzMyODQ2NTA4ODg4MDMxMjMy.DEEEZA.64_sT9Qo-X8VrTSqFP4FqdDYhSc');
+        this.client.login(DiscordSecrets.token);
     }
 
     public listen() {
@@ -36,10 +43,25 @@ export class DiscordClient {
 
         this.client.on("message", (message) => {
             if (message.content.startsWith("/")) {
-                if (message.content.slice(1) === 'hi') {
-                    message.channel.send("pong!");
+                let messageString = message.content.replace(/ +/g, ' ').replace(/\n/g, "\\n").trim();
+                let messageArray = messageString.split(" ");
+                let command = messageArray[0].toLowerCase().substring(1);
+                let commandArguments: string = "";
+                if (messageArray.length > 1) {
+                    commandArguments = messageArray.slice(1, messageArray.length).join(" ");
+                }
+                if (this.commandsMap.has(command)) {
+                    console.log(command + " command requested");
+                    let commander = new (this.commandsMap.get(command))();
+                    commander.exec(message, commandArguments);
                 }
             }
         });
+    }
+
+    private initiateCommands(): void {
+        this.commandsMap.set("hi", Hi);
+        this.commandsMap.set("myguild", MyGuild);
+        this.commandsMap.set("bgsrole", BGSRole);
     }
 }
