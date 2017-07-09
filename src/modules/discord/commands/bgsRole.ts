@@ -49,8 +49,8 @@ export class BGSRole {
             let bgsRoleId = argsArray[1];
 
             this.db.model.guild.findOneAndUpdate(
-                { guildId: guildId },
-                { bgsRoleId: bgsRoleId })
+                { guil_id: guildId },
+                { bgs_role_id: bgsRoleId })
                 .then(guild => {
                     message.channel.send(this.responses.getResponse("success"));
                 })
@@ -70,8 +70,8 @@ export class BGSRole {
             let guildId = message.guild.id;
 
             this.db.model.guild.findOneAndUpdate(
-                { guildId: guildId },
-                { $unset: { bgsRoleId: 1 } })
+                { guild_id: guildId },
+                { $unset: { bgs_role_id: 1 } })
                 .then(guild => {
                     message.channel.send(this.responses.getResponse("success"));
                 })

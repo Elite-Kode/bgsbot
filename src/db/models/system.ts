@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-export * from './hi';
-export * from './help';
-export * from './myGuild';
-export * from './bgsRole';
-export * from './bgsChannel';
-export * from './monitorSystems';
+import { Document } from 'mongoose';
+import { ISystem } from '../interfaces/system';
+
+export interface ISystemModel extends Document, ISystem {
+}

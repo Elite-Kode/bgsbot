@@ -49,8 +49,8 @@ export class BGSChannel {
             let bgsChannelId = argsArray[1];
 
             this.db.model.guild.findOneAndUpdate(
-                { guildId: guildId },
-                { bgsChannelId: bgsChannelId })
+                { guild_id: guildId },
+                { bgs_channel_id: bgsChannelId })
                 .then(guild => {
                     message.channel.send(this.responses.getResponse("success"));
                 })
@@ -70,8 +70,8 @@ export class BGSChannel {
             let guildId = message.guild.id;
 
             this.db.model.guild.findOneAndUpdate(
-                { guildId: guildId },
-                { $unset: { bgsChannelId: 1 } })
+                { guild_id: guildId },
+                { $unset: { bgs_channel_id: 1 } })
                 .then(guild => {
                     message.channel.send(this.responses.getResponse("success"));
                 })

@@ -72,19 +72,42 @@ export class MonitorSystems {
                             });
                     } else {
                         let responseObject: object = JSON.parse(responseData);
+                        let systemName = responseObject[0].name;
+                        let systemNameLower = responseObject[0].name_lower;
                         let monitorSystems = {
-                            systemName: responseObject[0].name_lower,
-                            systemPos: {
+                            system_name: systemNameLower,
+                            system_pos: {
                                 x: responseObject[0].x,
                                 y: responseObject[0].y,
                                 z: responseObject[0].z
                             }
                         }
                         this.db.model.guild.findOneAndUpdate(
-                            { guildId: guildId },
-                            { $addToSet: { monitorSystems: monitorSystems } })
+                            { guild_id: guildId },
+                            { $addToSet: { monitor_systems: monitorSystems } })
                             .then(guild => {
-                                message.channel.send(this.responses.getResponse("success"));
+                                this.db.model.system.findOne({ system_name_lower: systemNameLower })
+                                    .then(system => {
+                                        if (system) {
+                                            message.channel.send(this.responses.getResponse("success"));
+                                        } else {
+                                            this.db.model.system.create({
+                                                system_name: systemName,
+                                                system_name_lower: systemNameLower
+                                            })
+                                                .then(system => {
+                                                    message.channel.send(this.responses.getResponse("success"));
+                                                })
+                                                .catch(err => {
+                                                    message.channel.send(this.responses.getResponse("fail"));
+                                                    console.log(err);
+                                                });
+                                        }
+                                    })
+                                    .catch(err => {
+                                        message.channel.send(this.responses.getResponse("fail"));
+                                        console.log(err);
+                                    })
                             })
                             .catch(err => {
                                 message.channel.send(this.responses.getResponse("fail"));
@@ -106,8 +129,8 @@ export class MonitorSystems {
             let systemName = argsArray[1].toLowerCase();
 
             this.db.model.guild.findOneAndUpdate(
-                { guildId: guildId },
-                { $pull: { monitorSystems: { systemName: systemName } } })
+                { guild_id: guildId },
+                { $pull: { monitor_systems: { system_name: systemName } } })
                 .then(guild => {
                     message.channel.send(this.responses.getResponse("success"));
                 })

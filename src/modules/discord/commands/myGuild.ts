@@ -47,7 +47,7 @@ export class MyGuild {
         if (argsArray.length === 1) {
             let guildId = message.guild.id;
 
-            this.db.model.guild.findOne({ guildId: guildId })
+            this.db.model.guild.findOne({ guild_id: guildId })
                 .then(guild => {
                     if (guild) {
                         message.channel.send(this.responses.getResponse("fail"))
@@ -58,7 +58,7 @@ export class MyGuild {
                                 console.log(err);
                             });
                     } else {
-                        this.db.model.guild.create({ guildId: guildId })
+                        this.db.model.guild.create({ guild_id: guildId })
                             .then(guild => {
                                 message.channel.send(this.responses.getResponse("success"));
                             })
@@ -81,7 +81,7 @@ export class MyGuild {
         if (argsArray.length === 1) {
             let guildId = message.guild.id;
 
-            this.db.model.guild.findOneAndRemove({ guildId: guildId })
+            this.db.model.guild.findOneAndRemove({ guild_id: guildId })
                 .then(guild => {
                     message.channel.send(this.responses.getResponse("success"));
                 })

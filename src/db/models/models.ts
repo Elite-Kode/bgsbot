@@ -16,7 +16,9 @@
 
 import { Model } from 'mongoose';
 import { IGuildModel } from './guild';
+import { ISystemModel } from './system';
 
 export interface IModel {
     guild: Model<IGuildModel>;
+    system: Model<ISystemModel>;
 }

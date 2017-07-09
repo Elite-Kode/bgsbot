@@ -16,7 +16,7 @@
 
 import * as discord from 'discord.js';
 import { DiscordSecrets } from '../../secrets';
-import { Hi, MyGuild, BGSRole, BGSChannel, MonitorSystems } from './commands';
+import { Hi, Help, MyGuild, BGSRole, BGSChannel, MonitorSystems } from './commands';
 import { Responses } from './responseDict';
 
 export class DiscordClient {
@@ -61,6 +61,7 @@ export class DiscordClient {
 
     private initiateCommands(): void {
         this.commandsMap.set("hi", Hi);
+        this.commandsMap.set("help", Help);
         this.commandsMap.set("myguild", MyGuild);
         this.commandsMap.set("bgsrole", BGSRole);
         this.commandsMap.set("bgschannel", BGSChannel);

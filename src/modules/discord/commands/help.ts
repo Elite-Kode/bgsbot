@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
-export * from './hi';
-export * from './help';
-export * from './myGuild';
-export * from './bgsRole';
-export * from './bgsChannel';
-export * from './monitorSystems';
+import * as discord from 'discord.js';
+
+export class Help{
+    exec(message: discord.Message, commandArguments: string): void {
+        if (commandArguments.length === 0) {
+            message.channel.send("Help documents are here for the time being");
+        }
+    }
+}

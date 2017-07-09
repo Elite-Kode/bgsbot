@@ -15,13 +15,13 @@
  */
 
 export interface IGuild {
-    guildId: string,
-    bgsChannelId: string,
-    bgsRoleId: string,
-    createdAt: Date,
-    monitorSystems: [{
-        systemName: string,
-        systemPos: {
+    guild_id: string,
+    bgs_channel_id: string,
+    bgs_role_id: string,
+    created_at: Date,
+    monitor_systems: [{
+        system_name: string,
+        system_pos: {
             x: number,
             y: number,
             z: number

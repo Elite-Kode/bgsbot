@@ -51,6 +51,7 @@ export class Eddn {
                     break;
                 case Journal.schemaId:
                     let journal = new Journal(message.message);
+                    journal.trackSystem();
                     // journal.display();
                     break;
                 case Outfitting.schemaId:

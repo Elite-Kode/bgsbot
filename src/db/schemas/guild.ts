@@ -17,19 +17,20 @@
 import { Schema } from 'mongoose';
 
 export let guildSchema: Schema = new Schema({
-    guildId: {
+    guild_id: {
         type: String,
         unique: true
     },
-    bgsChannelId: String,
-    bgsRoleId: String,
-    createdAt: {
+    bgs_channel_id: String,
+    bgs_role_id: String,
+    created_at: {
         type: Date,
         default: Date.now
     },
-    monitorSystems: [{
-        systemName: String,
-        systemPos: {
+    monitor_systems: [{
+        _id: false,
+        system_name: String,
+        system_pos: {
             x: Number,
             y: Number,
             z: Number

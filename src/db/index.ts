@@ -17,11 +17,11 @@
 import * as mongoose from 'mongoose';
 import { DBSecrets } from '../secrets';
 
-import { IGuild } from './interfaces/guild';
-
 import { guildSchema } from './schemas/guild';
+import { systemSchema } from './schemas/system';
 
 import { IGuildModel } from './models/guild';
+import { ISystemModel } from './models/system';
 import { IModel } from './models/models';
 
 export class DB {
@@ -82,6 +82,7 @@ export class DB {
 
     createModels(): void {
         this.model.guild = mongoose.model<IGuildModel>("Guild", guildSchema);
+        this.model.system = mongoose.model<ISystemModel>("System", systemSchema);
     }
 }
 
