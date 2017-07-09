@@ -15,11 +15,12 @@
  */
 
 import * as discord from 'discord.js';
+import * as request from 'request';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
 
-export class MyGuild {
+export class MonitorSystems {
     responses: Responses;
     db: DB;
     constructor() {
@@ -43,22 +44,45 @@ export class MyGuild {
         }
     }
 
-    set(message: discord.Message, argsArray: string[]) {
-        if (argsArray.length === 1) {
+    add(message: discord.Message, argsArray: string[]) {
+        if (argsArray.length === 2) {
             let guildId = message.guild.id;
+            let systemName = argsArray[1];
+            let requestOptions = {
+                url: "http://elitebgs.kodeblox.com/api/eddb/v1/populatedsystems",
+                method: "GET",
+                auth: {
+                    'user': 'guest',
+                    'pass': 'secret',
+                    'sendImmediately': true
+                },
+                qs: { name: systemName }
+            }
 
-            this.db.model.guild.findOne({ guildId: guildId })
-                .then(guild => {
-                    if (guild) {
+            request(requestOptions, (error, response, body) => {
+                if (!error && response.statusCode == 200) {
+                    let responseData: string = body;
+                    if (responseData.length === 0) {
                         message.channel.send(this.responses.getResponse("fail"))
                             .then(() => {
-                                message.channel.send("Your guild is already set");
+                                message.channel.send("System not found");
                             })
                             .catch(err => {
                                 console.log(err);
                             });
                     } else {
-                        this.db.model.guild.create({ guildId: guildId })
+                        let responseObject: object = JSON.parse(responseData);
+                        let monitorSystems = {
+                            systemName: responseObject[0].name_lower,
+                            systemPos: {
+                                x: responseObject[0].x,
+                                y: responseObject[0].y,
+                                z: responseObject[0].z
+                            }
+                        }
+                        this.db.model.guild.findOneAndUpdate(
+                            { guildId: guildId },
+                            { $addToSet: { monitorSystems: monitorSystems } })
                             .then(guild => {
                                 message.channel.send(this.responses.getResponse("success"));
                             })
@@ -67,21 +91,23 @@ export class MyGuild {
                                 console.log(err);
                             })
                     }
-                })
-                .catch(err => {
-                    message.channel.send(this.responses.getResponse("fail"));
-                    console.log(err);
-                })
-        } else {
+                }
+            });
+        } else if (argsArray.length > 2) {
             message.channel.send(this.responses.getResponse("tooManyParams"));
+        } else {
+            message.channel.send(this.responses.getResponse("noParams"));
         }
     }
 
     remove(message: discord.Message, argsArray: string[]) {
-        if (argsArray.length === 1) {
+        if (argsArray.length === 2) {
             let guildId = message.guild.id;
+            let systemName = argsArray[1].toLowerCase();
 
-            this.db.model.guild.findOneAndRemove({ guildId: guildId })
+            this.db.model.guild.findOneAndUpdate(
+                { guildId: guildId },
+                { $pull: { monitorSystems: { systemName: systemName } } })
                 .then(guild => {
                     message.channel.send(this.responses.getResponse("success"));
                 })

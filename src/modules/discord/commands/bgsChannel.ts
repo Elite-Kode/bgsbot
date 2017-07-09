@@ -19,7 +19,7 @@ import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
 
-export class MyGuild {
+export class BGSChannel {
     responses: Responses;
     db: DB;
     constructor() {
@@ -44,36 +44,24 @@ export class MyGuild {
     }
 
     set(message: discord.Message, argsArray: string[]) {
-        if (argsArray.length === 1) {
+        if (argsArray.length === 2) {
             let guildId = message.guild.id;
+            let bgsChannelId = argsArray[1];
 
-            this.db.model.guild.findOne({ guildId: guildId })
+            this.db.model.guild.findOneAndUpdate(
+                { guildId: guildId },
+                { bgsChannelId: bgsChannelId })
                 .then(guild => {
-                    if (guild) {
-                        message.channel.send(this.responses.getResponse("fail"))
-                            .then(() => {
-                                message.channel.send("Your guild is already set");
-                            })
-                            .catch(err => {
-                                console.log(err);
-                            });
-                    } else {
-                        this.db.model.guild.create({ guildId: guildId })
-                            .then(guild => {
-                                message.channel.send(this.responses.getResponse("success"));
-                            })
-                            .catch(err => {
-                                message.channel.send(this.responses.getResponse("fail"));
-                                console.log(err);
-                            })
-                    }
+                    message.channel.send(this.responses.getResponse("success"));
                 })
                 .catch(err => {
                     message.channel.send(this.responses.getResponse("fail"));
                     console.log(err);
                 })
-        } else {
+        } else if (argsArray.length > 2) {
             message.channel.send(this.responses.getResponse("tooManyParams"));
+        } else {
+            message.channel.send(this.responses.getResponse("noParams"));
         }
     }
 
@@ -81,7 +69,9 @@ export class MyGuild {
         if (argsArray.length === 1) {
             let guildId = message.guild.id;
 
-            this.db.model.guild.findOneAndRemove({ guildId: guildId })
+            this.db.model.guild.findOneAndUpdate(
+                { guildId: guildId },
+                { $unset: { bgsChannelId: 1 } })
                 .then(guild => {
                     message.channel.send(this.responses.getResponse("success"));
                 })

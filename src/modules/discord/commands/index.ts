@@ -17,3 +17,5 @@
 export * from './hi';
 export * from './myGuild';
 export * from './bgsRole';
+export * from './bgsChannel';
+export * from './monitorSystems';

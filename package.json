@@ -15,6 +15,7 @@
         "express": "^4.15.3",
         "mongoose": "^4.11.1",
         "morgan": "^1.8.2",
+        "request": "^2.81.0",
         "serve-favicon": "^2.4.3",
         "zmq": "^2.15.3"
     },
@@ -26,6 +27,7 @@
         "@types/mongoose": "^4.7.18",
         "@types/morgan": "^1.7.32",
         "@types/node": "^8.0.8",
+        "@types/request": "0.0.45",
         "@types/serve-favicon": "^2.2.28",
         "@types/zmq": "0.0.20",
         "cross-env": "^5.0.1",

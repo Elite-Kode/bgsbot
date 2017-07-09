@@ -19,7 +19,7 @@ import * as discord from 'discord.js';
 export class Hi{
     exec(message: discord.Message, commandArguments: string): void {
         if (commandArguments.length === 0) {
-            message.channel.sendMessage("Hey there!");
+            message.channel.send("Hey there!");
         }
     }
 }

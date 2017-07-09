@@ -36,10 +36,10 @@ export class BGSRole {
             if (this[command]) {
                 this[command](message, argsArray)
             } else {
-                message.channel.sendMessage(this.responses.getResponse('notACommand'));
+                message.channel.send(this.responses.getResponse('notACommand'));
             }
         } else {
-            message.channel.sendMessage(this.responses.getResponse('noParams'));
+            message.channel.send(this.responses.getResponse('noParams'));
         }
     }
 
@@ -52,16 +52,16 @@ export class BGSRole {
                 { guildId: guildId },
                 { bgsRoleId: bgsRoleId })
                 .then(guild => {
-                    message.channel.sendMessage(this.responses.getResponse("success"));
+                    message.channel.send(this.responses.getResponse("success"));
                 })
                 .catch(err => {
-                    message.channel.sendMessage(this.responses.getResponse("fail"));
+                    message.channel.send(this.responses.getResponse("fail"));
                     console.log(err);
                 })
         } else if (argsArray.length > 2) {
-            message.channel.sendMessage(this.responses.getResponse("tooManyParams"));
+            message.channel.send(this.responses.getResponse("tooManyParams"));
         } else {
-            message.channel.sendMessage(this.responses.getResponse("noParams"));
+            message.channel.send(this.responses.getResponse("noParams"));
         }
     }
 
@@ -73,14 +73,14 @@ export class BGSRole {
                 { guildId: guildId },
                 { $unset: { bgsRoleId: 1 } })
                 .then(guild => {
-                    message.channel.sendMessage(this.responses.getResponse("success"));
+                    message.channel.send(this.responses.getResponse("success"));
                 })
                 .catch(err => {
-                    message.channel.sendMessage(this.responses.getResponse("fail"));
+                    message.channel.send(this.responses.getResponse("fail"));
                     console.log(err);
                 })
         } else {
-            message.channel.sendMessage(this.responses.getResponse("tooManyParams"));
+            message.channel.send(this.responses.getResponse("tooManyParams"));
         }
     }
 }
