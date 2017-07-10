@@ -49,7 +49,7 @@ export class BGSRole {
             let bgsRoleId = argsArray[1];
 
             this.db.model.guild.findOneAndUpdate(
-                { guil_id: guildId },
+                { guild_id: guildId },
                 { bgs_role_id: bgsRoleId })
                 .then(guild => {
                     message.channel.send(this.responses.getResponse("success"));
