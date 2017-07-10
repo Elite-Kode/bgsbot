@@ -28,7 +28,7 @@ export class Journal {
     private db: DB
 
     constructor(message: any) {
-        this.message = message;
+        this.message = JSON.parse(JSON.stringify(message));
         this.timestamp = message.timestamp;
         this.event = message.event;
         this.starSystem = message.StarSystem;

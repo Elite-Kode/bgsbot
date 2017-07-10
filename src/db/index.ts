@@ -17,12 +17,9 @@
 import * as mongoose from 'mongoose';
 import { DBSecrets } from '../secrets';
 
-import { guildSchema } from './schemas/guild';
-import { systemSchema } from './schemas/system';
+import { guildSchema, systemSchema } from './schemas';
 
-import { IGuildModel } from './models/guild';
-import { ISystemModel } from './models/system';
-import { IModel } from './models/models';
+import { IModel, IGuildModel, ISystemModel } from './models';
 
 export class DB {
     private options: mongoose.ConnectionOptions;
