@@ -26,7 +26,7 @@ export class SystemStatus {
         this.responses = App.discordClient.responses;
         this.db = App.db;
     }
-    exec = (message: discord.Message, commandArguments: string): void => {
+    exec(message: discord.Message, commandArguments: string): void {
         let argsArray: string[] = [];
         if (commandArguments.length !== 0) {
             argsArray = commandArguments.split(" ");
@@ -43,7 +43,7 @@ export class SystemStatus {
         }
     }
 
-    get = (message: discord.Message, argsArray: string[]): void => {
+    get(message: discord.Message, argsArray: string[]): void {
         if (argsArray.length >= 2) {
             let systemName: string = argsArray.slice(1).join(" ").toLowerCase();
 
@@ -105,7 +105,7 @@ export class SystemStatus {
         }
     }
 
-    private getTrendIcon = (trend: number): string => {
+    private getTrendIcon(trend: number): string {
         if (trend > 0) {
             return "⬆️";
         } else if (trend < 0) {
