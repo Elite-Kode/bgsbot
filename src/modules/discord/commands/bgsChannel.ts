@@ -53,7 +53,17 @@ export class BGSChannel {
                         { guild_id: guildId },
                         { bgs_channel_id: bgsChannelId })
                         .then(guild => {
-                            message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                            if (guild) {
+                                message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                            } else {
+                                message.channel.send(Responses.getResponse(Responses.FAIL))
+                                    .then(() => {
+                                        message.channel.send("Your guild is not set yet");
+                                    })
+                                    .catch(err => {
+                                        console.log(err);
+                                    });
+                            }
                         })
                         .catch(err => {
                             message.channel.send(Responses.getResponse(Responses.FAIL));
@@ -80,7 +90,17 @@ export class BGSChannel {
                         { guild_id: guildId },
                         { $unset: { bgs_channel_id: 1 } })
                         .then(guild => {
-                            message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                            if (guild) {
+                                message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                            } else {
+                                message.channel.send(Responses.getResponse(Responses.FAIL))
+                                    .then(() => {
+                                        message.channel.send("Your guild is not set yet");
+                                    })
+                                    .catch(err => {
+                                        console.log(err);
+                                    });
+                            }
                         })
                         .catch(err => {
                             message.channel.send(Responses.getResponse(Responses.FAIL));

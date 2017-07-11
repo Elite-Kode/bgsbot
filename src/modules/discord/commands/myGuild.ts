@@ -89,7 +89,17 @@ export class MyGuild {
 
                     this.db.model.guild.findOneAndRemove({ guild_id: guildId })
                         .then(guild => {
-                            message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                            if (guild) {
+                                message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                            } else {
+                                message.channel.send(Responses.getResponse(Responses.FAIL))
+                                    .then(() => {
+                                        message.channel.send("Your guild is not set yet");
+                                    })
+                                    .catch(err => {
+                                        console.log(err);
+                                    });
+                            }
                         })
                         .catch(err => {
                             message.channel.send(Responses.getResponse(Responses.FAIL));

@@ -51,49 +51,59 @@ export class SystemStatus {
                     this.db.model.system.findOne(
                         { system_name_lower: systemName })
                         .then(system => {
-                            let embed = new discord.RichEmbed();
-                            embed.setTitle(system.system_name);
-                            embed.setColor([255, 0, 255]);
-                            embed.addField("State", system.faction_state, true);
-                            embed.addField("System Security", system.system_security, true);
-                            embed.addField("No of Factions in system", system.factions.length);
-                            embed.addField("Status of factions", "----------------", false);
-                            system.factions.forEach((faction) => {
-                                embed.addField(faction.faction_name, "----------------", false);
-                                embed.addField("Influence", faction.faction_influence, true)
-                                embed.addField("State", faction.faction_state, true);
-                                let pendingStates: string = "";
-                                if (faction.faction_pending_states.length === 0) {
-                                    pendingStates = "None";
-                                } else {
-                                    faction.faction_pending_states.forEach((pendingState, index, factionPendingStates) => {
-                                        let trend = this.getTrendIcon(pendingState.trend);
-                                        pendingStates = `${pendingStates}${pendingState.state}${trend}`;
-                                        if (index !== factionPendingStates.length - 1) {
-                                            pendingStates = `${pendingStates}, `
-                                        }
-                                    });
-                                }
-                                embed.addField("Pending States", pendingStates, false);
-                                let recoveringStates: string = "";
-                                if (faction.faction_recovering_states.length === 0) {
-                                    recoveringStates = "None";
-                                } else {
-                                    faction.faction_recovering_states.forEach((recoveringState, index, factionRecoveringState) => {
-                                        let trend = this.getTrendIcon(recoveringState.trend);
-                                        recoveringStates = `${recoveringStates}${recoveringState.state}${trend}`;
-                                        if (index !== factionRecoveringState.length - 1) {
-                                            recoveringStates = `${recoveringStates}, `
-                                        }
-                                    })
-                                }
-                                embed.addField("Recovering States", recoveringStates, true);
-                                embed.setTimestamp(system.created_at);
-                            });
-                            message.channel.send({ embed })
-                                .catch(err => {
-                                    console.log(err);
+                            if (system) {
+                                let embed = new discord.RichEmbed();
+                                embed.setTitle(system.system_name);
+                                embed.setColor([255, 0, 255]);
+                                embed.addField("State", system.faction_state, true);
+                                embed.addField("System Security", system.system_security, true);
+                                embed.addField("No of Factions in system", system.factions.length);
+                                embed.addField("Status of factions", "----------------", false);
+                                system.factions.forEach((faction) => {
+                                    embed.addField(faction.faction_name, "----------------", false);
+                                    embed.addField("Influence", faction.faction_influence, true)
+                                    embed.addField("State", faction.faction_state, true);
+                                    let pendingStates: string = "";
+                                    if (faction.faction_pending_states.length === 0) {
+                                        pendingStates = "None";
+                                    } else {
+                                        faction.faction_pending_states.forEach((pendingState, index, factionPendingStates) => {
+                                            let trend = this.getTrendIcon(pendingState.trend);
+                                            pendingStates = `${pendingStates}${pendingState.state}${trend}`;
+                                            if (index !== factionPendingStates.length - 1) {
+                                                pendingStates = `${pendingStates}, `
+                                            }
+                                        });
+                                    }
+                                    embed.addField("Pending States", pendingStates, false);
+                                    let recoveringStates: string = "";
+                                    if (faction.faction_recovering_states.length === 0) {
+                                        recoveringStates = "None";
+                                    } else {
+                                        faction.faction_recovering_states.forEach((recoveringState, index, factionRecoveringState) => {
+                                            let trend = this.getTrendIcon(recoveringState.trend);
+                                            recoveringStates = `${recoveringStates}${recoveringState.state}${trend}`;
+                                            if (index !== factionRecoveringState.length - 1) {
+                                                recoveringStates = `${recoveringStates}, `
+                                            }
+                                        })
+                                    }
+                                    embed.addField("Recovering States", recoveringStates, true);
+                                    embed.setTimestamp(system.created_at);
                                 });
+                                message.channel.send({ embed })
+                                    .catch(err => {
+                                        console.log(err);
+                                    });
+                            } else {
+                                message.channel.send(Responses.getResponse(Responses.FAIL))
+                                    .then(() => {
+                                        message.channel.send("System is not monitored");
+                                    })
+                                    .catch(err => {
+                                        console.log(err);
+                                    });
+                            }
                         })
                         .catch(err => {
                             message.channel.send(Responses.getResponse(Responses.FAIL));

@@ -87,28 +87,38 @@ export class MonitorSystems {
                                     { guild_id: guildId },
                                     { $addToSet: { monitor_systems: monitorSystems } })
                                     .then(guild => {
-                                        this.db.model.system.findOne({ system_name_lower: systemNameLower })
-                                            .then(system => {
-                                                if (system) {
-                                                    message.channel.send(Responses.getResponse(Responses.SUCCESS));
-                                                } else {
-                                                    this.db.model.system.create({
-                                                        system_name: systemName,
-                                                        system_name_lower: systemNameLower
-                                                    })
-                                                        .then(system => {
-                                                            message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                                        if (guild) {
+                                            this.db.model.system.findOne({ system_name_lower: systemNameLower })
+                                                .then(system => {
+                                                    if (system) {
+                                                        message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                                                    } else {
+                                                        this.db.model.system.create({
+                                                            system_name: systemName,
+                                                            system_name_lower: systemNameLower
                                                         })
-                                                        .catch(err => {
-                                                            message.channel.send(Responses.getResponse(Responses.FAIL));
-                                                            console.log(err);
-                                                        });
-                                                }
-                                            })
-                                            .catch(err => {
-                                                message.channel.send(Responses.getResponse(Responses.FAIL));
-                                                console.log(err);
-                                            })
+                                                            .then(system => {
+                                                                message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                                                            })
+                                                            .catch(err => {
+                                                                message.channel.send(Responses.getResponse(Responses.FAIL));
+                                                                console.log(err);
+                                                            });
+                                                    }
+                                                })
+                                                .catch(err => {
+                                                    message.channel.send(Responses.getResponse(Responses.FAIL));
+                                                    console.log(err);
+                                                })
+                                        } else {
+                                            message.channel.send(Responses.getResponse(Responses.FAIL))
+                                                .then(() => {
+                                                    message.channel.send("Your guild is not set yet");
+                                                })
+                                                .catch(err => {
+                                                    console.log(err);
+                                                });
+                                        }
                                     })
                                     .catch(err => {
                                         message.channel.send(Responses.getResponse(Responses.FAIL));
@@ -139,7 +149,17 @@ export class MonitorSystems {
                         { guild_id: guildId },
                         { $pull: { monitor_systems: { system_name: systemName } } })
                         .then(guild => {
-                            message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                            if (guild) {
+                                message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                            } else {
+                                message.channel.send(Responses.getResponse(Responses.FAIL))
+                                    .then(() => {
+                                        message.channel.send("Your guild is not set yet");
+                                    })
+                                    .catch(err => {
+                                        console.log(err);
+                                    });
+                            }
                         })
                         .catch(err => {
                             message.channel.send(Responses.getResponse(Responses.FAIL));
