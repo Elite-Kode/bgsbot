@@ -18,12 +18,11 @@ import * as discord from 'discord.js';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
+import { Access } from './../access';
 
 export class BGSChannel {
-    responses: Responses;
     db: DB;
     constructor() {
-        this.responses = App.discordClient.responses;
         this.db = App.db;
     }
     exec(message: discord.Message, commandArguments: string): void {
@@ -34,53 +33,65 @@ export class BGSChannel {
         if (argsArray.length > 0) {
             let command = argsArray[0].toLowerCase();
             if (this[command]) {
-                this[command](message, argsArray)
+                this[command](message, argsArray);
             } else {
-                message.channel.send(this.responses.getResponse('notACommand'));
+                message.channel.send(Responses.getResponse(Responses.NOTACOMMAND));
             }
         } else {
-            message.channel.send(this.responses.getResponse('noParams'));
+            message.channel.send(Responses.getResponse(Responses.NOPARAMS));
         }
     }
 
     set(message: discord.Message, argsArray: string[]) {
-        if (argsArray.length === 2) {
-            let guildId = message.guild.id;
-            let bgsChannelId = argsArray[1];
+        Access.has(message.member, [Access.ADMIN, Access.FORBIDDEN])
+            .then(() => {
+                if (argsArray.length === 2) {
+                    let guildId = message.guild.id;
+                    let bgsChannelId = argsArray[1];
 
-            this.db.model.guild.findOneAndUpdate(
-                { guild_id: guildId },
-                { bgs_channel_id: bgsChannelId })
-                .then(guild => {
-                    message.channel.send(this.responses.getResponse("success"));
-                })
-                .catch(err => {
-                    message.channel.send(this.responses.getResponse("fail"));
-                    console.log(err);
-                })
-        } else if (argsArray.length > 2) {
-            message.channel.send(this.responses.getResponse("tooManyParams"));
-        } else {
-            message.channel.send(this.responses.getResponse("noParams"));
-        }
+                    this.db.model.guild.findOneAndUpdate(
+                        { guild_id: guildId },
+                        { bgs_channel_id: bgsChannelId })
+                        .then(guild => {
+                            message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                        })
+                        .catch(err => {
+                            message.channel.send(Responses.getResponse(Responses.FAIL));
+                            console.log(err);
+                        })
+                } else if (argsArray.length > 2) {
+                    message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+                } else {
+                    message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+                }
+            })
+            .catch(() => {
+                message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
+            })
     }
 
     remove(message: discord.Message, argsArray: string[]) {
-        if (argsArray.length === 1) {
-            let guildId = message.guild.id;
+        Access.has(message.member, [Access.ADMIN, Access.FORBIDDEN])
+            .then(() => {
+                if (argsArray.length === 1) {
+                    let guildId = message.guild.id;
 
-            this.db.model.guild.findOneAndUpdate(
-                { guild_id: guildId },
-                { $unset: { bgs_channel_id: 1 } })
-                .then(guild => {
-                    message.channel.send(this.responses.getResponse("success"));
-                })
-                .catch(err => {
-                    message.channel.send(this.responses.getResponse("fail"));
-                    console.log(err);
-                })
-        } else {
-            message.channel.send(this.responses.getResponse("tooManyParams"));
-        }
+                    this.db.model.guild.findOneAndUpdate(
+                        { guild_id: guildId },
+                        { $unset: { bgs_channel_id: 1 } })
+                        .then(guild => {
+                            message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                        })
+                        .catch(err => {
+                            message.channel.send(Responses.getResponse(Responses.FAIL));
+                            console.log(err);
+                        })
+                } else {
+                    message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+                }
+            })
+            .catch(() => {
+                message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
+            })
     }
 }

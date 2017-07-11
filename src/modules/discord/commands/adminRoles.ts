@@ -20,7 +20,7 @@ import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
 import { Access } from './../access';
 
-export class MyGuild {
+export class AdminRoles {
     db: DB;
     constructor() {
         this.db = App.db;
@@ -42,39 +42,27 @@ export class MyGuild {
         }
     }
 
-    set(message: discord.Message, argsArray: string[]) {
-        // Only the server admins can set the guild
+    add(message: discord.Message, argsArray: string[]) {
+        // Only the server admins can set the admin roles
         if (message.member.hasPermission("ADMINISTRATOR")) {
-            if (argsArray.length === 1) {
+            if (argsArray.length === 2) {
                 let guildId = message.guild.id;
+                let adminRoleId = argsArray[1];
 
-                this.db.model.guild.findOne({ guild_id: guildId })
+                this.db.model.guild.findOneAndUpdate(
+                    { guild_id: guildId },
+                    { $addToSet: { admin_roles_id: adminRoleId } })
                     .then(guild => {
-                        if (guild) {
-                            message.channel.send(Responses.getResponse(Responses.FAIL))
-                                .then(() => {
-                                    message.channel.send("Your guild is already set");
-                                })
-                                .catch(err => {
-                                    console.log(err);
-                                });
-                        } else {
-                            this.db.model.guild.create({ guild_id: guildId })
-                                .then(guild => {
-                                    message.channel.send(Responses.getResponse(Responses.SUCCESS));
-                                })
-                                .catch(err => {
-                                    message.channel.send(Responses.getResponse(Responses.FAIL));
-                                    console.log(err);
-                                })
-                        }
+                        message.channel.send(Responses.getResponse(Responses.SUCCESS));
                     })
                     .catch(err => {
                         message.channel.send(Responses.getResponse(Responses.FAIL));
                         console.log(err);
                     })
-            } else {
+            } else if (argsArray.length > 2) {
                 message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+            } else {
+                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
             }
         } else {
             message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
@@ -84,10 +72,13 @@ export class MyGuild {
     remove(message: discord.Message, argsArray: string[]) {
         Access.has(message.member, [Access.ADMIN, Access.FORBIDDEN])
             .then(() => {
-                if (argsArray.length === 1) {
+                if (argsArray.length === 2) {
                     let guildId = message.guild.id;
+                    let adminRoleId = argsArray[1];
 
-                    this.db.model.guild.findOneAndRemove({ guild_id: guildId })
+                    this.db.model.guild.findOneAndUpdate(
+                        { guild_id: guildId },
+                        { $pull: { admin_roles_id: adminRoleId } })
                         .then(guild => {
                             message.channel.send(Responses.getResponse(Responses.SUCCESS));
                         })
@@ -95,8 +86,10 @@ export class MyGuild {
                             message.channel.send(Responses.getResponse(Responses.FAIL));
                             console.log(err);
                         })
-                } else {
+                } else if (argsArray.length > 2) {
                     message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+                } else {
+                    message.channel.send(Responses.getResponse(Responses.NOPARAMS));
                 }
             })
             .catch(() => {

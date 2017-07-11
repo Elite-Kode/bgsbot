@@ -15,46 +15,38 @@
  */
 
 export class Responses {
-    success: string[];
-    fail: string[];
-    noParams: string[];
-    tooManyParams: string[];
-    notACommand: string[];
-    botMentioned: string[];
+    public static readonly SUCCESS = [
+        "Your wish is my command!",
+        "All done boss! :thumbsup:",
+        "It is done! :ok_hand:"
+    ];
+    public static readonly FAIL = [
+        "Um...sorry couldn't do that",
+        "Computer says no",
+        "Oops! problem... :frowning:",
+        "Eeek! problems :frowning:"
+    ];
+    public static readonly NOPARAMS = [
+        "Um...I think you are forgetting something",
+        "I need more details to work on",
+        "Yeah...go on!"
+    ];
+    public static readonly TOOMANYPARAMS = [
+        "Aaah...thats too many details!",
+        "No need to hurry. Give me the details one by one"
+    ];
+    public static readonly NOTACOMMAND = [
+        "Um...Were you try to give me a command? If so you may be using the wrong one"
+    ];
+    public static readonly BOTMENTIONED = [
+        "Someone called me!!",
+        "I'm here :raised_hand:"
+    ];
+    public static readonly INSUFFICIENTPERMS = [
+        "You don't have the permissions to make me do that"
+    ]
 
-    constructor() {
-        this.success = [
-            "Your wish is my command!",
-            "All done boss! :thumbsup:",
-            "It is done! :ok_hand:"
-        ];
-        this.fail = [
-            "Um...sorry couldn't do that",
-            "Computer says no",
-            "Oops! problem... :frowning:",
-            "Eeek! problems :frowning:"
-        ];
-        this.noParams = [
-            "Um...I think you are forgetting something",
-            "I need more details to work on",
-            "Yeah...go on!"
-        ];
-        this.tooManyParams = [
-            "Aaah...thats too many details!",
-            "No need to hurry. Give me the details one by one"
-        ];
-        this.notACommand = [
-            "Um...Were you try to give me a command? If so you may be using the wrong one"
-        ];
-        this.botMentioned = [
-            "Someone called me!!",
-            "I'm here :raised_hand:"
-        ];
-    }
-
-    getResponse(action: string): string {
-        if (this[action]) {
-            return (this[action])[Math.floor(Math.random() * (this[action]).length)];
-        }
+    public static getResponse(action: string[]): string {
+        return action[Math.floor(Math.random() * action.length)];
     }
 }

@@ -18,12 +18,11 @@ import * as discord from 'discord.js';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
+import { Access } from './../access';
 
 export class SystemStatus {
-    responses: Responses;
     db: DB;
     constructor() {
-        this.responses = App.discordClient.responses;
         this.db = App.db;
     }
     exec(message: discord.Message, commandArguments: string): void {
@@ -34,75 +33,81 @@ export class SystemStatus {
         if (argsArray.length > 0) {
             let command = argsArray[0].toLowerCase();
             if (this[command]) {
-                this[command](message, argsArray)
+                this[command](message, argsArray);
             } else {
-                message.channel.send(this.responses.getResponse('notACommand'));
+                message.channel.send(Responses.getResponse(Responses.NOTACOMMAND));
             }
         } else {
-            message.channel.send(this.responses.getResponse('noParams'));
+            message.channel.send(Responses.getResponse(Responses.NOPARAMS));
         }
     }
 
     get(message: discord.Message, argsArray: string[]): void {
-        if (argsArray.length >= 2) {
-            let systemName: string = argsArray.slice(1).join(" ").toLowerCase();
+        Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN])
+            .then(() => {
+                if (argsArray.length >= 2) {
+                    let systemName: string = argsArray.slice(1).join(" ").toLowerCase();
 
-            this.db.model.system.findOne(
-                { system_name_lower: systemName })
-                .then(system => {
-                    let embed = new discord.RichEmbed();
-                    embed.setTitle(system.system_name);
-                    embed.setColor([255, 0, 255]);
-                    embed.addField("State", system.faction_state, true);
-                    embed.addField("System Security", system.system_security, true);
-                    embed.addField("No of Factions in system", system.factions.length);
-                    embed.addField("Status of factions", "----------------", false);
-                    system.factions.forEach((faction) => {
-                        embed.addField(faction.faction_name, "----------------", false);
-                        embed.addField("Influence", faction.faction_influence, true)
-                        embed.addField("State", faction.faction_state, true);
-                        let pendingStates: string = "";
-                        if (faction.faction_pending_states.length === 0) {
-                            pendingStates = "None";
-                        } else {
-                            faction.faction_pending_states.forEach((pendingState, index, factionPendingStates) => {
-                                let trend = this.getTrendIcon(pendingState.trend);
-                                pendingStates = `${pendingStates}${pendingState.state}${trend}`;
-                                if (index !== factionPendingStates.length - 1) {
-                                    pendingStates = `${pendingStates}, `
+                    this.db.model.system.findOne(
+                        { system_name_lower: systemName })
+                        .then(system => {
+                            let embed = new discord.RichEmbed();
+                            embed.setTitle(system.system_name);
+                            embed.setColor([255, 0, 255]);
+                            embed.addField("State", system.faction_state, true);
+                            embed.addField("System Security", system.system_security, true);
+                            embed.addField("No of Factions in system", system.factions.length);
+                            embed.addField("Status of factions", "----------------", false);
+                            system.factions.forEach((faction) => {
+                                embed.addField(faction.faction_name, "----------------", false);
+                                embed.addField("Influence", faction.faction_influence, true)
+                                embed.addField("State", faction.faction_state, true);
+                                let pendingStates: string = "";
+                                if (faction.faction_pending_states.length === 0) {
+                                    pendingStates = "None";
+                                } else {
+                                    faction.faction_pending_states.forEach((pendingState, index, factionPendingStates) => {
+                                        let trend = this.getTrendIcon(pendingState.trend);
+                                        pendingStates = `${pendingStates}${pendingState.state}${trend}`;
+                                        if (index !== factionPendingStates.length - 1) {
+                                            pendingStates = `${pendingStates}, `
+                                        }
+                                    });
                                 }
+                                embed.addField("Pending States", pendingStates, false);
+                                let recoveringStates: string = "";
+                                if (faction.faction_recovering_states.length === 0) {
+                                    recoveringStates = "None";
+                                } else {
+                                    faction.faction_recovering_states.forEach((recoveringState, index, factionRecoveringState) => {
+                                        let trend = this.getTrendIcon(recoveringState.trend);
+                                        recoveringStates = `${recoveringStates}${recoveringState.state}${trend}`;
+                                        if (index !== factionRecoveringState.length - 1) {
+                                            recoveringStates = `${recoveringStates}, `
+                                        }
+                                    })
+                                }
+                                embed.addField("Recovering States", recoveringStates, true);
+                                embed.setTimestamp(system.created_at);
                             });
-                        }
-                        embed.addField("Pending States", pendingStates, false);
-                        let recoveringStates: string = "";
-                        if (faction.faction_recovering_states.length === 0) {
-                            recoveringStates = "None";
-                        } else {
-                            faction.faction_recovering_states.forEach((recoveringState, index, factionRecoveringState) => {
-                                let trend = this.getTrendIcon(recoveringState.trend);
-                                recoveringStates = `${recoveringStates}${recoveringState.state}${trend}`;
-                                if (index !== factionRecoveringState.length - 1) {
-                                    recoveringStates = `${recoveringStates}, `
-                                }
-                            })
-                        }
-                        embed.addField("Recovering States", recoveringStates, true);
-                        embed.setTimestamp(system.created_at);
-                    });
-                    message.channel.send({ embed })
+                            message.channel.send({ embed })
+                                .catch(err => {
+                                    console.log(err);
+                                });
+                        })
                         .catch(err => {
+                            message.channel.send(Responses.getResponse(Responses.FAIL));
                             console.log(err);
-                        });
-                })
-                .catch(err => {
-                    message.channel.send(this.responses.getResponse("fail"));
-                    console.log(err);
-                })
-        } else if (argsArray.length > 2) {
-            message.channel.send(this.responses.getResponse("tooManyParams"));
-        } else {
-            message.channel.send(this.responses.getResponse("noParams"));
-        }
+                        })
+                } else if (argsArray.length > 2) {
+                    message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+                } else {
+                    message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+                }
+            })
+            .catch(() => {
+                message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
+            })
     }
 
     private getTrendIcon(trend: number): string {

@@ -16,12 +16,10 @@
 
 import * as discord from 'discord.js';
 import { DiscordSecrets } from '../../secrets';
-import { Hi, Help, MyGuild, BGSRole, BGSChannel, MonitorSystems, SystemStatus } from './commands';
-import { Responses } from './responseDict';
+import { Hi, Help, MyGuild, BGSRole, AdminRoles, ForbiddenRoles, BGSChannel, MonitorSystems, SystemStatus } from './commands';
 
 export class DiscordClient {
     public client: discord.Client;
-    public responses: Responses;
     private commandsMap = new Map();
 
     constructor() {
@@ -29,7 +27,6 @@ export class DiscordClient {
         this.login();
         this.listen();
         this.initiateCommands();
-        this.responses = new Responses();
     }
 
     public login() {
@@ -64,6 +61,8 @@ export class DiscordClient {
         this.commandsMap.set("help", Help);
         this.commandsMap.set("myguild", MyGuild);
         this.commandsMap.set("bgsrole", BGSRole);
+        this.commandsMap.set("adminroles", AdminRoles);
+        this.commandsMap.set("forbiddenroles", ForbiddenRoles);
         this.commandsMap.set("bgschannel", BGSChannel);
         this.commandsMap.set("monitorsystems", MonitorSystems);
         this.commandsMap.set("systemstatus", SystemStatus);

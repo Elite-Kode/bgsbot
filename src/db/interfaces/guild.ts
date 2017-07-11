@@ -18,6 +18,8 @@ export interface IGuild {
     guild_id: string,
     bgs_channel_id: string,
     bgs_role_id: string,
+    admin_roles_id: string[],
+    forbidden_roles_id: string[],
     created_at: Date,
     monitor_systems: [{
         system_name: string,

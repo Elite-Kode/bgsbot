@@ -19,12 +19,11 @@ import * as request from 'request';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
+import { Access } from './../access';
 
 export class MonitorSystems {
-    responses: Responses;
     db: DB;
     constructor() {
-        this.responses = App.discordClient.responses;
         this.db = App.db;
     }
     exec(message: discord.Message, commandArguments: string): void {
@@ -35,111 +34,123 @@ export class MonitorSystems {
         if (argsArray.length > 0) {
             let command = argsArray[0].toLowerCase();
             if (this[command]) {
-                this[command](message, argsArray)
+                this[command](message, argsArray);
             } else {
-                message.channel.send(this.responses.getResponse('notACommand'));
+                message.channel.send(Responses.getResponse(Responses.NOTACOMMAND));
             }
         } else {
-            message.channel.send(this.responses.getResponse('noParams'));
+            message.channel.send(Responses.getResponse(Responses.NOPARAMS));
         }
     }
 
     add(message: discord.Message, argsArray: string[]) {
-        if (argsArray.length === 2) {
-            let guildId = message.guild.id;
-            let systemName = argsArray[1];
-            let requestOptions = {
-                url: "http://elitebgs.kodeblox.com/api/eddb/v1/populatedsystems",
-                method: "GET",
-                auth: {
-                    'user': 'guest',
-                    'pass': 'secret',
-                    'sendImmediately': true
-                },
-                qs: { name: systemName }
-            }
+        Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN])
+            .then(() => {
+                if (argsArray.length === 2) {
+                    let guildId = message.guild.id;
+                    let systemName = argsArray[1];
+                    let requestOptions = {
+                        url: "http://elitebgs.kodeblox.com/api/eddb/v1/populatedsystems",
+                        method: "GET",
+                        auth: {
+                            'user': 'guest',
+                            'pass': 'secret',
+                            'sendImmediately': true
+                        },
+                        qs: { name: systemName }
+                    }
 
-            request(requestOptions, (error, response, body) => {
-                if (!error && response.statusCode == 200) {
-                    let responseData: string = body;
-                    if (responseData.length === 0) {
-                        message.channel.send(this.responses.getResponse("fail"))
-                            .then(() => {
-                                message.channel.send("System not found");
-                            })
-                            .catch(err => {
-                                console.log(err);
-                            });
-                    } else {
-                        let responseObject: object = JSON.parse(responseData);
-                        let systemName = responseObject[0].name;
-                        let systemNameLower = responseObject[0].name_lower;
-                        let monitorSystems = {
-                            system_name: systemNameLower,
-                            system_pos: {
-                                x: responseObject[0].x,
-                                y: responseObject[0].y,
-                                z: responseObject[0].z
-                            }
-                        }
-                        this.db.model.guild.findOneAndUpdate(
-                            { guild_id: guildId },
-                            { $addToSet: { monitor_systems: monitorSystems } })
-                            .then(guild => {
-                                this.db.model.system.findOne({ system_name_lower: systemNameLower })
-                                    .then(system => {
-                                        if (system) {
-                                            message.channel.send(this.responses.getResponse("success"));
-                                        } else {
-                                            this.db.model.system.create({
-                                                system_name: systemName,
-                                                system_name_lower: systemNameLower
-                                            })
-                                                .then(system => {
-                                                    message.channel.send(this.responses.getResponse("success"));
-                                                })
-                                                .catch(err => {
-                                                    message.channel.send(this.responses.getResponse("fail"));
-                                                    console.log(err);
-                                                });
-                                        }
+                    request(requestOptions, (error, response, body) => {
+                        if (!error && response.statusCode == 200) {
+                            let responseData: string = body;
+                            if (responseData.length === 0) {
+                                message.channel.send(Responses.getResponse(Responses.FAIL))
+                                    .then(() => {
+                                        message.channel.send("System not found");
                                     })
                                     .catch(err => {
-                                        message.channel.send(this.responses.getResponse("fail"));
+                                        console.log(err);
+                                    });
+                            } else {
+                                let responseObject: object = JSON.parse(responseData);
+                                let systemName = responseObject[0].name;
+                                let systemNameLower = responseObject[0].name_lower;
+                                let monitorSystems = {
+                                    system_name: systemNameLower,
+                                    system_pos: {
+                                        x: responseObject[0].x,
+                                        y: responseObject[0].y,
+                                        z: responseObject[0].z
+                                    }
+                                }
+                                this.db.model.guild.findOneAndUpdate(
+                                    { guild_id: guildId },
+                                    { $addToSet: { monitor_systems: monitorSystems } })
+                                    .then(guild => {
+                                        this.db.model.system.findOne({ system_name_lower: systemNameLower })
+                                            .then(system => {
+                                                if (system) {
+                                                    message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                                                } else {
+                                                    this.db.model.system.create({
+                                                        system_name: systemName,
+                                                        system_name_lower: systemNameLower
+                                                    })
+                                                        .then(system => {
+                                                            message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                                                        })
+                                                        .catch(err => {
+                                                            message.channel.send(Responses.getResponse(Responses.FAIL));
+                                                            console.log(err);
+                                                        });
+                                                }
+                                            })
+                                            .catch(err => {
+                                                message.channel.send(Responses.getResponse(Responses.FAIL));
+                                                console.log(err);
+                                            })
+                                    })
+                                    .catch(err => {
+                                        message.channel.send(Responses.getResponse(Responses.FAIL));
                                         console.log(err);
                                     })
-                            })
-                            .catch(err => {
-                                message.channel.send(this.responses.getResponse("fail"));
-                                console.log(err);
-                            })
-                    }
+                            }
+                        }
+                    });
+                } else if (argsArray.length > 2) {
+                    message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+                } else {
+                    message.channel.send(Responses.getResponse(Responses.NOPARAMS));
                 }
-            });
-        } else if (argsArray.length > 2) {
-            message.channel.send(this.responses.getResponse("tooManyParams"));
-        } else {
-            message.channel.send(this.responses.getResponse("noParams"));
-        }
+            })
+            .catch(() => {
+                message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
+            })
     }
 
     remove(message: discord.Message, argsArray: string[]) {
-        if (argsArray.length === 2) {
-            let guildId = message.guild.id;
-            let systemName = argsArray[1].toLowerCase();
+        Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN])
+            .then(() => {
+                if (argsArray.length === 2) {
+                    let guildId = message.guild.id;
+                    let systemName = argsArray[1].toLowerCase();
 
-            this.db.model.guild.findOneAndUpdate(
-                { guild_id: guildId },
-                { $pull: { monitor_systems: { system_name: systemName } } })
-                .then(guild => {
-                    message.channel.send(this.responses.getResponse("success"));
-                })
-                .catch(err => {
-                    message.channel.send(this.responses.getResponse("fail"));
-                    console.log(err);
-                })
-        } else {
-            message.channel.send(this.responses.getResponse("tooManyParams"));
-        }
+                    this.db.model.guild.findOneAndUpdate(
+                        { guild_id: guildId },
+                        { $pull: { monitor_systems: { system_name: systemName } } })
+                        .then(guild => {
+                            message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                        })
+                        .catch(err => {
+                            message.channel.send(Responses.getResponse(Responses.FAIL));
+                            console.log(err);
+                        })
+                } else {
+                    message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+                }
+            })
+            .catch(() => {
+                message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
+            })
     }
 }
