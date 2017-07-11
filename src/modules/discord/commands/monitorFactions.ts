@@ -21,7 +21,7 @@ import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
 import { Access } from './../access';
 
-export class MonitorSystems {
+export class MonitorFactions {
     db: DB;
     constructor() {
         this.db = App.db;
@@ -48,22 +48,22 @@ export class MonitorSystems {
             .then(() => {
                 if (argsArray.length === 2) {
                     let guildId = message.guild.id;
-                    let systemName = argsArray[1];
-                    let requestOptions = {
-                        url: "http://elitebgs.kodeblox.com/api/eddb/v1/populatedsystems",
+                    let factionName = argsArray[1];
+                    let factionRequestOptions = {
+                        url: "http://elitebgs.kodeblox.com/api/eddb/v1/factions",
                         method: "GET",
                         auth: {
                             'user': 'guest',
                             'pass': 'secret',
                             'sendImmediately': true
                         },
-                        qs: { name: systemName }
+                        qs: { name: factionName }
                     }
 
-                    request(requestOptions, (error, response, body) => {
+                    request(factionRequestOptions, (error, response, body) => {
                         if (!error && response.statusCode == 200) {
-                            let responseData: string = body;
-                            if (responseData.length === 2) {
+                            let factionResponseData: string = body;
+                            if (factionResponseData.length === 2) {
                                 message.channel.send(Responses.getResponse(Responses.FAIL))
                                     .then(() => {
                                         message.channel.send("System not found");
@@ -72,11 +72,11 @@ export class MonitorSystems {
                                         console.log(err);
                                     });
                             } else {
-                                let responseObject: object = JSON.parse(responseData);
-                                let systemName = responseObject[0].name;
-                                let systemNameLower = responseObject[0].name_lower;
+                                let factionResponseObject: object = JSON.parse(factionResponseData);
+                                let factionName = factionResponseObject[0].name;
+                                let factionNameLower = factionResponseObject[0].name_lower;
                                 let monitorSystems = {
-                                    system_name: systemNameLower,
+                                    system_name: factionNameLower,
                                     system_pos: {
                                         x: responseObject[0].x,
                                         y: responseObject[0].y,

@@ -16,6 +16,7 @@
 
 import * as discord from 'discord.js';
 import { DiscordSecrets } from '../../secrets';
+import { Responses } from './responseDict';
 import { Hi, Help, MyGuild, BGSRole, AdminRoles, ForbiddenRoles, BGSChannel, MonitorSystems, SystemStatus } from './commands';
 
 export class DiscordClient {
@@ -51,6 +52,8 @@ export class DiscordClient {
                     console.log(command + " command requested");
                     let commander = new (this.commandsMap.get(command))();
                     commander.exec(message, commandArguments);
+                } else {
+                    message.channel.send(Responses.getResponse(Responses.NOTACOMMAND));
                 }
             }
         });
