@@ -23,12 +23,13 @@ export let factionSchema: Schema = new Schema({
     },
     faction_name_lower: String,
     faction_government: String,
-    faction_prescence: [{
+    faction_presence: [{
         _id: false,
         system_name: String,
         system_name_lower: String,
         influence: Number,
         state: String,
+        isControlling: Boolean,
         pending_states: [{
             _id: false,
             state: String,

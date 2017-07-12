@@ -18,11 +18,12 @@ export interface IFaction {
     faction_name: string,
     faction_name_lower: string,
     faction_government: string,
-    faction_prescence: [{
+    faction_presence: [{
         system_name: string,
         system_name_lower: string,
         influence: number,
         state: string,
+        isControlling: boolean,
         pending_states: [{
             state: string,
             trend: number

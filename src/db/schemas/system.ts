@@ -51,10 +51,6 @@ export let systemSchema: Schema = new Schema({
             trend: Number
         }]
     }],
-    powers: [{
-        _id: false,
-        name: String,
-        name_lower: String
-    }],
+    powers: [String],
     powerplay_state: String
 });

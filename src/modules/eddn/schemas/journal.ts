@@ -53,6 +53,7 @@ export class Journal {
         if (this.event === "FSDJump") {
             if (this.misc.Factions) {
                 let factionArray = [];
+                let factionNameArray = [];
                 this.misc.Factions.forEach(faction => {
                     let factionObject: any = {};
                     factionObject.faction_name = faction.Name;
@@ -65,7 +66,7 @@ export class Journal {
                         faction.PendingStates.forEach(pendingState => {
                             let pendingStateObject: any = {};
                             pendingStateObject.state = pendingState.State;
-                            pendingStateObject.trend = pendingState.trend;
+                            pendingStateObject.trend = pendingState.Trend;
                             factionObject.faction_pending_states.push(pendingStateObject);
                         });
                     }
@@ -74,32 +75,73 @@ export class Journal {
                         faction.RecoveringStates.forEach(recoveringState => {
                             let recoveringStateObject: any = {};
                             recoveringStateObject.state = recoveringState.State;
-                            recoveringStateObject.trend = recoveringState.trend;
+                            recoveringStateObject.trend = recoveringState.Trend;
                             factionObject.faction_pending_states.push(recoveringStateObject);
                         });
                     }
                     factionArray.push(factionObject);
+                    factionNameArray.push(factionObject.faction_name_lower);
                 });
+                let updateObject: any = {
+                    system_name: this.starSystem,
+                    system_faction: this.misc.SystemFaction,
+                    system_faction_lower: this.misc.SystemFaction.toLowerCase(),
+                    faction_state: this.misc.FactionState,
+                    system_allegiance: this.misc.SystemAllegiance,
+                    system_economy: this.misc.SystemEconomy,
+                    system_government: this.misc.SystemGovernment,
+                    system_security: this.misc.SystemSecurity,
+                    factions: factionArray
+                };
+                if (this.misc.Powers) {
+                    updateObject.powers = this.misc.Powers;
+                    updateObject.powerplay_state = this.misc.PowerplayState;
+                }
                 this.db.model.system.findOneAndUpdate(
                     { system_name_lower: this.starSystem.toLowerCase() },
-                    {
-                        system_name: this.starSystem,
-                        system_faction: this.misc.SystemFaction,
-                        system_faction_lower: this.misc.SystemFaction.toLowerCase(),
-                        faction_state: this.misc.FactionState,
-                        system_allegiance: this.misc.SystemAllegiance,
-                        system_economy: this.misc.SystemEconomy,
-                        system_government: this.misc.SystemGovernment,
-                        system_security: this.misc.SystemSecurity,
-                        factions: factionArray
-                        // powers: this.misc.Powers,
-                        // powerplay_state: this.misc.PowerplayState
-                    })
+                    updateObject
+                )
                     .then(system => {
                         // console.log(system);
                     })
                     .catch(err => {
                         console.log(err);
+                    });
+                this.db.model.faction.find({ faction_name_lower: { $in: factionNameArray } })
+                    .then(factions => {
+                        if (factions) {
+                            factions.forEach(faction => {
+                                let readFaction = factionArray[factionArray.findIndex(x => x.faction_name === faction.faction_name)];
+                                faction.faction_government = readFaction.faction_government;
+                                let indexOfSystem = faction.faction_presence.findIndex(x => x.system_name_lower === this.starSystem.toLowerCase());
+                                let presenceObject: any = {};
+                                if (indexOfSystem !== -1) {
+                                    faction.faction_presence.splice(indexOfSystem, 1);
+                                }
+                                presenceObject.system_name = this.starSystem;
+                                presenceObject.system_name_lower = this.starSystem.toLowerCase();
+                                presenceObject.influece = readFaction.faction_influence;
+                                presenceObject.state = readFaction.faction_state;
+                                if (this.misc.SystemFaction === faction.faction_name_lower) {
+                                    presenceObject.isControlling = true;
+                                } else {
+                                    presenceObject.isControlling = false;
+                                }
+                                presenceObject.pending_states = readFaction.faction_pending_states;
+                                presenceObject.recovering_states = readFaction.faction_recovering_states;
+                                faction.faction_presence.push(presenceObject);
+                                this.db.model.faction.findOneAndUpdate(
+                                    { faction_name_lower: faction.faction_name_lower },
+                                    faction
+                                )
+                                    .then(faction => {
+                                        // console.log(faction);
+                                    })
+                                    .catch(err => {
+                                        console.log(err);
+                                    })
+                            });
+                        }
                     })
             }
         }
