@@ -18,7 +18,7 @@ import { DB } from '../../../db/index';
 import App from '../../../server';
 
 export class Journal {
-    public static readonly schemaId: string = "http://schemas.elite-markets.net/eddn/journal/1";
+    public static readonly schemaId: string = "http://schemas.elite-markets.net/eddn/journal/1/test";
     private message: any;
     private timestamp: string;
     private event: string;
@@ -107,29 +107,39 @@ export class Journal {
                     .catch(err => {
                         console.log(err);
                     });
-                this.db.model.faction.find({ faction_name_lower: { $in: factionNameArray } })
+                this.db.model.faction.find({
+                    $or: [
+                        { faction_name_lower: { $in: factionNameArray } },
+                        { "faction_presence.system_name": this.starSystem }
+                    ]
+                })
                     .then(factions => {
                         if (factions) {
                             factions.forEach(faction => {
-                                let readFaction = factionArray[factionArray.findIndex(x => x.faction_name === faction.faction_name)];
-                                faction.faction_government = readFaction.faction_government;
+                                let readFaction: any;
+                                let indexOfFaction = factionArray.findIndex(x => x.faction_name === faction.faction_name);
                                 let indexOfSystem = faction.faction_presence.findIndex(x => x.system_name_lower === this.starSystem.toLowerCase());
-                                let presenceObject: any = {};
                                 if (indexOfSystem !== -1) {
                                     faction.faction_presence.splice(indexOfSystem, 1);
                                 }
-                                presenceObject.system_name = this.starSystem;
-                                presenceObject.system_name_lower = this.starSystem.toLowerCase();
-                                presenceObject.influece = readFaction.faction_influence;
-                                presenceObject.state = readFaction.faction_state;
-                                if (this.misc.SystemFaction === faction.faction_name_lower) {
-                                    presenceObject.isControlling = true;
-                                } else {
-                                    presenceObject.isControlling = false;
+                                if (indexOfFaction !== -1) {
+                                    readFaction = factionArray[indexOfFaction];
+                                    faction.faction_government = readFaction.faction_government;
+                                    let presenceObject: any = {};
+
+                                    presenceObject.system_name = this.starSystem;
+                                    presenceObject.system_name_lower = this.starSystem.toLowerCase();
+                                    presenceObject.influece = readFaction.faction_influence;
+                                    presenceObject.state = readFaction.faction_state;
+                                    if (this.misc.SystemFaction === faction.faction_name) {
+                                        presenceObject.isControlling = true;
+                                    } else {
+                                        presenceObject.isControlling = false;
+                                    }
+                                    presenceObject.pending_states = readFaction.faction_pending_states;
+                                    presenceObject.recovering_states = readFaction.faction_recovering_states;
+                                    faction.faction_presence.push(presenceObject);
                                 }
-                                presenceObject.pending_states = readFaction.faction_pending_states;
-                                presenceObject.recovering_states = readFaction.faction_recovering_states;
-                                faction.faction_presence.push(presenceObject);
                                 this.db.model.faction.findOneAndUpdate(
                                     { faction_name_lower: faction.faction_name_lower },
                                     faction
