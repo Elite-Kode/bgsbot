@@ -24,3 +24,4 @@ export * from './bgsChannel';
 export * from './monitorSystems';
 export * from './monitorFactions';
 export * from './systemstatus';
+export * from './factionstatus';

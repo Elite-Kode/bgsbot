@@ -29,10 +29,6 @@ export let systemSchema: Schema = new Schema({
     system_economy: String,
     system_government: String,
     system_security: String,
-    created_at: {
-        type: Date,
-        default: Date.now
-    },
     factions: [{
         _id: false,
         faction_name: String,

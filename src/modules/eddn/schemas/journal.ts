@@ -18,7 +18,7 @@ import { DB } from '../../../db/index';
 import App from '../../../server';
 
 export class Journal {
-    public static readonly schemaId: string = "http://schemas.elite-markets.net/eddn/journal/1/test";
+    public static readonly schemaId: string = "http://schemas.elite-markets.net/eddn/journal/1";
     private message: any;
     private timestamp: string;
     private event: string;
@@ -129,7 +129,7 @@ export class Journal {
 
                                     presenceObject.system_name = this.starSystem;
                                     presenceObject.system_name_lower = this.starSystem.toLowerCase();
-                                    presenceObject.influece = readFaction.faction_influence;
+                                    presenceObject.influence = readFaction.faction_influence;
                                     presenceObject.state = readFaction.faction_state;
                                     if (this.misc.SystemFaction === faction.faction_name) {
                                         presenceObject.isControlling = true;

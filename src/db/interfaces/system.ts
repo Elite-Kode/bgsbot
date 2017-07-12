@@ -24,7 +24,6 @@ export interface ISystem {
     system_economy: string,
     system_government: string,
     system_security: string,
-    created_at: Date,
     factions: [{
         faction_name: string,
         faction_name_lower: string,
