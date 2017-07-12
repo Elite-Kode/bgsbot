@@ -17,7 +17,7 @@
 import * as discord from 'discord.js';
 import { DiscordSecrets } from '../../secrets';
 import { Responses } from './responseDict';
-import { Hi, Help, MyGuild, BGSRole, AdminRoles, ForbiddenRoles, BGSChannel, MonitorSystems, SystemStatus } from './commands';
+import { Hi, Help, MyGuild, BGSRole, AdminRoles, ForbiddenRoles, BGSChannel, MonitorSystems, MonitorFactions, SystemStatus } from './commands';
 
 export class DiscordClient {
     public client: discord.Client;
@@ -68,6 +68,7 @@ export class DiscordClient {
         this.commandsMap.set("forbiddenroles", ForbiddenRoles);
         this.commandsMap.set("bgschannel", BGSChannel);
         this.commandsMap.set("monitorsystems", MonitorSystems);
+        this.commandsMap.set("monitorfactions", MonitorFactions);
         this.commandsMap.set("systemstatus", SystemStatus);
     }
 }

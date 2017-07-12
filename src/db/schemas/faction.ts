@@ -22,22 +22,22 @@ export let factionSchema: Schema = new Schema({
         unique: true
     },
     faction_name_lower: String,
-    faction_state: String,
     faction_government: String,
-    faction_influence: Number,
-    faction_pending_states: [{
+    faction_prescence: [{
         _id: false,
+        system_name: String,
+        system_name_lower: String,
+        influence: Number,
         state: String,
-        trend: Number
-    }],
-    faction_recovering_states: [{
-        _id: false,
-        state: String,
-        trend: Number
-    }],
-    systems_in_control: [{
-        _id: false,
-        name: String,
-        name_lower: String
+        pending_states: [{
+            _id: false,
+            state: String,
+            trend: Number
+        }],
+        recovering_states: [{
+            _id: false,
+            state: String,
+            trend: Number
+        }],
     }]
 });

@@ -28,5 +28,8 @@ export interface IGuild {
             y: number,
             z: number
         }
+    }],
+    monitor_factions: [{
+        faction_name: string
     }]
 }

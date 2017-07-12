@@ -46,9 +46,9 @@ export class MonitorSystems {
     add(message: discord.Message, argsArray: string[]) {
         Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN])
             .then(() => {
-                if (argsArray.length === 2) {
+                if (argsArray.length >= 2) {
                     let guildId = message.guild.id;
-                    let systemName = argsArray[1];
+                    let systemName = argsArray.slice(1).join(" ");
                     let requestOptions = {
                         url: "http://elitebgs.kodeblox.com/api/eddb/v1/populatedsystems",
                         method: "GET",
@@ -127,8 +127,6 @@ export class MonitorSystems {
                             }
                         }
                     });
-                } else if (argsArray.length > 2) {
-                    message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
                 } else {
                     message.channel.send(Responses.getResponse(Responses.NOPARAMS));
                 }
@@ -141,9 +139,9 @@ export class MonitorSystems {
     remove(message: discord.Message, argsArray: string[]) {
         Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN])
             .then(() => {
-                if (argsArray.length === 2) {
+                if (argsArray.length >= 2) {
                     let guildId = message.guild.id;
-                    let systemName = argsArray[1].toLowerCase();
+                    let systemName = argsArray.slice(1).join(" ").toLowerCase();
 
                     this.db.model.guild.findOneAndUpdate(
                         { guild_id: guildId },
@@ -166,7 +164,7 @@ export class MonitorSystems {
                             console.log(err);
                         })
                 } else {
-                    message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+                    message.channel.send(Responses.getResponse(Responses.NOPARAMS));
                 }
             })
             .catch(() => {

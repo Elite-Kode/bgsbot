@@ -15,7 +15,7 @@
  */
 
 import { Document } from 'mongoose';
-import { IFaction } from '../interfaces/faction';
+import { IFaction } from '../interfaces';
 
-export interface IGuildModel extends Document, IFaction {
+export interface IFactionModel extends Document, IFaction {
 }

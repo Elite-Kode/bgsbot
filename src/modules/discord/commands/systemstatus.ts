@@ -109,8 +109,6 @@ export class SystemStatus {
                             message.channel.send(Responses.getResponse(Responses.FAIL));
                             console.log(err);
                         })
-                } else if (argsArray.length > 2) {
-                    message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
                 } else {
                     message.channel.send(Responses.getResponse(Responses.NOPARAMS));
                 }

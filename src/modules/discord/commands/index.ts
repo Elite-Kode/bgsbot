@@ -22,4 +22,5 @@ export * from './adminRoles';
 export * from './forbiddenRoles';
 export * from './bgsChannel';
 export * from './monitorSystems';
+export * from './monitorFactions';
 export * from './systemstatus';

@@ -15,7 +15,7 @@
  */
 
 import { Document } from 'mongoose';
-import { ISystem } from '../interfaces/system';
+import { ISystem } from '../interfaces';
 
 export interface ISystemModel extends Document, ISystem {
 }

@@ -17,19 +17,19 @@
 export interface IFaction {
     faction_name: string,
     faction_name_lower: string,
-    faction_state: string,
     faction_government: string,
-    faction_influence: number,
-    faction_pending_states: [{
+    faction_prescence: [{
+        system_name: string,
+        system_name_lower: string,
+        influence: number,
         state: string,
-        trend: number
-    }],
-    faction_recovering_states: [{
-        state: string,
-        trend: number
-    }],
-    systems_in_control: [{
-        name: string,
-        name_lower: string
+        pending_states: [{
+            state: string,
+            trend: number
+        }],
+        recovering_states: [{
+            state: string,
+            trend: number
+        }],
     }]
 }

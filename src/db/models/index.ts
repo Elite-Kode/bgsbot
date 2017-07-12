@@ -17,3 +17,4 @@
 export * from './models';
 export * from './guild';
 export * from './system';
+export * from './faction';

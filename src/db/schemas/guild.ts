@@ -37,5 +37,9 @@ export let guildSchema: Schema = new Schema({
             y: Number,
             z: Number
         }
+    }],
+    monitor_factions: [{
+        _id: false,
+        faction_name: String
     }]
 });

@@ -15,7 +15,7 @@
  */
 
 import { Document } from 'mongoose';
-import { IGuild } from '../interfaces/guild';
+import { IGuild } from '../interfaces';
 
 export interface IGuildModel extends Document, IGuild {
 }
