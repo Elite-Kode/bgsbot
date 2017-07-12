@@ -40,10 +40,10 @@ export class DiscordClient {
         });
 
         this.client.on("message", (message) => {
-            if (message.content.startsWith("/")) {
-                let messageString = message.content.replace(/ +/g, ' ').replace(/\n/g, "\\n").trim();
+            if (message.isMemberMentioned(this.client.user)) {
+                let messageString = message.content.replace(this.client.user.toString(), "").replace(/\s+/g, ' ').trim();
                 let messageArray = messageString.split(" ");
-                let command = messageArray[0].toLowerCase().substring(1);
+                let command = messageArray[0].toLowerCase();
                 let commandArguments: string = "";
                 if (messageArray.length > 1) {
                     commandArguments = messageArray.slice(1, messageArray.length).join(" ");
