@@ -18,7 +18,7 @@ import { DB } from '../../../db/index';
 import App from '../../../server';
 
 export class Journal {
-    public static readonly schemaId: string = "http://schemas.elite-markets.net/eddn/journal/1";
+    public static readonly schemaId: string = "http://schemas.elite-markets.net/eddn/journal/1/test";
     private message: any;
     private timestamp: string;
     private event: string;
@@ -79,6 +79,7 @@ export class Journal {
                             factionObject.faction_pending_states.push(recoveringStateObject);
                         });
                     }
+                    factionObject.updated_at = new Date();
                     factionArray.push(factionObject);
                     factionNameArray.push(factionObject.faction_name_lower);
                 });
@@ -138,6 +139,7 @@ export class Journal {
                                     }
                                     presenceObject.pending_states = readFaction.faction_pending_states;
                                     presenceObject.recovering_states = readFaction.faction_recovering_states;
+                                    presenceObject.updated_at = new Date();
                                     faction.faction_presence.push(presenceObject);
                                 }
                                 this.db.model.faction.findOneAndUpdate(

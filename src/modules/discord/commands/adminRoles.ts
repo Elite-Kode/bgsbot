@@ -51,7 +51,10 @@ export class AdminRoles {
 
                 this.db.model.guild.findOneAndUpdate(
                     { guild_id: guildId },
-                    { $addToSet: { admin_roles_id: adminRoleId } })
+                    {
+                        updated_at: new Date(),
+                        $addToSet: { admin_roles_id: adminRoleId }
+                    })
                     .then(guild => {
                         if (guild) {
                             message.channel.send(Responses.getResponse(Responses.SUCCESS));
@@ -88,7 +91,10 @@ export class AdminRoles {
 
                     this.db.model.guild.findOneAndUpdate(
                         { guild_id: guildId },
-                        { $pull: { admin_roles_id: adminRoleId } })
+                        {
+                            updated_at: new Date(),
+                            $pull: { admin_roles_id: adminRoleId }
+                        })
                         .then(guild => {
                             if (guild) {
                                 message.channel.send(Responses.getResponse(Responses.SUCCESS));

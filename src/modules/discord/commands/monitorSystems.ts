@@ -85,7 +85,10 @@ export class MonitorSystems {
                                 }
                                 this.db.model.guild.findOneAndUpdate(
                                     { guild_id: guildId },
-                                    { $addToSet: { monitor_systems: monitorSystems } })
+                                    {
+                                        updated_at: new Date(),
+                                        $addToSet: { monitor_systems: monitorSystems }
+                                    })
                                     .then(guild => {
                                         if (guild) {
                                             this.db.model.system.findOne({ system_name_lower: systemNameLower })
@@ -95,7 +98,8 @@ export class MonitorSystems {
                                                     } else {
                                                         this.db.model.system.create({
                                                             system_name: systemName,
-                                                            system_name_lower: systemNameLower
+                                                            system_name_lower: systemNameLower,
+                                                            updated_at: new Date()
                                                         })
                                                             .then(system => {
                                                                 message.channel.send(Responses.getResponse(Responses.SUCCESS));
@@ -145,7 +149,10 @@ export class MonitorSystems {
 
                     this.db.model.guild.findOneAndUpdate(
                         { guild_id: guildId },
-                        { $pull: { monitor_systems: { system_name: systemName } } })
+                        {
+                            updated_at: new Date(),
+                            $pull: { monitor_systems: { system_name: systemName } }
+                        })
                         .then(guild => {
                             if (guild) {
                                 message.channel.send(Responses.getResponse(Responses.SUCCESS));

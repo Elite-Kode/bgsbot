@@ -51,7 +51,10 @@ export class ForbiddenRoles {
 
                     this.db.model.guild.findOneAndUpdate(
                         { guild_id: guildId },
-                        { $addToSet: { forbidden_roles_id: forbiddenRoleId } })
+                        {
+                            updated_at: new Date(),
+                            $addToSet: { forbidden_roles_id: forbiddenRoleId }
+                        })
                         .then(guild => {
                             if (guild) {
                                 message.channel.send(Responses.getResponse(Responses.SUCCESS));
@@ -89,7 +92,10 @@ export class ForbiddenRoles {
 
                     this.db.model.guild.findOneAndUpdate(
                         { guild_id: guildId },
-                        { $pull: { forbidden_roles_id: forbiddenRoleId } })
+                        {
+                            updated_at: new Date(),
+                            $pull: { forbidden_roles_id: forbiddenRoleId }
+                        })
                         .then(guild => {
                             if (guild) {
                                 message.channel.send(Responses.getResponse(Responses.SUCCESS));

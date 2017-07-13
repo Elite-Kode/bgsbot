@@ -51,7 +51,10 @@ export class BGSChannel {
 
                     this.db.model.guild.findOneAndUpdate(
                         { guild_id: guildId },
-                        { bgs_channel_id: bgsChannelId })
+                        {
+                            updated_at: new Date(),
+                            bgs_channel_id: bgsChannelId
+                        })
                         .then(guild => {
                             if (guild) {
                                 message.channel.send(Responses.getResponse(Responses.SUCCESS));
@@ -88,7 +91,10 @@ export class BGSChannel {
 
                     this.db.model.guild.findOneAndUpdate(
                         { guild_id: guildId },
-                        { $unset: { bgs_channel_id: 1 } })
+                        {
+                            updated_at: new Date(),
+                            $unset: { bgs_channel_id: 1 }
+                        })
                         .then(guild => {
                             if (guild) {
                                 message.channel.send(Responses.getResponse(Responses.SUCCESS));

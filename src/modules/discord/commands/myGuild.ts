@@ -59,7 +59,10 @@ export class MyGuild {
                                     console.log(err);
                                 });
                         } else {
-                            this.db.model.guild.create({ guild_id: guildId })
+                            this.db.model.guild.create({
+                                guild_id: guildId,
+                                updated_at: new Date(),
+                            })
                                 .then(guild => {
                                     message.channel.send(Responses.getResponse(Responses.SUCCESS));
                                 })
