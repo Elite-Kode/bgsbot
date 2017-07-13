@@ -77,6 +77,7 @@ export class MonitorSystems {
                                 let systemNameLower = responseObject[0].name_lower;
                                 let monitorSystems = {
                                     system_name: systemNameLower,
+                                    primary: primary,
                                     system_pos: {
                                         x: responseObject[0].x,
                                         y: responseObject[0].y,
@@ -87,7 +88,6 @@ export class MonitorSystems {
                                     { guild_id: guildId },
                                     {
                                         updated_at: new Date(),
-                                        primary: primary,
                                         $addToSet: { monitor_systems: monitorSystems }
                                     })
                                     .then(guild => {

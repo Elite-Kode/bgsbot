@@ -18,7 +18,7 @@ import { DB } from '../../../db/index';
 import App from '../../../server';
 
 export class Journal {
-    public static readonly schemaId: string = "http://schemas.elite-markets.net/eddn/journal/1/test";
+    public static readonly schemaId: string = "http://schemas.elite-markets.net/eddn/journal/1";
     private message: any;
     private timestamp: string;
     private event: string;

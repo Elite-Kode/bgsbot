@@ -68,7 +68,7 @@ export class BGSReport {
                                         secondarySystems.push(system.system_name);
                                     }
                                 });
-                                this.db.model.faction.find({ faction_name: { $in: primaryFactions } })
+                                this.db.model.faction.find({ faction_name_lower: { $in: primaryFactions } })
                                     .then(factions => {
                                         if (factions) {
                                             let embed = new discord.RichEmbed();
@@ -79,7 +79,7 @@ export class BGSReport {
                                                 embed.addField(faction.faction_name, "------------", false);
                                                 faction.faction_presence.forEach((faction) => {
                                                     let systemReport = "";
-                                                    systemReport += `Current ${factionAcronym} Influence : ${(faction.influence * 100).toFixed(1)}\n`;
+                                                    systemReport += `Current ${factionAcronym} Influence : ${(faction.influence * 100).toFixed(1)}%\n`;
                                                     systemReport += `Current ${factionAcronym} State : ${faction.state}\n`;
                                                     let pendingStates: string = "";
                                                     if (faction.pending_states.length === 0) {
@@ -95,7 +95,7 @@ export class BGSReport {
                                                     }
                                                     systemReport += `Pending ${factionAcronym} States : ${pendingStates}\n`;
                                                     secondaryFactions.forEach(otherFaction => {
-                                                        this.db.model.faction.findOne({ faction_name: otherFaction })
+                                                        this.db.model.faction.findOne({ faction_name_lower: otherFaction })
                                                             .then(otherFaction => {
                                                                 if (otherFaction) {
                                                                     let systems = otherFaction.faction_presence;
@@ -103,9 +103,12 @@ export class BGSReport {
                                                                     if (indexOfSystem !== -1) {
                                                                         let factionAcronym = this.acronym(otherFaction.faction_name);
                                                                         let otherSystem = otherFaction.faction_presence[indexOfSystem];
-                                                                        systemReport += `Current ${factionAcronym} Influence : ${(otherSystem.influence * 100).toFixed(1)} (Currently in ${otherSystem.state})\n`;
+                                                                        systemReport += `Current ${factionAcronym} Influence : ${(otherSystem.influence * 100).toFixed(1)}% (Currently in ${otherSystem.state})\n`;
                                                                     }
                                                                 }
+                                                            })
+                                                            .catch(err => {
+                                                                console.log(err);
                                                             });
                                                     });
                                                     embed.addField(faction.system_name, systemReport);

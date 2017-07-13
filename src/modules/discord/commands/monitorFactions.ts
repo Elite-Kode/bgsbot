@@ -76,13 +76,13 @@ export class MonitorFactions {
                                 let factionName = responseObject[0].name;
                                 let factionNameLower = responseObject[0].name_lower;
                                 let monitorFactions = {
-                                    faction_name: factionNameLower
+                                    faction_name: factionNameLower,
+                                    primary: primary,
                                 }
                                 this.db.model.guild.findOneAndUpdate(
                                     { guild_id: guildId },
                                     {
                                         updated_at: new Date(),
-                                        primary: primary,
                                         $addToSet: { monitor_factions: monitorFactions }
                                     })
                                     .then(guild => {
