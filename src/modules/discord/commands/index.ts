@@ -23,5 +23,6 @@ export * from './forbiddenRoles';
 export * from './bgsChannel';
 export * from './monitorSystems';
 export * from './monitorFactions';
-export * from './systemstatus';
-export * from './factionstatus';
+export * from './systemStatus';
+export * from './factionStatus';
+export * from './bgsReport';

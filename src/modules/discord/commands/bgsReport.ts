@@ -20,7 +20,7 @@ import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
 import { Access } from './../access';
 
-export class SystemStatus {
+export class BGSReport {
     db: DB;
     constructor() {
         this.db = App.db;
@@ -51,15 +51,21 @@ export class SystemStatus {
                         .then(guild => {
                             if (guild) {
                                 let primaryFactions = [];
+                                let secondaryFactions = [];
                                 guild.monitor_factions.forEach(faction => {
                                     if (faction.primary) {
                                         primaryFactions.push(faction.faction_name);
+                                    } else {
+                                        secondaryFactions.push(faction.faction_name);
                                     }
                                 });
                                 let primarySystems = [];
+                                let secondarySystems = []
                                 guild.monitor_systems.forEach(system => {
                                     if (system.primary) {
                                         primarySystems.push(system.system_name);
+                                    } else {
+                                        secondarySystems.push(system.system_name);
                                     }
                                 });
                                 this.db.model.faction.find({ faction_name: { $in: primaryFactions } })
@@ -69,11 +75,12 @@ export class SystemStatus {
                                             embed.setTitle("BGS REPORT");
                                             embed.setColor([255, 100, 255]);
                                             factions.forEach(faction => {
+                                                let factionAcronym = this.acronym(faction.faction_name);
                                                 embed.addField(faction.faction_name, "------------", false);
                                                 faction.faction_presence.forEach((faction) => {
-                                                    let factionDetail = "";
-                                                    factionDetail += `State : ${faction.state}\n`;
-                                                    factionDetail += `Influence : ${(faction.influence * 100).toFixed(1)}%\n`;
+                                                    let systemReport = "";
+                                                    systemReport += `Current ${factionAcronym} Influence : ${(faction.influence * 100).toFixed(1)}\n`;
+                                                    systemReport += `Current ${factionAcronym} State : ${faction.state}\n`;
                                                     let pendingStates: string = "";
                                                     if (faction.pending_states.length === 0) {
                                                         pendingStates = "None";
@@ -86,25 +93,22 @@ export class SystemStatus {
                                                             }
                                                         });
                                                     }
-                                                    factionDetail += `Pending States : ${pendingStates}\n`;
-                                                    let recoveringStates: string = "";
-                                                    if (faction.recovering_states.length === 0) {
-                                                        recoveringStates = "None";
-                                                    } else {
-                                                        faction.recovering_states.forEach((recoveringState, index, factionRecoveringState) => {
-                                                            let trend = this.getTrendIcon(recoveringState.trend);
-                                                            recoveringStates = `${recoveringStates}${recoveringState.state}${trend}`;
-                                                            if (index !== factionRecoveringState.length - 1) {
-                                                                recoveringStates = `${recoveringStates}, `
-                                                            }
-                                                        })
-                                                    }
-                                                    factionDetail += `Recovering States : ${recoveringStates}`;
-                                                    let systemName = faction.system_name;
-                                                    // if (system.system_faction === factionName) {
-                                                    //     factionName += "* CONTROLLING FACTION";
-                                                    // }
-                                                    embed.addField(systemName, factionDetail, false)
+                                                    systemReport += `Pending ${factionAcronym} States : ${pendingStates}\n`;
+                                                    secondaryFactions.forEach(otherFaction => {
+                                                        this.db.model.faction.findOne({ faction_name: otherFaction })
+                                                            .then(otherFaction => {
+                                                                if (otherFaction) {
+                                                                    let systems = otherFaction.faction_presence;
+                                                                    let indexOfSystem = systems.findIndex(x => x.system_name === faction.system_name);
+                                                                    if (indexOfSystem !== -1) {
+                                                                        let factionAcronym = this.acronym(otherFaction.faction_name);
+                                                                        let otherSystem = otherFaction.faction_presence[indexOfSystem];
+                                                                        systemReport += `Current ${factionAcronym} Influence : ${(otherSystem.influence * 100).toFixed(1)} (Currently in ${otherSystem.state})\n`;
+                                                                    }
+                                                                }
+                                                            });
+                                                    });
+                                                    embed.addField(faction.system_name, systemReport);
                                                 });
                                             });
                                             embed.setTimestamp(new Date());
@@ -217,5 +221,11 @@ export class SystemStatus {
         } else {
             return "↔️";
         }
+    }
+
+    private acronym(text) {
+        return text
+            .split(/\s/)
+            .reduce((accumulator, word) => accumulator + word.charAt(0), '');
     }
 }
