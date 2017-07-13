@@ -58,7 +58,6 @@ export class FactionStatus {
                                 embed.addField(faction.faction_name, faction.faction_government, false);
                                 faction.faction_presence.forEach((faction) => {
                                     let factionDetail = "";
-                                    factionDetail += `System : ${faction.system_name}\n`;
                                     factionDetail += `State : ${faction.state}\n`;
                                     factionDetail += `Influence : ${(faction.influence * 100).toFixed(1)}%\n`;
                                     let pendingStates: string = "";
