@@ -43,7 +43,7 @@ export class MonitorFactions {
         }
     }
 
-    add(message: discord.Message, argsArray: string[]) {
+    add(message: discord.Message, argsArray: string[], primary: boolean = false) {
         Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN])
             .then(() => {
                 if (argsArray.length >= 2) {
@@ -82,6 +82,7 @@ export class MonitorFactions {
                                     { guild_id: guildId },
                                     {
                                         updated_at: new Date(),
+                                        primary: primary,
                                         $addToSet: { monitor_factions: monitorFactions }
                                     })
                                     .then(guild => {
@@ -133,6 +134,10 @@ export class MonitorFactions {
             .catch(() => {
                 message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
             })
+    }
+
+    addprimary(message: discord.Message, argsArray: string[]) {
+        this.add(message, argsArray, true);
     }
 
     remove(message: discord.Message, argsArray: string[]) {

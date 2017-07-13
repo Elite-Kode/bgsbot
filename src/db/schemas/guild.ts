@@ -32,6 +32,7 @@ export let guildSchema: Schema = new Schema({
     updated_at: Date,
     monitor_systems: [{
         _id: false,
+        primary: Boolean,
         system_name: String,
         system_pos: {
             x: Number,
@@ -41,6 +42,7 @@ export let guildSchema: Schema = new Schema({
     }],
     monitor_factions: [{
         _id: false,
+        primary: Boolean,
         faction_name: String
     }]
 });
