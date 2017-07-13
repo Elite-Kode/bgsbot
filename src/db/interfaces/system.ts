@@ -17,6 +17,8 @@
 export interface ISystem {
     system_name: string,
     system_name_lower: string,
+    created_at: Date,
+    updated_at: Date,
     system_faction: string,
     system_faction_lower: string,
     faction_state: string,
@@ -27,6 +29,7 @@ export interface ISystem {
     factions: [{
         faction_name: string,
         faction_name_lower: string,
+        updated_at: Date,
         faction_state: string,
         faction_government: string,
         faction_influence: number,

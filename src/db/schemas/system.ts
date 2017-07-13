@@ -22,6 +22,11 @@ export let systemSchema: Schema = new Schema({
         unique: true
     },
     system_name_lower: String,
+    created_at: {
+        type: Date,
+        default: Date.now
+    },
+    updated_at: Date,
     system_faction: String,
     system_faction_lower: String,
     faction_state: String,
@@ -33,6 +38,7 @@ export let systemSchema: Schema = new Schema({
         _id: false,
         faction_name: String,
         faction_name_lower: String,
+        updated_at: Date,
         faction_state: String,
         faction_government: String,
         faction_influence: Number,

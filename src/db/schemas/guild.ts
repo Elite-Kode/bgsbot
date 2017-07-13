@@ -29,6 +29,7 @@ export let guildSchema: Schema = new Schema({
         type: Date,
         default: Date.now
     },
+    updated_at: Date,
     monitor_systems: [{
         _id: false,
         system_name: String,

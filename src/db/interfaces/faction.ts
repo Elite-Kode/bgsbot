@@ -17,10 +17,13 @@
 export interface IFaction {
     faction_name: string,
     faction_name_lower: string,
+    created_at: Date,
+    updated_at: Date,
     faction_government: string,
     faction_presence: [{
         system_name: string,
         system_name_lower: string,
+        updated_at: Date,
         influence: number,
         state: string,
         isControlling: boolean,

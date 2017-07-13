@@ -21,6 +21,7 @@ export interface IGuild {
     admin_roles_id: string[],
     forbidden_roles_id: string[],
     created_at: Date,
+    updated_at: Date,
     monitor_systems: [{
         system_name: string,
         system_pos: {

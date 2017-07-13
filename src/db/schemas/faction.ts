@@ -22,11 +22,17 @@ export let factionSchema: Schema = new Schema({
         unique: true
     },
     faction_name_lower: String,
+    created_at: {
+        type: Date,
+        default: Date.now
+    },
+    updated_at: Date,
     faction_government: String,
     faction_presence: [{
         _id: false,
         system_name: String,
         system_name_lower: String,
+        updated_at: Date,
         influence: Number,
         state: String,
         isControlling: Boolean,
