@@ -77,6 +77,7 @@ export class BGSReport {
                                             factions.forEach(faction => {
                                                 let factionAcronym = this.acronym(faction.faction_name);
                                                 embed.addField(faction.faction_name, "------------", false);
+                                                let factionPromiseArray = [];
                                                 faction.faction_presence.forEach((faction) => {
                                                     let systemReport = "";
                                                     systemReport += `Current ${factionAcronym} Influence : ${(faction.influence * 100).toFixed(1)}%\n`;
@@ -95,23 +96,35 @@ export class BGSReport {
                                                     }
                                                     systemReport += `Pending ${factionAcronym} States : ${pendingStates}\n`;
                                                     secondaryFactions.forEach(otherFaction => {
-                                                        this.db.model.faction.findOne({ faction_name_lower: otherFaction })
-                                                            .then(otherFaction => {
-                                                                if (otherFaction) {
-                                                                    let systems = otherFaction.faction_presence;
-                                                                    let indexOfSystem = systems.findIndex(x => x.system_name === faction.system_name);
-                                                                    if (indexOfSystem !== -1) {
-                                                                        let factionAcronym = this.acronym(otherFaction.faction_name);
-                                                                        let otherSystem = otherFaction.faction_presence[indexOfSystem];
-                                                                        systemReport += `Current ${factionAcronym} Influence : ${(otherSystem.influence * 100).toFixed(1)}% (Currently in ${otherSystem.state})\n`;
-                                                                    }
-                                                                }
+                                                        factionPromiseArray.push(
+                                                            new Promise((resolve, reject) => {
+                                                                this.db.model.faction.findOne({ faction_name_lower: otherFaction })
+                                                                    .then(otherFaction => {
+                                                                        if (otherFaction) {
+                                                                            let systems = otherFaction.faction_presence;
+                                                                            let indexOfSystem = systems.findIndex(x => x.system_name === faction.system_name);
+                                                                            if (indexOfSystem !== -1) {
+                                                                                let factionAcronym = this.acronym(otherFaction.faction_name);
+                                                                                let otherSystem = otherFaction.faction_presence[indexOfSystem];
+                                                                                systemReport += `Current ${factionAcronym} Influence : ${(otherSystem.influence * 100).toFixed(1)}% (Currently in ${otherSystem.state})\n`;
+                                                                            }
+                                                                        }
+                                                                        resolve(systemReport);
+                                                                    })
+                                                                    .catch(err => {
+                                                                        reject(err);
+                                                                    });
                                                             })
-                                                            .catch(err => {
-                                                                console.log(err);
-                                                            });
+                                                        );
                                                     });
-                                                    embed.addField(faction.system_name, systemReport);
+                                                    console.log(factionPromiseArray);
+                                                    Promise.all(factionPromiseArray)
+                                                        .then(systemReport => {
+                                                            embed.addField(faction.system_name, systemReport);
+                                                        })
+                                                        .catch(err => {
+                                                            console.log(err);
+                                                        })
                                                 });
                                             });
                                             embed.setTimestamp(new Date());
