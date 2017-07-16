@@ -87,29 +87,7 @@ export class MonitorFactions {
                                     })
                                     .then(guild => {
                                         if (guild) {
-                                            this.db.model.faction.findOne({ faction_name_lower: factionNameLower })
-                                                .then(faction => {
-                                                    if (faction) {
-                                                        message.channel.send(Responses.getResponse(Responses.SUCCESS));
-                                                    } else {
-                                                        this.db.model.faction.create({
-                                                            faction_name: factionName,
-                                                            faction_name_lower: factionNameLower,
-                                                            updated_at: new Date()
-                                                        })
-                                                            .then(system => {
-                                                                message.channel.send(Responses.getResponse(Responses.SUCCESS));
-                                                            })
-                                                            .catch(err => {
-                                                                message.channel.send(Responses.getResponse(Responses.FAIL));
-                                                                console.log(err);
-                                                            });
-                                                    }
-                                                })
-                                                .catch(err => {
-                                                    message.channel.send(Responses.getResponse(Responses.FAIL));
-                                                    console.log(err);
-                                                })
+                                            message.channel.send(Responses.getResponse(Responses.SUCCESS));
                                         } else {
                                             message.channel.send(Responses.getResponse(Responses.FAIL))
                                                 .then(() => {

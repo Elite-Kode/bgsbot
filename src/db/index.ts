@@ -17,9 +17,9 @@
 import * as mongoose from 'mongoose';
 import { DBSecrets } from '../secrets';
 
-import { guildSchema, systemSchema, factionSchema } from './schemas';
+import { guildSchema } from './schemas';
 
-import { IModel, IGuildModel, ISystemModel, IFactionModel } from './models';
+import { IModel, IGuildModel } from './models';
 
 export class DB {
     private options: mongoose.ConnectionOptions;
@@ -79,8 +79,6 @@ export class DB {
 
     createModels(): void {
         this.model.guild = mongoose.model<IGuildModel>("Guild", guildSchema);
-        this.model.system = mongoose.model<ISystemModel>("System", systemSchema);
-        this.model.faction = mongoose.model<IFactionModel>("Faction", factionSchema);
     }
 }
 

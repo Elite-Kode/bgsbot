@@ -92,29 +92,7 @@ export class MonitorSystems {
                                     })
                                     .then(guild => {
                                         if (guild) {
-                                            this.db.model.system.findOne({ system_name_lower: systemNameLower })
-                                                .then(system => {
-                                                    if (system) {
-                                                        message.channel.send(Responses.getResponse(Responses.SUCCESS));
-                                                    } else {
-                                                        this.db.model.system.create({
-                                                            system_name: systemName,
-                                                            system_name_lower: systemNameLower,
-                                                            updated_at: new Date()
-                                                        })
-                                                            .then(system => {
-                                                                message.channel.send(Responses.getResponse(Responses.SUCCESS));
-                                                            })
-                                                            .catch(err => {
-                                                                message.channel.send(Responses.getResponse(Responses.FAIL));
-                                                                console.log(err);
-                                                            });
-                                                    }
-                                                })
-                                                .catch(err => {
-                                                    message.channel.send(Responses.getResponse(Responses.FAIL));
-                                                    console.log(err);
-                                                })
+                                            message.channel.send(Responses.getResponse(Responses.SUCCESS));
                                         } else {
                                             message.channel.send(Responses.getResponse(Responses.FAIL))
                                                 .then(() => {

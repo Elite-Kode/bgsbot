@@ -15,10 +15,8 @@
  */
 
 import { Model } from 'mongoose';
-import { IGuildModel, ISystemModel, IFactionModel } from './';
+import { IGuildModel } from './';
 
 export interface IModel {
     guild: Model<IGuildModel>;
-    system: Model<ISystemModel>;
-    faction: Model<IFactionModel>;
 }

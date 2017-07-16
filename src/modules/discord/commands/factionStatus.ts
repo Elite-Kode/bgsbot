@@ -15,6 +15,7 @@
  */
 
 import * as discord from 'discord.js';
+import * as request from 'request';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
@@ -48,69 +49,123 @@ export class FactionStatus {
                 if (argsArray.length >= 2) {
                     let factionName: string = argsArray.slice(1).join(" ").toLowerCase();
 
-                    this.db.model.faction.findOne(
-                        { faction_name_lower: factionName })
-                        .then(faction => {
-                            if (faction) {
-                                let embed = new discord.RichEmbed();
-                                embed.setTitle("FACTION STATUS");
-                                embed.setColor([255, 100, 255]);
-                                embed.addField(faction.faction_name, faction.faction_government, false);
-                                faction.faction_presence.forEach((faction) => {
-                                    let factionDetail = "";
-                                    factionDetail += `State : ${faction.state}\n`;
-                                    factionDetail += `Influence : ${(faction.influence * 100).toFixed(1)}%\n`;
-                                    let pendingStates: string = "";
-                                    if (faction.pending_states.length === 0) {
-                                        pendingStates = "None";
-                                    } else {
-                                        faction.pending_states.forEach((pendingState, index, factionPendingStates) => {
-                                            let trend = this.getTrendIcon(pendingState.trend);
-                                            pendingStates = `${pendingStates}${pendingState.state}${trend}`;
-                                            if (index !== factionPendingStates.length - 1) {
-                                                pendingStates = `${pendingStates}, `
-                                            }
-                                        });
-                                    }
-                                    factionDetail += `Pending States : ${pendingStates}\n`;
-                                    let recoveringStates: string = "";
-                                    if (faction.recovering_states.length === 0) {
-                                        recoveringStates = "None";
-                                    } else {
-                                        faction.recovering_states.forEach((recoveringState, index, factionRecoveringState) => {
-                                            let trend = this.getTrendIcon(recoveringState.trend);
-                                            recoveringStates = `${recoveringStates}${recoveringState.state}${trend}`;
-                                            if (index !== factionRecoveringState.length - 1) {
-                                                recoveringStates = `${recoveringStates}, `
-                                            }
-                                        })
-                                    }
-                                    factionDetail += `Recovering States : ${recoveringStates}`;
-                                    let systemName = faction.system_name;
-                                    // if (system.system_faction === factionName) {
-                                    //     factionName += "* CONTROLLING FACTION";
-                                    // }
-                                    embed.addField(systemName, factionDetail, false)
-                                });
-                                embed.setTimestamp(new Date());
-                                message.channel.send({ embed })
-                                    .catch(err => {
-                                        console.log(err);
-                                    });
-                            } else {
+                    let requestOptions = {
+                        url: "http://elitebgs.kodeblox.com/api/ebgs/v1/factions",
+                        method: "GET",
+                        auth: {
+                            'user': 'guest',
+                            'pass': 'secret',
+                            'sendImmediately': true
+                        },
+                        qs: { name: factionName }
+                    }
+
+                    request(requestOptions, (error, response, body) => {
+                        if (!error && response.statusCode == 200) {
+                            let responseData: string = body;
+                            if (responseData.length === 2) {
                                 message.channel.send(Responses.getResponse(Responses.FAIL))
                                     .then(() => {
-                                        message.channel.send("Faction is not monitored");
+                                        message.channel.send("Faction not found");
                                     })
                                     .catch(err => {
                                         console.log(err);
                                     });
+                            } else {
+                                let responseObject: object = JSON.parse(responseData);
+                                let factionName = responseObject[0].name;
+                                let factionNameLower = responseObject[0].name_lower;
+                                let government = responseObject[0].government;
+                                let presence = responseObject[0].faction_presence;
+                                let embed = new discord.RichEmbed();
+                                embed.setTitle("FACTION STATUS");
+                                embed.setColor([255, 0, 255]);
+                                embed.addField(factionName, government, false);
+                                let historyPromises = [];
+                                presence.forEach((system) => {
+                                    let requestOptions = {
+                                        url: "http://elitebgs.kodeblox.com/api/ebgs/v1/factions",
+                                        method: "GET",
+                                        auth: {
+                                            'user': 'guest',
+                                            'pass': 'secret',
+                                            'sendImmediately': true
+                                        },
+                                        qs: {
+                                            name: factionNameLower,
+                                            system: system.system_name_lower
+                                        }
+                                    }
+                                    historyPromises.push(new Promise((resolve, reject) => {
+                                        request(requestOptions, (error, response, body) => {
+                                            if (!error && response.statusCode == 200) {
+                                                let responseData: string = body;
+                                                if (responseData.length === 2) {
+                                                    resolve([system.system_name, "Faction status not found"]);
+                                                } else {
+                                                    let responseObject: object = JSON.parse(responseData);
+                                                    let systemName = responseObject[0].history[0].system;
+                                                    let systemNameLower = responseObject[0].history[0].system_lower;
+                                                    let state = responseObject[0].history[0].state;
+                                                    let influence = responseObject[0].history[0].influence;
+                                                    let pendingStatesArray = responseObject[0].history[0].pending_states;
+                                                    let recoveringStatesArray = responseObject[0].history[0].recovering_states;
+
+                                                    let factionDetail = "";
+                                                    factionDetail += `State : ${state}\n`;
+                                                    factionDetail += `Influence : ${(influence * 100).toFixed(1)}%\n`;
+
+                                                    let pendingStates: string = "";
+                                                    if (pendingStatesArray.length === 0) {
+                                                        pendingStates = "None";
+                                                    } else {
+                                                        pendingStatesArray.forEach((pendingState, index, factionPendingStates) => {
+                                                            let trend = this.getTrendIcon(pendingState.trend);
+                                                            pendingStates = `${pendingStates}${pendingState.state}${trend}`;
+                                                            if (index !== factionPendingStates.length - 1) {
+                                                                pendingStates = `${pendingStates}, `
+                                                            }
+                                                        });
+                                                    }
+                                                    factionDetail += `Pending States : ${pendingStates}\n`;
+                                                    let recoveringStates: string = "";
+                                                    if (recoveringStatesArray.length === 0) {
+                                                        recoveringStates = "None";
+                                                    } else {
+                                                        recoveringStatesArray.forEach((recoveringState, index, factionRecoveringState) => {
+                                                            let trend = this.getTrendIcon(recoveringState.trend);
+                                                            recoveringStates = `${recoveringStates}${recoveringState.state}${trend}`;
+                                                            if (index !== factionRecoveringState.length - 1) {
+                                                                recoveringStates = `${recoveringStates}, `
+                                                            }
+                                                        })
+                                                    }
+                                                    factionDetail += `Recovering States : ${recoveringStates}`;
+                                                    resolve([systemName, factionDetail]);
+                                                }
+                                            }
+                                        })
+                                    }));
+                                })
+
+                                Promise.all(historyPromises)
+                                    .then(fields => {
+                                        fields.forEach(field => {
+                                            embed.addField(field[0], field[1]);
+                                        })
+                                        embed.setTimestamp(new Date());
+                                        message.channel.send({ embed })
+                                            .catch(err => {
+                                                console.log(err);
+                                            });
+                                    })
+                                    .catch(err => {
+                                        message.channel.send(Responses.getResponse(Responses.FAIL));
+                                        console.log(err);
+                                    })
                             }
-                        })
-                        .catch(err => {
-                            message.channel.send(Responses.getResponse(Responses.FAIL));
-                            console.log(err);
-                        })
+                        }
+                    })
                 } else {
                     message.channel.send(Responses.getResponse(Responses.NOPARAMS));
                 }
