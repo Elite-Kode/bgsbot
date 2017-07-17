@@ -197,7 +197,7 @@ export class BGSReport {
                                     factionPromises.push(new Promise((resolve, reject) => {
                                         Promise.all(primaryFactionPromises)
                                             .then(fields => {
-                                                resolve([fields]);
+                                                resolve(fields);
                                             })
                                             .catch(err => {
                                                 reject(err);
@@ -206,21 +206,26 @@ export class BGSReport {
                                     factionPromises.push(new Promise((resolve, reject) => {
                                         Promise.all(secondaryFactionPromises)
                                             .then(fields => {
-                                                resolve([fields]);
+                                                resolve(fields);
                                             })
                                             .catch(err => {
                                                 reject(err);
                                             })
                                     }));
 
-                                    console.log(factionPromises);
-
                                     systemPromises.push(new Promise((resolve, reject) => {
                                         Promise.all(factionPromises)
                                             .then(fields => {
-                                                let primarySystems: string = fields[0];
-                                                let secondarySystems: string = fields[1];
-                                                resolve([system, primarySystems + secondarySystems]);
+                                                let primarySystems: string[] = fields[0];
+                                                let secondarySystems: string[] = fields[1];
+                                                let output = "";
+                                                primarySystems.forEach(primarySystem => {
+                                                    output += primarySystem;
+                                                });
+                                                secondarySystems.forEach(secondarySystem => {
+                                                    output += secondarySystem;
+                                                });
+                                                resolve([system, output]);
                                             })
                                             .catch(err => {
                                                 reject(err);
