@@ -40,7 +40,13 @@ export class DiscordClient {
         });
 
         this.client.on("message", (message) => {
-            if (message.isMemberMentioned(this.client.user)) {
+            if (message.mentions.users.filterArray(user => {
+                if (user.id === this.client.user.id) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }).length > 0) {
                 let messageString = message.content.replace(this.client.user.toString(), "").replace(/\s+/g, ' ').trim();
                 let messageArray = messageString.split(" ");
                 let command = messageArray[0].toLowerCase();
