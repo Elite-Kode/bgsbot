@@ -143,6 +143,8 @@ export class FactionStatus {
                                                     factionDetail += `Recovering States : ${recoveringStates}`;
                                                     resolve([systemName, factionDetail]);
                                                 }
+                                            } else {
+                                                reject(error);
                                             }
                                         })
                                     }));

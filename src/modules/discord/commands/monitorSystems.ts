@@ -76,7 +76,8 @@ export class MonitorSystems {
                                 let systemName = responseObject[0].name;
                                 let systemNameLower = responseObject[0].name_lower;
                                 let monitorSystems = {
-                                    system_name: systemNameLower,
+                                    system_name: systemName,
+                                    system_name_lower: systemNameLower,
                                     primary: primary,
                                     system_pos: {
                                         x: responseObject[0].x,
@@ -134,7 +135,7 @@ export class MonitorSystems {
                         { guild_id: guildId },
                         {
                             updated_at: new Date(),
-                            $pull: { monitor_systems: { system_name: systemName } }
+                            $pull: { monitor_systems: { system_name_lower: systemName } }
                         })
                         .then(guild => {
                             if (guild) {
