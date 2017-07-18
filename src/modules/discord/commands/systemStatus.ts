@@ -150,6 +150,8 @@ export class SystemStatus {
                                                     }
                                                     resolve([factionName, factionDetail]);
                                                 }
+                                            } else {
+                                                reject(error);
                                             }
                                         })
                                     }));
@@ -159,7 +161,7 @@ export class SystemStatus {
                                     .then(fields => {
                                         fields.forEach(field => {
                                             embed.addField(field[0], field[1]);
-                                        })
+                                        });
                                         embed.setTimestamp(new Date());
                                         message.channel.send({ embed })
                                             .catch(err => {

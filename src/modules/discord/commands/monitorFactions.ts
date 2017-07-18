@@ -76,7 +76,8 @@ export class MonitorFactions {
                                 let factionName = responseObject[0].name;
                                 let factionNameLower = responseObject[0].name_lower;
                                 let monitorFactions = {
-                                    faction_name: factionNameLower,
+                                    faction_name: factionName,
+                                    faction_name_lower: factionNameLower,
                                     primary: primary,
                                 }
                                 this.db.model.guild.findOneAndUpdate(
@@ -129,7 +130,7 @@ export class MonitorFactions {
                         { guild_id: guildId },
                         {
                             updated_at: new Date(),
-                            $pull: { monitor_factions: { faction_name: factionName } }
+                            $pull: { monitor_factions: { faction_name_lower: factionName } }
                         })
                         .then(guild => {
                             if (guild) {

@@ -25,3 +25,4 @@ export * from './monitorSystems';
 export * from './monitorFactions';
 export * from './systemStatus';
 export * from './factionStatus';
+export * from './bgsReport';

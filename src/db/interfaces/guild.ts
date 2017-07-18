@@ -25,6 +25,7 @@ export interface IGuild {
     monitor_systems: [{
         primary: boolean,
         system_name: string,
+        system_name_lower: string,
         system_pos: {
             x: number,
             y: number,
@@ -33,6 +34,7 @@ export interface IGuild {
     }],
     monitor_factions: [{
         primary: boolean,
-        faction_name: string
+        faction_name: string,
+        faction_name_lower: string
     }]
 }
