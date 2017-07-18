@@ -162,4 +162,55 @@ export class MonitorSystems {
                 message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
             })
     }
+
+    list(message: discord.Message, argsArray: string[]) {
+        Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN])
+            .then(() => {
+                if (argsArray.length === 1) {
+                    let guildId = message.guild.id;
+
+                    this.db.model.guild.findOne({ guild_id: guildId })
+                        .then(guild => {
+                            if (guild) {
+                                let embed = new discord.RichEmbed();
+                                embed.setTitle("MONITORED SYSTEMS");
+                                embed.setColor([255, 0, 255]);
+                                let systemList = "";
+                                guild.monitor_systems.forEach(system => {
+                                    systemList += `${system.system_name}`;
+                                    if (system.primary) {
+                                        systemList += ` | PRIMARY`;
+                                    }
+                                    systemList += `\n`;
+                                });
+                                embed.addField("Systems", systemList);
+                                embed.setTimestamp(new Date());
+                                message.channel.send({ embed })
+                                    .catch(err => {
+                                        console.log(err);
+                                    });
+                            } else {
+                                message.channel.send(Responses.getResponse(Responses.FAIL))
+                                    .then(() => {
+                                        message.channel.send("Your guild is not set yet");
+                                    })
+                                    .catch(err => {
+                                        console.log(err);
+                                    });
+                            }
+                        })
+                        .catch(err => {
+                            message.channel.send(Responses.getResponse(Responses.FAIL));
+                            console.log(err);
+                        })
+                } else if (argsArray.length > 1) {
+                    message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+                } else {
+                    message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+                }
+            })
+            .catch(() => {
+                message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
+            })
+    }
 }
