@@ -114,11 +114,16 @@ export class SystemStatus {
                                                     let influence = responseObject[0].history[0].influence;
                                                     let pendingStatesArray = responseObject[0].history[0].pending_states;
                                                     let recoveringStatesArray = responseObject[0].history[0].recovering_states;
-
                                                     let factionDetail = "";
+                                                    let updatedAt = new Date(responseObject[0].updated_at);
+                                                    let currentTime = new Date();
+                                                    if (currentTime < updatedAt) {
+                                                        currentTime.setDate(currentTime.getDate() + 1);
+                                                    }
+                                                    let diff = ((currentTime.getTime() - updatedAt.getTime()) / 60000) / 60
                                                     factionDetail += `State : ${state}\n`;
                                                     factionDetail += `Influence : ${(influence * 100).toFixed(1)}%\n`;
-
+                                                    factionDetail += `Last Updated : ${diff.toFixed(1)} hours ago\n`;
                                                     let pendingStates: string = "";
                                                     if (pendingStatesArray.length === 0) {
                                                         pendingStates = "None";
