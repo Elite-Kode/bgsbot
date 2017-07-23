@@ -16,6 +16,7 @@
 
 import * as discord from 'discord.js';
 import * as request from 'request';
+import * as moment from 'moment';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
@@ -110,11 +111,11 @@ export class FactionStatus {
                                                     let influence = responseObject[0].history[0].influence;
                                                     let pendingStatesArray = responseObject[0].history[0].pending_states;
                                                     let recoveringStatesArray = responseObject[0].history[0].recovering_states;
-
+                                                    let updatedAt = moment(responseObject[0].history[0].updated_at);
                                                     let factionDetail = "";
+                                                    factionDetail += `Last Updated : ${updatedAt.fromNow()} \n`;
                                                     factionDetail += `State : ${state}\n`;
                                                     factionDetail += `Influence : ${(influence * 100).toFixed(1)}%\n`;
-
                                                     let pendingStates: string = "";
                                                     if (pendingStatesArray.length === 0) {
                                                         pendingStates = "None";
