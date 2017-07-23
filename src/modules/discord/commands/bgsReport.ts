@@ -16,6 +16,7 @@
 
 import * as discord from 'discord.js';
 import * as request from 'request';
+import * as moment from 'moment';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
@@ -108,14 +109,9 @@ export class BGSReport {
                                                             let state = responseObject[0].history[0].state;
                                                             let influence = responseObject[0].history[0].influence;
                                                             let pendingStatesArray = responseObject[0].history[0].pending_states;
-                                                            let updatedAt = new Date(responseObject[0].updated_at);
-                                                            let currentTime = new Date();
-                                                            if (currentTime < updatedAt) {
-                                                                currentTime.setDate(currentTime.getDate() + 1);
-                                                            }
-                                                            let diff = ((currentTime.getTime() - updatedAt.getTime()) / 60000) / 60
+                                                            let updatedAt = moment(responseObject[0].history[0].updated_at);
                                                             let factionDetail = "";
-                                                            factionDetail += `Last Updated : ${diff.toFixed(1)} hours ago\n`;
+                                                            factionDetail += `Last Updated : ${updatedAt.fromNow()} \n`;
                                                             factionDetail += `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}%\n`;
                                                             factionDetail += `Current ${this.acronym(factionName)} State : ${state}\n`;
 
