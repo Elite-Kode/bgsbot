@@ -21,6 +21,7 @@ import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
 import { Access } from './../access';
+import { EBGSFactionsV3WOHistory } from "../../../interfaces/typings";
 
 export class BGSReport {
     db: DB;
@@ -61,8 +62,8 @@ export class BGSReport {
                                         secondaryFactions.push(faction.faction_name);
                                     }
                                 });
-                                let primarySystems = [];
-                                let secondarySystems = []
+                                let primarySystems: string[] = [];
+                                let secondarySystems: string[] = []
                                 guild.monitor_systems.forEach(system => {
                                     if (system.primary) {
                                         primarySystems.push(system.system_name);
@@ -84,55 +85,53 @@ export class BGSReport {
 
                                     primaryFactions.forEach(faction => {
                                         let requestOptions = {
-                                            url: "http://elitebgs.kodeblox.com/api/ebgs/v1/factions",
+                                            url: "http://elitebgs.kodeblox.com/api/ebgs/v3/factions",
                                             method: "GET",
-                                            auth: {
-                                                'user': 'guest',
-                                                'pass': 'secret',
-                                                'sendImmediately': true
-                                            },
                                             qs: {
                                                 name: faction.toLowerCase(),
-                                                system: system.toLowerCase()
-                                            }
+                                                // system: system.toLowerCase()
+                                            },
+                                            json: true
                                         }
                                         primaryFactionPromises.push(new Promise((resolve, reject) => {
-                                            request(requestOptions, (error, response, body) => {
+                                            request(requestOptions, (error, response, body: EBGSFactionsV3WOHistory) => {
                                                 if (!error && response.statusCode == 200) {
-                                                    let responseData: string = body;
-                                                    if (responseData.length === 2) {
+                                                    if (body.total === 0) {
                                                         resolve(`${this.acronym(faction)} Faction status not found\n`);
                                                     } else {
-                                                        let responseObject: object = JSON.parse(responseData);
-                                                        if (responseObject[0].history.length > 0) {
-                                                            let factionName = responseObject[0].name;
-                                                            let state = responseObject[0].history[0].state;
-                                                            let influence = responseObject[0].history[0].influence;
-                                                            let pendingStatesArray = responseObject[0].history[0].pending_states;
-                                                            let updatedAt = moment(responseObject[0].history[0].updated_at);
-                                                            let factionDetail = "";
-                                                            factionDetail += `Last Updated : ${updatedAt.fromNow()} \n`;
-                                                            factionDetail += `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}%\n`;
-                                                            factionDetail += `Current ${this.acronym(factionName)} State : ${state}\n`;
-
-                                                            let pendingStates: string = "";
-                                                            if (pendingStatesArray.length === 0) {
-                                                                pendingStates = "None";
-                                                            } else {
-                                                                pendingStatesArray.forEach((pendingState, index, factionPendingStates) => {
-                                                                    let trend = this.getTrendIcon(pendingState.trend);
-                                                                    pendingStates = `${pendingStates}${pendingState.state}${trend}`;
-                                                                    if (index !== factionPendingStates.length - 1) {
-                                                                        pendingStates = `${pendingStates}, `
-                                                                    }
-                                                                });
+                                                        let responseData = body.docs[0];
+                                                        let factionName = responseData.name;
+                                                        let state = "";
+                                                        let influence = 0;
+                                                        let pendingStatesArray = [];
+                                                        responseData.faction_presence.forEach(systemElement => {
+                                                            if (systemElement.system_name_lower === system.toLowerCase()) {
+                                                                state = systemElement.state;
+                                                                influence = systemElement.influence;
+                                                                pendingStatesArray = systemElement.pending_states;
                                                             }
+                                                        });
+                                                        let updatedAt = moment(responseData.updated_at);
+                                                        let factionDetail = "";
+                                                        factionDetail += `Last Updated : ${updatedAt.fromNow()} \n`;
+                                                        factionDetail += `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}%\n`;
+                                                        factionDetail += `Current ${this.acronym(factionName)} State : ${state}\n`;
 
-                                                            factionDetail += `Pending ${this.acronym(factionName)} State : ${pendingStates}\n`;
-                                                            resolve(factionDetail);
+                                                        let pendingStates: string = "";
+                                                        if (pendingStatesArray.length === 0) {
+                                                            pendingStates = "None";
                                                         } else {
-                                                            resolve("");
+                                                            pendingStatesArray.forEach((pendingState, index, factionPendingStates) => {
+                                                                let trend = this.getTrendIcon(pendingState.trend);
+                                                                pendingStates = `${pendingStates}${pendingState.state}${trend}`;
+                                                                if (index !== factionPendingStates.length - 1) {
+                                                                    pendingStates = `${pendingStates}, `
+                                                                }
+                                                            });
                                                         }
+
+                                                        factionDetail += `Pending ${this.acronym(factionName)} State : ${pendingStates}\n`;
+                                                        resolve(factionDetail);
                                                     }
                                                 } else {
                                                     reject(error);
@@ -142,50 +141,47 @@ export class BGSReport {
                                     });
                                     secondaryFactions.forEach(faction => {
                                         let requestOptions = {
-                                            url: "http://elitebgs.kodeblox.com/api/ebgs/v1/factions",
+                                            url: "http://elitebgs.kodeblox.com/api/ebgs/v3/factions",
                                             method: "GET",
-                                            auth: {
-                                                'user': 'guest',
-                                                'pass': 'secret',
-                                                'sendImmediately': true
-                                            },
                                             qs: {
                                                 name: faction.toLowerCase(),
-                                                system: system.toLowerCase()
-                                            }
+                                                // system: system.toLowerCase()
+                                            },
+                                            json: true
                                         }
                                         secondaryFactionPromises.push(new Promise((resolve, reject) => {
-                                            request(requestOptions, (error, response, body) => {
+                                            request(requestOptions, (error, response, body: EBGSFactionsV3WOHistory) => {
                                                 if (!error && response.statusCode == 200) {
-                                                    let responseData: string = body;
-                                                    if (responseData.length === 2) {
+                                                    if (body.total === 0) {
                                                         resolve(`${this.acronym(faction)} Faction status not found\n`);
                                                     } else {
-                                                        let responseObject: object = JSON.parse(responseData);
-                                                        if (responseObject[0].history.length > 0) {
-                                                            let factionName = responseObject[0].name;
-                                                            let state = responseObject[0].history[0].state;
-                                                            let influence = responseObject[0].history[0].influence;
-                                                            let pendingStatesArray = responseObject[0].history[0].pending_states;
-
-                                                            let pendingStates: string = "";
-                                                            if (pendingStatesArray.length === 0) {
-                                                                pendingStates = "None";
-                                                            } else {
-                                                                pendingStatesArray.forEach((pendingState, index, factionPendingStates) => {
-                                                                    let trend = this.getTrendIcon(pendingState.trend);
-                                                                    pendingStates = `${pendingStates}${pendingState.state}${trend}`;
-                                                                    if (index !== factionPendingStates.length - 1) {
-                                                                        pendingStates = `${pendingStates}, `
-                                                                    }
-                                                                });
+                                                        let responseData = body.docs[0];
+                                                        let factionName = responseData.name;
+                                                        let state = "";
+                                                        let influence = 0;
+                                                        let pendingStatesArray = [];
+                                                        responseData.faction_presence.forEach(systemElement => {
+                                                            if (systemElement.system_name_lower === system.toLowerCase()) {
+                                                                state = systemElement.state;
+                                                                influence = systemElement.influence;
+                                                                pendingStatesArray = systemElement.pending_states;
                                                             }
-
-                                                            let factionDetail = `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}% (Currently in ${state}. Pending ${pendingStates})\n`;
-                                                            resolve(factionDetail);
+                                                        });
+                                                        let pendingStates: string = "";
+                                                        if (pendingStatesArray.length === 0) {
+                                                            pendingStates = "None";
                                                         } else {
-                                                            resolve("");
+                                                            pendingStatesArray.forEach((pendingState, index, factionPendingStates) => {
+                                                                let trend = this.getTrendIcon(pendingState.trend);
+                                                                pendingStates = `${pendingStates}${pendingState.state}${trend}`;
+                                                                if (index !== factionPendingStates.length - 1) {
+                                                                    pendingStates = `${pendingStates}, `
+                                                                }
+                                                            });
                                                         }
+
+                                                        let factionDetail = `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}% (Currently in ${state}. Pending ${pendingStates})\n`;
+                                                        resolve(factionDetail);
                                                     }
                                                 } else {
                                                     reject(error);
