@@ -20,6 +20,8 @@ import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
 import { Access } from './../access';
+import { PopulatedSystemsV3 } from "../../../interfaces/typings";
+import { OptionsWithUrl } from 'request';
 
 export class MonitorSystems {
     db: DB;
@@ -49,21 +51,16 @@ export class MonitorSystems {
                 if (argsArray.length >= 2) {
                     let guildId = message.guild.id;
                     let systemName = argsArray.slice(1).join(" ");
-                    let requestOptions = {
-                        url: "http://elitebgs.kodeblox.com/api/eddb/v1/populatedsystems",
+                    let requestOptions: OptionsWithUrl = {
+                        url: "http://elitebgs.kodeblox.com/api/eddb/v3/populatedsystems",
                         method: "GET",
-                        auth: {
-                            'user': 'guest',
-                            'pass': 'secret',
-                            'sendImmediately': true
-                        },
-                        qs: { name: systemName }
+                        qs: { name: systemName },
+                        json: true
                     }
 
-                    request(requestOptions, (error, response, body) => {
+                    request(requestOptions, (error, response, body: PopulatedSystemsV3) => {
                         if (!error && response.statusCode == 200) {
-                            let responseData: string = body;
-                            if (responseData.length === 2) {
+                            if (body.total === 0) {
                                 message.channel.send(Responses.getResponse(Responses.FAIL))
                                     .then(() => {
                                         message.channel.send("System not found");
@@ -72,17 +69,17 @@ export class MonitorSystems {
                                         console.log(err);
                                     });
                             } else {
-                                let responseObject: object = JSON.parse(responseData);
-                                let systemName = responseObject[0].name;
-                                let systemNameLower = responseObject[0].name_lower;
+                                let responseSystem = body.docs[0];
+                                let systemName = responseSystem.name;
+                                let systemNameLower = responseSystem.name_lower;
                                 let monitorSystems = {
                                     system_name: systemName,
                                     system_name_lower: systemNameLower,
                                     primary: primary,
                                     system_pos: {
-                                        x: responseObject[0].x,
-                                        y: responseObject[0].y,
-                                        z: responseObject[0].z
+                                        x: responseSystem.x,
+                                        y: responseSystem.y,
+                                        z: responseSystem.z
                                     }
                                 }
                                 this.db.model.guild.findOneAndUpdate(
@@ -108,6 +105,12 @@ export class MonitorSystems {
                                         message.channel.send(Responses.getResponse(Responses.FAIL));
                                         console.log(err);
                                     })
+                            }
+                        } else {
+                            if (error) {
+                                console.log(error);
+                            } else {
+                                console.log(response.statusMessage);
                             }
                         }
                     });

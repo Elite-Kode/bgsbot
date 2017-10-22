@@ -21,6 +21,8 @@ import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
 import { Access } from './../access';
+import { EBGSFactionsV3WOHistory, EBGSSystemsV3WOHistory } from "../../../interfaces/typings";
+import { OptionsWithUrl } from 'request';
 
 export class SystemStatus {
     db: DB;
@@ -50,21 +52,16 @@ export class SystemStatus {
                 if (argsArray.length >= 2) {
                     let systemName: string = argsArray.slice(1).join(" ").toLowerCase();
 
-                    let requestOptions = {
-                        url: "http://elitebgs.kodeblox.com/api/ebgs/v1/systems",
+                    let requestOptions: OptionsWithUrl = {
+                        url: "http://elitebgs.kodeblox.com/api/ebgs/v3/systems",
                         method: "GET",
-                        auth: {
-                            'user': 'guest',
-                            'pass': 'secret',
-                            'sendImmediately': true
-                        },
-                        qs: { name: systemName }
+                        qs: { name: systemName },
+                        json: true
                     }
 
-                    request(requestOptions, (error, response, body) => {
+                    request(requestOptions, (error, response, body: EBGSSystemsV3WOHistory) => {
                         if (!error && response.statusCode == 200) {
-                            let responseData: string = body;
-                            if (responseData.length === 2) {
+                            if (body.total === 0) {
                                 message.channel.send(Responses.getResponse(Responses.FAIL))
                                     .then(() => {
                                         message.channel.send("System not found");
@@ -73,12 +70,11 @@ export class SystemStatus {
                                         console.log(err);
                                     });
                             } else {
-                                let responseObject: object = JSON.parse(responseData);
-                                let systemName = responseObject[0].name;
-                                let systemNameLower = responseObject[0].name_lower;
-                                let systemState = responseObject[0].state;
-                                let controlling = responseObject[0].controlling_minor_faction;
-                                let minorFactions = responseObject[0].minor_faction_presences;
+                                let responseSystem = body.docs[0];
+                                let systemName = responseSystem.name;
+                                let systemState = responseSystem.state;
+                                let controlling = responseSystem.controlling_minor_faction;
+                                let minorFactions = responseSystem.factions;
                                 let embed = new discord.RichEmbed();
                                 embed.setTitle("SYSTEM STATUS");
                                 embed.setColor([255, 0, 255]);
@@ -86,36 +82,37 @@ export class SystemStatus {
                                     systemState = "None";
                                 }
                                 embed.addField(systemName, systemState, false);
-                                let factionPromises = [];
+                                let factionPromises: Promise<[string, string]>[] = [];
                                 minorFactions.forEach((faction) => {
-                                    let requestOptions = {
-                                        url: "http://elitebgs.kodeblox.com/api/ebgs/v1/factions",
+                                    let requestOptions: OptionsWithUrl = {
+                                        url: "http://elitebgs.kodeblox.com/api/ebgs/v3/factions",
                                         method: "GET",
-                                        auth: {
-                                            'user': 'guest',
-                                            'pass': 'secret',
-                                            'sendImmediately': true
-                                        },
-                                        qs: {
-                                            name: faction.name_lower,
-                                            system: systemNameLower
-                                        }
+                                        qs: { name: faction.name_lower },
+                                        json: true
                                     }
                                     factionPromises.push(new Promise((resolve, reject) => {
-                                        request(requestOptions, (error, response, body) => {
+                                        request(requestOptions, (error, response, body: EBGSFactionsV3WOHistory) => {
                                             if (!error && response.statusCode == 200) {
-                                                let responseData: string = body;
-                                                if (responseData.length === 2) {
-                                                    resolve([faction.name, "Faction status not found"]);
+                                                if (body.total === 0) {
+                                                    message.channel.send(Responses.getResponse(Responses.FAIL))
+                                                        .then(() => {
+                                                            resolve([faction.name, "Faction status not found"]);
+                                                        })
+                                                        .catch(err => {
+                                                            console.log(err);
+                                                        });
                                                 } else {
-                                                    let responseObject: object = JSON.parse(responseData);
-                                                    let factionName = responseObject[0].name;
-                                                    let factionNameLower = responseObject[0].name_lower;
-                                                    let state = responseObject[0].history[0].state;
-                                                    let influence = responseObject[0].history[0].influence;
-                                                    let pendingStatesArray = responseObject[0].history[0].pending_states;
-                                                    let recoveringStatesArray = responseObject[0].history[0].recovering_states;
-                                                    let updatedAt = moment(responseObject[0].history[0].updated_at);
+                                                    let responseFaction = body.docs[0];
+                                                    let factionName = responseFaction.name;
+                                                    let factionNameLower = responseFaction.name_lower;
+                                                    let systemIndex = responseFaction.faction_presence.findIndex(element => {
+                                                        return element.system_name_lower === systemName.toLowerCase();
+                                                    });
+                                                    let state = responseFaction.faction_presence[systemIndex].state;
+                                                    let influence = responseFaction.faction_presence[systemIndex].influence;
+                                                    let pendingStatesArray = responseFaction.faction_presence[systemIndex].pending_states;
+                                                    let recoveringStatesArray = responseFaction.faction_presence[systemIndex].recovering_states;
+                                                    let updatedAt = moment(responseFaction.updated_at);
                                                     let factionDetail = "";
                                                     factionDetail += `Last Updated : ${updatedAt.fromNow()} \n`;
                                                     factionDetail += `State : ${state}\n`;
@@ -152,15 +149,18 @@ export class SystemStatus {
                                                     resolve([factionName, factionDetail]);
                                                 }
                                             } else {
-                                                reject(error);
+                                                if (error) {
+                                                    reject(error);
+                                                } else {
+                                                    reject(response.statusMessage);
+                                                }
                                             }
-                                        })
+                                        });
                                     }));
-                                })
-
+                                });
                                 Promise.all(factionPromises)
-                                    .then(fields => {
-                                        fields.forEach(field => {
+                                    .then(factions => {
+                                        factions.forEach(field => {
                                             embed.addField(field[0], field[1]);
                                         });
                                         embed.setTimestamp(new Date());
@@ -174,16 +174,18 @@ export class SystemStatus {
                                         console.log(err);
                                     })
                             }
+                        } else {
+                            if (error) {
+                                console.log(error);
+                            } else {
+                                console.log(response.statusMessage);
+                            }
                         }
                     })
-                } else {
-                    message.channel.send(Responses.getResponse(Responses.NOPARAMS));
                 }
             })
-            .catch(() => {
-                message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
-            })
     }
+
     private getTrendIcon(trend: number): string {
         if (trend > 0) {
             return "⬆️";
