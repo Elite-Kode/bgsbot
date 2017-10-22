@@ -20,6 +20,8 @@ import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
 import { Access } from './../access';
+import { FactionsV3 } from "../../../interfaces/typings";
+import { OptionsWithUrl } from 'request';
 
 export class MonitorFactions {
     db: DB;
@@ -49,21 +51,16 @@ export class MonitorFactions {
                 if (argsArray.length >= 2) {
                     let guildId = message.guild.id;
                     let factionName = argsArray.slice(1).join(" ");
-                    let requestOptions = {
-                        url: "http://elitebgs.kodeblox.com/api/eddb/v1/factions",
+                    let requestOptions: OptionsWithUrl = {
+                        url: "http://elitebgs.kodeblox.com/api/eddb/v3/factions",
                         method: "GET",
-                        auth: {
-                            'user': 'guest',
-                            'pass': 'secret',
-                            'sendImmediately': true
-                        },
-                        qs: { name: factionName }
+                        qs: { name: factionName },
+                        json: true
                     }
 
-                    request(requestOptions, (error, response, body) => {
+                    request(requestOptions, (error, response, body: FactionsV3) => {
                         if (!error && response.statusCode == 200) {
-                            let responseData: string = body;
-                            if (responseData.length === 2) {
+                            if (body.total === 0) {
                                 message.channel.send(Responses.getResponse(Responses.FAIL))
                                     .then(() => {
                                         message.channel.send("Faction not found");
@@ -72,9 +69,9 @@ export class MonitorFactions {
                                         console.log(err);
                                     });
                             } else {
-                                let responseObject: object = JSON.parse(responseData);
-                                let factionName = responseObject[0].name;
-                                let factionNameLower = responseObject[0].name_lower;
+                                let responseFaction = body.docs[0];
+                                let factionName = responseFaction.name;
+                                let factionNameLower = responseFaction.name_lower;
                                 let monitorFactions = {
                                     faction_name: factionName,
                                     faction_name_lower: factionNameLower,
@@ -103,6 +100,12 @@ export class MonitorFactions {
                                         message.channel.send(Responses.getResponse(Responses.FAIL));
                                         console.log(err);
                                     })
+                            }
+                        } else {
+                            if (error) {
+                                console.log(error);
+                            } else {
+                                console.log(response.statusMessage);
                             }
                         }
                     });

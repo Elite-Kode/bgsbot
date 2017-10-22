@@ -21,6 +21,8 @@ import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
 import { Access } from './../access';
+import { EBGSFactionsV3WOHistory } from "../../../interfaces/typings";
+import { OptionsWithUrl } from 'request';
 
 export class FactionStatus {
     db: DB;
@@ -50,21 +52,16 @@ export class FactionStatus {
                 if (argsArray.length >= 2) {
                     let factionName: string = argsArray.slice(1).join(" ").toLowerCase();
 
-                    let requestOptions = {
-                        url: "http://elitebgs.kodeblox.com/api/ebgs/v1/factions",
+                    let requestOptions: OptionsWithUrl = {
+                        url: "http://elitebgs.kodeblox.com/api/ebgs/v3/factions",
                         method: "GET",
-                        auth: {
-                            'user': 'guest',
-                            'pass': 'secret',
-                            'sendImmediately': true
-                        },
-                        qs: { name: factionName }
+                        qs: { name: factionName },
+                        json: true
                     }
 
-                    request(requestOptions, (error, response, body) => {
+                    request(requestOptions, (error, response, body: EBGSFactionsV3WOHistory) => {
                         if (!error && response.statusCode == 200) {
-                            let responseData: string = body;
-                            if (responseData.length === 2) {
+                            if (body.total === 0) {
                                 message.channel.send(Responses.getResponse(Responses.FAIL))
                                     .then(() => {
                                         message.channel.send("Faction not found");
@@ -73,109 +70,69 @@ export class FactionStatus {
                                         console.log(err);
                                     });
                             } else {
-                                let responseObject: object = JSON.parse(responseData);
-                                let factionName = responseObject[0].name;
-                                let factionNameLower = responseObject[0].name_lower;
-                                let government = responseObject[0].government;
-                                let presence = responseObject[0].faction_presence;
+                                let responseFaction = body.docs[0];
+                                let factionName = responseFaction.name;
+                                let government = responseFaction.government;
+                                let presence = responseFaction.faction_presence;
                                 let embed = new discord.RichEmbed();
                                 embed.setTitle("FACTION STATUS");
                                 embed.setColor([255, 0, 255]);
                                 embed.addField(factionName, government, false);
-                                let historyPromises = [];
-                                presence.forEach((system) => {
-                                    let requestOptions = {
-                                        url: "http://elitebgs.kodeblox.com/api/ebgs/v1/factions",
-                                        method: "GET",
-                                        auth: {
-                                            'user': 'guest',
-                                            'pass': 'secret',
-                                            'sendImmediately': true
-                                        },
-                                        qs: {
-                                            name: factionNameLower,
-                                            system: system.system_name_lower
-                                        }
+                                presence.forEach(system => {
+                                    let systemName = system.system_name;
+                                    let state = system.state;
+                                    let influence = system.influence;
+                                    let pendingStatesArray = system.pending_states;
+                                    let recoveringStatesArray = system.recovering_states;
+                                    let updatedAt = moment(responseFaction.updated_at);
+                                    let factionDetail = "";
+                                    factionDetail += `Last Updated : ${updatedAt.fromNow()} \n`;
+                                    factionDetail += `State : ${state}\n`;
+                                    factionDetail += `Influence : ${(influence * 100).toFixed(1)}%\n`;
+                                    let pendingStates: string = "";
+                                    if (pendingStatesArray.length === 0) {
+                                        pendingStates = "None";
+                                    } else {
+                                        pendingStatesArray.forEach((pendingState, index, factionPendingStates) => {
+                                            let trend = this.getTrendIcon(pendingState.trend);
+                                            pendingStates = `${pendingStates}${pendingState.state}${trend}`;
+                                            if (index !== factionPendingStates.length - 1) {
+                                                pendingStates = `${pendingStates}, `
+                                            }
+                                        });
                                     }
-                                    historyPromises.push(new Promise((resolve, reject) => {
-                                        request(requestOptions, (error, response, body) => {
-                                            if (!error && response.statusCode == 200) {
-                                                let responseData: string = body;
-                                                if (responseData.length === 2) {
-                                                    resolve([system.system_name, "Faction status not found"]);
-                                                } else {
-                                                    let responseObject: object = JSON.parse(responseData);
-                                                    let systemName = responseObject[0].history[0].system;
-                                                    let systemNameLower = responseObject[0].history[0].system_lower;
-                                                    let state = responseObject[0].history[0].state;
-                                                    let influence = responseObject[0].history[0].influence;
-                                                    let pendingStatesArray = responseObject[0].history[0].pending_states;
-                                                    let recoveringStatesArray = responseObject[0].history[0].recovering_states;
-                                                    let updatedAt = moment(responseObject[0].history[0].updated_at);
-                                                    let factionDetail = "";
-                                                    factionDetail += `Last Updated : ${updatedAt.fromNow()} \n`;
-                                                    factionDetail += `State : ${state}\n`;
-                                                    factionDetail += `Influence : ${(influence * 100).toFixed(1)}%\n`;
-                                                    let pendingStates: string = "";
-                                                    if (pendingStatesArray.length === 0) {
-                                                        pendingStates = "None";
-                                                    } else {
-                                                        pendingStatesArray.forEach((pendingState, index, factionPendingStates) => {
-                                                            let trend = this.getTrendIcon(pendingState.trend);
-                                                            pendingStates = `${pendingStates}${pendingState.state}${trend}`;
-                                                            if (index !== factionPendingStates.length - 1) {
-                                                                pendingStates = `${pendingStates}, `
-                                                            }
-                                                        });
-                                                    }
-                                                    factionDetail += `Pending States : ${pendingStates}\n`;
-                                                    let recoveringStates: string = "";
-                                                    if (recoveringStatesArray.length === 0) {
-                                                        recoveringStates = "None";
-                                                    } else {
-                                                        recoveringStatesArray.forEach((recoveringState, index, factionRecoveringState) => {
-                                                            let trend = this.getTrendIcon(recoveringState.trend);
-                                                            recoveringStates = `${recoveringStates}${recoveringState.state}${trend}`;
-                                                            if (index !== factionRecoveringState.length - 1) {
-                                                                recoveringStates = `${recoveringStates}, `
-                                                            }
-                                                        })
-                                                    }
-                                                    factionDetail += `Recovering States : ${recoveringStates}`;
-                                                    resolve([systemName, factionDetail]);
-                                                }
-                                            } else {
-                                                reject(error);
+                                    factionDetail += `Pending States : ${pendingStates}\n`;
+                                    let recoveringStates: string = "";
+                                    if (recoveringStatesArray.length === 0) {
+                                        recoveringStates = "None";
+                                    } else {
+                                        recoveringStatesArray.forEach((recoveringState, index, factionRecoveringState) => {
+                                            let trend = this.getTrendIcon(recoveringState.trend);
+                                            recoveringStates = `${recoveringStates}${recoveringState.state}${trend}`;
+                                            if (index !== factionRecoveringState.length - 1) {
+                                                recoveringStates = `${recoveringStates}, `
                                             }
                                         })
-                                    }));
-                                })
-
-                                Promise.all(historyPromises)
-                                    .then(fields => {
-                                        fields.forEach(field => {
-                                            embed.addField(field[0], field[1]);
-                                        })
-                                        embed.setTimestamp(new Date());
-                                        message.channel.send({ embed })
-                                            .catch(err => {
-                                                console.log(err);
-                                            });
-                                    })
+                                    }
+                                    factionDetail += `Recovering States : ${recoveringStates}`;
+                                    embed.addField(systemName, factionDetail);
+                                });
+                                embed.setTimestamp(new Date());
+                                message.channel.send({ embed })
                                     .catch(err => {
-                                        message.channel.send(Responses.getResponse(Responses.FAIL));
                                         console.log(err);
-                                    })
+                                    });
+                            }
+                        } else {
+                            if (error) {
+                                console.log(error);
+                            } else {
+                                console.log(response.statusMessage);
                             }
                         }
-                    })
-                } else {
-                    message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+                    });
                 }
-            })
-            .catch(() => {
-                message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
-            })
+            });
     }
 
     private getTrendIcon(trend: number): string {
