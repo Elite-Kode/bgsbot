@@ -36,14 +36,13 @@ export class Responses {
         "No need to hurry. Give me the details one by one"
     ];
     public static readonly NOTACOMMAND = [
-        "Um...Were you try to give me a command? If so you may be using the wrong one"
-    ];
-    public static readonly BOTMENTIONED = [
-        "Someone called me!!",
-        "I'm here :raised_hand:"
+        "Um...were you trying to give me a command? If so you may be using the wrong one"
     ];
     public static readonly INSUFFICIENTPERMS = [
         "You don't have the permissions to make me do that"
+    ];
+    public static readonly IDNOTFOUND = [
+        "The ID you entered does not exist"
     ]
 
     public static getResponse(action: string[]): string {

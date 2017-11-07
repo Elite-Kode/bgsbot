@@ -49,29 +49,33 @@ export class BGSChannel {
                     let guildId = message.guild.id;
                     let bgsChannelId = argsArray[1];
 
-                    this.db.model.guild.findOneAndUpdate(
-                        { guild_id: guildId },
-                        {
-                            updated_at: new Date(),
-                            bgs_channel_id: bgsChannelId
-                        })
-                        .then(guild => {
-                            if (guild) {
-                                message.channel.send(Responses.getResponse(Responses.SUCCESS));
-                            } else {
-                                message.channel.send(Responses.getResponse(Responses.FAIL))
-                                    .then(() => {
-                                        message.channel.send("Your guild is not set yet");
-                                    })
-                                    .catch(err => {
-                                        console.log(err);
-                                    });
-                            }
-                        })
-                        .catch(err => {
-                            message.channel.send(Responses.getResponse(Responses.FAIL));
-                            console.log(err);
-                        })
+                    if (message.guild.channels.has(bgsChannelId)) {
+                        this.db.model.guild.findOneAndUpdate(
+                            { guild_id: guildId },
+                            {
+                                updated_at: new Date(),
+                                bgs_channel_id: bgsChannelId
+                            })
+                            .then(guild => {
+                                if (guild) {
+                                    message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                                } else {
+                                    message.channel.send(Responses.getResponse(Responses.FAIL))
+                                        .then(() => {
+                                            message.channel.send("Your guild is not set yet");
+                                        })
+                                        .catch(err => {
+                                            console.log(err);
+                                        });
+                                }
+                            })
+                            .catch(err => {
+                                message.channel.send(Responses.getResponse(Responses.FAIL));
+                                console.log(err);
+                            })
+                    } else {
+                        message.channel.send(Responses.getResponse(Responses.IDNOTFOUND));
+                    }
                 } else if (argsArray.length > 2) {
                     message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
                 } else {
