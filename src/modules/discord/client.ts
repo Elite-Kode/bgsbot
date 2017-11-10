@@ -47,7 +47,7 @@ export class DiscordClient {
                     return false;
                 }
             }).length > 0) {
-                let messageString = message.content.replace(this.client.user.toString(), "").replace(/\s+/g, ' ').trim();
+                let messageString = message.content.replace(new RegExp(`<@!?${this.client.user.id}>`), "").replace(/\s+/g, ' ').trim();
                 let messageArray = messageString.split(" ");
                 let command = messageArray[0].toLowerCase();
                 let commandArguments: string = "";
