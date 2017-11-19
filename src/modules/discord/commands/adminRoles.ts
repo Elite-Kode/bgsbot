@@ -126,4 +126,61 @@ export class AdminRoles {
                 message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
             })
     }
+
+    list(message: discord.Message, argsArray: string[]) {
+        Access.has(message.member, [Access.ADMIN, Access.FORBIDDEN])
+            .then(() => {
+                if (argsArray.length === 1) {
+                    let guildId = message.guild.id;
+
+                    this.db.model.guild.findOne({ guild_id: guildId })
+                        .then(guild => {
+                            if (guild) {
+                                if (guild.admin_roles_id && guild.admin_roles_id.length !== 0) {
+                                    let embed = new discord.RichEmbed();
+                                    embed.setTitle("Admin Roles");
+                                    embed.setColor([255, 0, 255]);
+                                    let idList = "";
+                                    guild.admin_roles_id.forEach(id => {
+                                        idList += `${id} - @${message.guild.roles.get(id).name}\n`;
+                                    });
+                                    embed.addField("Ids and Names", idList);
+                                    embed.setTimestamp(new Date());
+                                    message.channel.send({ embed })
+                                        .catch(err => {
+                                            console.log(err);
+                                        });
+                                } else {
+                                    message.channel.send(Responses.getResponse(Responses.FAIL))
+                                        .then(() => {
+                                            message.channel.send("You don't have any admin roles set up");
+                                        })
+                                        .catch(err => {
+                                            console.log(err);
+                                        });
+                                }
+                            } else {
+                                message.channel.send(Responses.getResponse(Responses.FAIL))
+                                    .then(() => {
+                                        message.channel.send("Your guild is not set yet");
+                                    })
+                                    .catch(err => {
+                                        console.log(err);
+                                    });
+                            }
+                        })
+                        .catch(err => {
+                            message.channel.send(Responses.getResponse(Responses.FAIL));
+                            console.log(err);
+                        })
+                } else if (argsArray.length > 1) {
+                    message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+                } else {
+                    message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+                }
+            })
+            .catch(() => {
+                message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
+            })
+    }
 }
