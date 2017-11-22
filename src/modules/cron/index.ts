@@ -14,28 +14,4 @@
  * limitations under the License.
  */
 
-export interface IGuild {
-    guild_id: string,
-    bgs_channel_id: string,
-    bgs_role_id: string,
-    bgs_time: string,
-    admin_roles_id: string[],
-    forbidden_roles_id: string[],
-    created_at: Date,
-    updated_at: Date,
-    monitor_systems: [{
-        primary: boolean,
-        system_name: string,
-        system_name_lower: string,
-        system_pos: {
-            x: number,
-            y: number,
-            z: number
-        }
-    }],
-    monitor_factions: [{
-        primary: boolean,
-        faction_name: string,
-        faction_name_lower: string
-    }]
-}
+export * from './autoReport';

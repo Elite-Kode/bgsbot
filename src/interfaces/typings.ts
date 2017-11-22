@@ -1,5 +1,6 @@
 import * as mongoosePaginate from 'mongoose-paginate';
 import { PaginateResult } from 'mongoose';
+import { CronJob } from 'cron';
 
 interface FactionSchema {
     _id: string;
@@ -197,6 +198,12 @@ export interface EBGSSystemV3SchemaWOHistory {
     updated_at: string;
 }
 
+export interface CronJobStoreSchema {
+    cronJob: CronJob;
+    guildid: String;
+    time: String;
+}
+
 
 export type FactionsV3 = PaginateResult<FactionSchema>;
 export type PopulatedSystemsV3 = PaginateResult<PopulatedSystemSchema>;
@@ -204,3 +211,4 @@ export type EBGSFactionsV3 = PaginateResult<EBGSFactionV3Schema>;
 export type EBGSSystemsV3 = PaginateResult<EBGSSystemV3Schema>;
 export type EBGSFactionsV3WOHistory = PaginateResult<EBGSFactionV3SchemaWOHistory>;
 export type EBGSSystemsV3WOHistory = PaginateResult<EBGSSystemV3SchemaWOHistory>;
+export type CronJobStore = CronJobStoreSchema;
