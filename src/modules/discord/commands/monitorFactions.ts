@@ -170,23 +170,33 @@ export class MonitorFactions {
                     this.db.model.guild.findOne({ guild_id: guildId })
                         .then(guild => {
                             if (guild) {
-                                let embed = new discord.RichEmbed();
-                                embed.setTitle("MONITORED FACTIONS");
-                                embed.setColor([255, 0, 255]);
-                                let factionList = "";
-                                guild.monitor_factions.forEach(faction => {
-                                    factionList += `${faction.faction_name}`;
-                                    if (faction.primary) {
-                                        factionList += ` | PRIMARY`;
-                                    }
-                                    factionList += `\n`;
-                                });
-                                embed.addField("Factions", factionList);
-                                embed.setTimestamp(new Date());
-                                message.channel.send({ embed })
-                                    .catch(err => {
-                                        console.log(err);
+                                if (guild.monitor_factions && guild.monitor_factions.length !== 0) {
+                                    let embed = new discord.RichEmbed();
+                                    embed.setTitle("MONITORED FACTIONS");
+                                    embed.setColor([255, 0, 255]);
+                                    let factionList = "";
+                                    guild.monitor_factions.forEach(faction => {
+                                        factionList += `${faction.faction_name}`;
+                                        if (faction.primary) {
+                                            factionList += ` | PRIMARY`;
+                                        }
+                                        factionList += `\n`;
                                     });
+                                    embed.addField("Factions", factionList);
+                                    embed.setTimestamp(new Date());
+                                    message.channel.send({ embed })
+                                        .catch(err => {
+                                            console.log(err);
+                                        });
+                                } else {
+                                    message.channel.send(Responses.getResponse(Responses.FAIL))
+                                        .then(() => {
+                                            message.channel.send("You don't have any monitored faction set up");
+                                        })
+                                        .catch(err => {
+                                            console.log(err);
+                                        });
+                                }
                             } else {
                                 message.channel.send(Responses.getResponse(Responses.FAIL))
                                     .then(() => {

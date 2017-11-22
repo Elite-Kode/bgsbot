@@ -24,6 +24,7 @@ import * as cookieParser from 'cookie-parser';
 import IndexRouter from './routes/index';
 import { DiscordClient } from './modules/discord/client';
 import { DB } from './db';
+import { AutoReport } from './modules/cron/index';
 
 class App {
     public express: express.Application;
@@ -36,6 +37,7 @@ class App {
         this.routes();
         this.discordClient = new DiscordClient();
         this.db = new DB();
+        this.cron();
     }
 
     private middleware(): void {
@@ -47,6 +49,16 @@ class App {
 
     private routes(): void {
         this.express.use('/', IndexRouter);
+    }
+
+    private cron(): void {
+        this.db.model.guild.find()
+            .then(guilds => {
+                AutoReport.initiateJob(guilds, this.discordClient.client)
+            })
+            .catch(err => {
+                console.log(err);
+            });
     }
 }
 

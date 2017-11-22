@@ -175,23 +175,33 @@ export class MonitorSystems {
                     this.db.model.guild.findOne({ guild_id: guildId })
                         .then(guild => {
                             if (guild) {
-                                let embed = new discord.RichEmbed();
-                                embed.setTitle("MONITORED SYSTEMS");
-                                embed.setColor([255, 0, 255]);
-                                let systemList = "";
-                                guild.monitor_systems.forEach(system => {
-                                    systemList += `${system.system_name}`;
-                                    if (system.primary) {
-                                        systemList += ` | PRIMARY`;
-                                    }
-                                    systemList += `\n`;
-                                });
-                                embed.addField("Systems", systemList);
-                                embed.setTimestamp(new Date());
-                                message.channel.send({ embed })
-                                    .catch(err => {
-                                        console.log(err);
+                                if (guild.monitor_systems && guild.monitor_systems.length !== 0) {
+                                    let embed = new discord.RichEmbed();
+                                    embed.setTitle("MONITORED SYSTEMS");
+                                    embed.setColor([255, 0, 255]);
+                                    let systemList = "";
+                                    guild.monitor_systems.forEach(system => {
+                                        systemList += `${system.system_name}`;
+                                        if (system.primary) {
+                                            systemList += ` | PRIMARY`;
+                                        }
+                                        systemList += `\n`;
                                     });
+                                    embed.addField("Systems", systemList);
+                                    embed.setTimestamp(new Date());
+                                    message.channel.send({ embed })
+                                        .catch(err => {
+                                            console.log(err);
+                                        });
+                                } else {
+                                    message.channel.send(Responses.getResponse(Responses.FAIL))
+                                        .then(() => {
+                                            message.channel.send("You don't have any monitored system set up");
+                                        })
+                                        .catch(err => {
+                                            console.log(err);
+                                        });
+                                }
                             } else {
                                 message.channel.send(Responses.getResponse(Responses.FAIL))
                                     .then(() => {

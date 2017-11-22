@@ -23,6 +23,7 @@ export let guildSchema: Schema = new Schema({
     },
     bgs_channel_id: String,
     bgs_role_id: String,
+    bgs_time: String,
     admin_roles_id: [String],
     forbidden_roles_id: [String],
     created_at: {
