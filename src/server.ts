@@ -14,12 +14,8 @@
  * limitations under the License.
  */
 
-import * as path from 'path';
 import * as express from 'express';
 import * as logger from 'morgan';
-import * as favicon from 'serve-favicon';
-import * as bodyParser from 'body-parser';
-import * as cookieParser from 'cookie-parser';
 
 import IndexRouter from './routes/index';
 import { DiscordClient } from './modules/discord/client';
@@ -42,9 +38,6 @@ class App {
 
     private middleware(): void {
         this.express.use(logger('dev'));
-        this.express.use(bodyParser.json());
-        this.express.use(bodyParser.urlencoded({ extended: false }));
-        this.express.use(cookieParser());
     }
 
     private routes(): void {
