@@ -304,7 +304,7 @@ export class BGSReport {
                                                                                 pendingStatesArray = systemElement.pending_states;
                                                                             }
                                                                         });
-                                                                        let updatedAt = moment(factionResponse.updated_at);
+                                                                        let updatedAt = moment(systemResponse.updated_at);
                                                                         let factionDetail = "";
                                                                         factionDetail += `Last Updated : ${updatedAt.fromNow()} \n`;
                                                                         factionDetail += `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}%\n`;
