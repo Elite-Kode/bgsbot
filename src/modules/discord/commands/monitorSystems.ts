@@ -20,7 +20,7 @@ import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
 import { Access } from './../access';
-import { PopulatedSystemsV3 } from "../../../interfaces/typings";
+import { PopulatedSystemsV4 } from "../../../interfaces/typings";
 import { OptionsWithUrl } from 'request';
 
 export class MonitorSystems {
@@ -58,7 +58,7 @@ export class MonitorSystems {
                         json: true
                     }
 
-                    request(requestOptions, (error, response, body: PopulatedSystemsV3) => {
+                    request(requestOptions, (error, response, body: PopulatedSystemsV4) => {
                         if (!error && response.statusCode == 200) {
                             if (body.total === 0) {
                                 message.channel.send(Responses.getResponse(Responses.FAIL))

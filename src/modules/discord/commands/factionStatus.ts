@@ -21,7 +21,7 @@ import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
 import { Access } from './../access';
-import { EBGSFactionsV3WOHistory } from "../../../interfaces/typings";
+import { EBGSFactionsV4WOHistory } from "../../../interfaces/typings";
 import { OptionsWithUrl } from 'request';
 
 export class FactionStatus {
@@ -53,13 +53,13 @@ export class FactionStatus {
                     let factionName: string = argsArray.slice(1).join(" ").toLowerCase();
 
                     let requestOptions: OptionsWithUrl = {
-                        url: "http://elitebgs.kodeblox.com/api/ebgs/v3/factions",
+                        url: "http://elitebgs.kodeblox.com/api/ebgs/v4/factions",
                         method: "GET",
                         qs: { name: factionName },
                         json: true
                     }
 
-                    request(requestOptions, (error, response, body: EBGSFactionsV3WOHistory) => {
+                    request(requestOptions, (error, response, body: EBGSFactionsV4WOHistory) => {
                         if (!error && response.statusCode == 200) {
                             if (body.total === 0) {
                                 message.channel.send(Responses.getResponse(Responses.FAIL))

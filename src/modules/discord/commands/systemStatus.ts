@@ -21,7 +21,7 @@ import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
 import { Access } from './../access';
-import { EBGSFactionsV3WOHistory, EBGSSystemsV3WOHistory } from "../../../interfaces/typings";
+import { EBGSFactionsV4WOHistory, EBGSSystemsV4WOHistory } from "../../../interfaces/typings";
 import { OptionsWithUrl } from 'request';
 
 export class SystemStatus {
@@ -53,13 +53,13 @@ export class SystemStatus {
                     let systemName: string = argsArray.slice(1).join(" ").toLowerCase();
 
                     let requestOptions: OptionsWithUrl = {
-                        url: "http://elitebgs.kodeblox.com/api/ebgs/v3/systems",
+                        url: "http://elitebgs.kodeblox.com/api/ebgs/v4/systems",
                         method: "GET",
                         qs: { name: systemName },
                         json: true
                     }
 
-                    request(requestOptions, (error, response, body: EBGSSystemsV3WOHistory) => {
+                    request(requestOptions, (error, response, body: EBGSSystemsV4WOHistory) => {
                         if (!error && response.statusCode == 200) {
                             if (body.total === 0) {
                                 message.channel.send(Responses.getResponse(Responses.FAIL))
@@ -85,13 +85,13 @@ export class SystemStatus {
                                 let factionPromises: Promise<[string, string]>[] = [];
                                 minorFactions.forEach((faction) => {
                                     let requestOptions: OptionsWithUrl = {
-                                        url: "http://elitebgs.kodeblox.com/api/ebgs/v3/factions",
+                                        url: "http://elitebgs.kodeblox.com/api/ebgs/v4/factions",
                                         method: "GET",
                                         qs: { name: faction.name_lower },
                                         json: true
                                     }
                                     factionPromises.push(new Promise((resolve, reject) => {
-                                        request(requestOptions, (error, response, body: EBGSFactionsV3WOHistory) => {
+                                        request(requestOptions, (error, response, body: EBGSFactionsV4WOHistory) => {
                                             if (!error && response.statusCode == 200) {
                                                 if (body.total === 0) {
                                                     message.channel.send(Responses.getResponse(Responses.FAIL))

@@ -21,7 +21,7 @@ import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
 import { Access } from './../access';
-import { EBGSFactionsV3WOHistory, EBGSSystemsV3WOHistory } from "../../../interfaces/typings";
+import { EBGSFactionsV4WOHistory, EBGSSystemsV4WOHistory } from "../../../interfaces/typings";
 import { OptionsWithUrl } from 'request';
 import { RichEmbed } from 'discord.js';
 import { AutoReport } from '../../cron/autoReport';
@@ -261,12 +261,12 @@ export class BGSReport {
                         primarySystems.forEach(system => {
                             systemPromises.push(new Promise((resolve, reject) => {
                                 let requestOptions: OptionsWithUrl = {
-                                    url: "http://elitebgs.kodeblox.com/api/ebgs/v3/systems",
+                                    url: "http://elitebgs.kodeblox.com/api/ebgs/v4/systems",
                                     method: "GET",
                                     qs: { name: system.toLowerCase() },
                                     json: true
                                 }
-                                request(requestOptions, (error, response, body: EBGSSystemsV3WOHistory) => {
+                                request(requestOptions, (error, response, body: EBGSSystemsV4WOHistory) => {
                                     if (!error && response.statusCode == 200) {
                                         if (body.total === 0) {
                                             resolve([system, `${this.acronym(system)} System not found\n`]);
@@ -278,12 +278,12 @@ export class BGSReport {
                                                 if (primaryFactions.indexOf(faction.name) !== -1) {
                                                     primaryFactionPromises.push(new Promise((resolve, reject) => {
                                                         let requestOptions: OptionsWithUrl = {
-                                                            url: "http://elitebgs.kodeblox.com/api/ebgs/v3/factions",
+                                                            url: "http://elitebgs.kodeblox.com/api/ebgs/v4/factions",
                                                             method: "GET",
                                                             qs: { name: faction.name_lower },
                                                             json: true
                                                         }
-                                                        request(requestOptions, (error, response, body: EBGSFactionsV3WOHistory) => {
+                                                        request(requestOptions, (error, response, body: EBGSFactionsV4WOHistory) => {
                                                             if (!error && response.statusCode == 200) {
                                                                 if (body.total === 0) {
                                                                     resolve(`${this.acronym(faction.name)} Faction not found\n`);
@@ -341,12 +341,12 @@ export class BGSReport {
                                                 } else if (secondaryFactions.indexOf(faction.name) !== -1) {
                                                     secondaryFactionPromises.push(new Promise((resolve, reject) => {
                                                         let requestOptions: OptionsWithUrl = {
-                                                            url: "http://elitebgs.kodeblox.com/api/ebgs/v3/factions",
+                                                            url: "http://elitebgs.kodeblox.com/api/4/factions",
                                                             method: "GET",
                                                             qs: { name: faction.name_lower },
                                                             json: true
                                                         }
-                                                        request(requestOptions, (error, response, body: EBGSFactionsV3WOHistory) => {
+                                                        request(requestOptions, (error, response, body: EBGSFactionsV4WOHistory) => {
                                                             if (!error && response.statusCode == 200) {
                                                                 if (body.total === 0) {
                                                                     resolve(`${this.acronym(faction)} Faction not found\n`);
