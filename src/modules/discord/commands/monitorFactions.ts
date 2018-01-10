@@ -20,7 +20,7 @@ import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
 import { Access } from './../access';
-import { FactionsV3 } from "../../../interfaces/typings";
+import { FactionsV4 } from "../../../interfaces/typings";
 import { OptionsWithUrl } from 'request';
 
 export class MonitorFactions {
@@ -58,7 +58,7 @@ export class MonitorFactions {
                         json: true
                     }
 
-                    request(requestOptions, (error, response, body: FactionsV3) => {
+                    request(requestOptions, (error, response, body: FactionsV4) => {
                         if (!error && response.statusCode == 200) {
                             if (body.total === 0) {
                                 message.channel.send(Responses.getResponse(Responses.FAIL))

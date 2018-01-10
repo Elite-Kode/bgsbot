@@ -60,7 +60,7 @@ interface PopulatedSystemSchema {
     }[];
 }
 
-export interface EBGSFactionV3Schema {
+export interface EBGSFactionV4Schema {
     _id: string;
     __v: number;
     eddb_id: number;
@@ -107,7 +107,7 @@ export interface EBGSFactionV3Schema {
     }[];
 }
 
-export interface EBGSSystemV3Schema {
+export interface EBGSSystemV4Schema {
     _id: string;
     __v: number;
     eddb_id: number;
@@ -146,7 +146,7 @@ export interface EBGSSystemV3Schema {
     }[];
 }
 
-interface EBGSFactionV3SchemaWOHistory {
+interface EBGSFactionV4SchemaWOHistory {
     _id: string;
     __v: number;
     eddb_id: number;
@@ -173,7 +173,7 @@ interface EBGSFactionV3SchemaWOHistory {
     }[];
 }
 
-export interface EBGSSystemV3SchemaWOHistory {
+export interface EBGSSystemV4SchemaWOHistory {
     _id: string;
     __v: number;
     eddb_id: number;
@@ -204,11 +204,18 @@ export interface CronJobStoreSchema {
     time: String;
 }
 
+export interface FieldRecordSchema {
+    fieldTitle: string,
+    fieldDescription: string,
+    influence: number,
+    name: string
+}
 
-export type FactionsV3 = PaginateResult<FactionSchema>;
-export type PopulatedSystemsV3 = PaginateResult<PopulatedSystemSchema>;
-export type EBGSFactionsV3 = PaginateResult<EBGSFactionV3Schema>;
-export type EBGSSystemsV3 = PaginateResult<EBGSSystemV3Schema>;
-export type EBGSFactionsV3WOHistory = PaginateResult<EBGSFactionV3SchemaWOHistory>;
-export type EBGSSystemsV3WOHistory = PaginateResult<EBGSSystemV3SchemaWOHistory>;
+
+export type FactionsV4 = PaginateResult<FactionSchema>;
+export type PopulatedSystemsV4 = PaginateResult<PopulatedSystemSchema>;
+export type EBGSFactionsV4 = PaginateResult<EBGSFactionV4Schema>;
+export type EBGSSystemsV4 = PaginateResult<EBGSSystemV4Schema>;
+export type EBGSFactionsV4WOHistory = PaginateResult<EBGSFactionV4SchemaWOHistory>;
+export type EBGSSystemsV4WOHistory = PaginateResult<EBGSSystemV4SchemaWOHistory>;
 export type CronJobStore = CronJobStoreSchema;

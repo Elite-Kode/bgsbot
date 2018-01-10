@@ -21,7 +21,7 @@ import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
 import { Access } from './../access';
-import { EBGSFactionsV3WOHistory, EBGSSystemsV3WOHistory } from "../../../interfaces/typings";
+import { EBGSFactionsV4WOHistory, EBGSSystemsV4WOHistory, FieldRecordSchema } from "../../../interfaces/typings";
 import { OptionsWithUrl } from 'request';
 
 export class SystemStatus {
@@ -53,13 +53,13 @@ export class SystemStatus {
                     let systemName: string = argsArray.slice(1).join(" ").toLowerCase();
 
                     let requestOptions: OptionsWithUrl = {
-                        url: "http://elitebgs.kodeblox.com/api/ebgs/v3/systems",
+                        url: "http://elitebgs.kodeblox.com/api/ebgs/v4/systems",
                         method: "GET",
                         qs: { name: systemName },
                         json: true
                     }
 
-                    request(requestOptions, (error, response, body: EBGSSystemsV3WOHistory) => {
+                    request(requestOptions, (error, response, body: EBGSSystemsV4WOHistory) => {
                         if (!error && response.statusCode == 200) {
                             if (body.total === 0) {
                                 message.channel.send(Responses.getResponse(Responses.FAIL))
@@ -75,28 +75,24 @@ export class SystemStatus {
                                 let systemState = responseSystem.state;
                                 let controlling = responseSystem.controlling_minor_faction;
                                 let minorFactions = responseSystem.factions;
-                                let embed = new discord.RichEmbed();
-                                embed.setTitle("SYSTEM STATUS");
-                                embed.setColor([255, 0, 255]);
                                 if (systemState === null) {
                                     systemState = "None";
                                 }
-                                embed.addField(systemName, systemState, false);
-                                let factionPromises: Promise<[string, string]>[] = [];
+                                let factionPromises: Promise<[string, string, string, number]>[] = [];
                                 minorFactions.forEach((faction) => {
                                     let requestOptions: OptionsWithUrl = {
-                                        url: "http://elitebgs.kodeblox.com/api/ebgs/v3/factions",
+                                        url: "http://elitebgs.kodeblox.com/api/ebgs/v4/factions",
                                         method: "GET",
                                         qs: { name: faction.name_lower },
                                         json: true
                                     }
                                     factionPromises.push(new Promise((resolve, reject) => {
-                                        request(requestOptions, (error, response, body: EBGSFactionsV3WOHistory) => {
+                                        request(requestOptions, (error, response, body: EBGSFactionsV4WOHistory) => {
                                             if (!error && response.statusCode == 200) {
                                                 if (body.total === 0) {
                                                     message.channel.send(Responses.getResponse(Responses.FAIL))
                                                         .then(() => {
-                                                            resolve([faction.name, "Faction status not found"]);
+                                                            resolve([faction.name, "Faction status not found", faction.name, 0]);
                                                         })
                                                         .catch(err => {
                                                             console.log(err);
@@ -144,9 +140,10 @@ export class SystemStatus {
                                                     }
                                                     factionDetail += `Recovering States : ${recoveringStates}`;
                                                     if (controlling === factionNameLower) {
-                                                        factionName += '* CONTROLLING FACTION';
+                                                        resolve([factionName + '* CONTROLLING FACTION', factionDetail, factionName, influence]);
+                                                    } else {
+                                                        resolve([factionName, factionDetail, factionName, influence]);
                                                     }
-                                                    resolve([factionName, factionDetail]);
                                                 }
                                             } else {
                                                 if (error) {
@@ -160,19 +157,93 @@ export class SystemStatus {
                                 });
                                 Promise.all(factionPromises)
                                     .then(factions => {
+                                        let fieldRecord: FieldRecordSchema[] = [];
                                         factions.forEach(field => {
-                                            embed.addField(field[0], field[1]);
+                                            fieldRecord.push({
+                                                fieldTitle: field[0],
+                                                fieldDescription: field[1],
+                                                influence: field[3],
+                                                name: field[2]
+                                            });
                                         });
-                                        embed.setTimestamp(new Date());
-                                        message.channel.send({ embed })
+                                        this.db.model.guild.findOne({ guild_id: message.guild.id })
+                                            .then(guild => {
+                                                if (guild) {
+                                                    if (guild.sort && guild.sort_order && guild.sort_order !== 0) {
+                                                        fieldRecord.sort((a, b) => {
+                                                            if (guild.sort === 'name') {
+                                                                if (guild.sort_order === -1) {
+                                                                    if (a.name.toLowerCase() < b.name.toLowerCase()) {
+                                                                        return 1;
+                                                                    } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
+                                                                        return -1;
+                                                                    } else {
+                                                                        return 0;
+                                                                    }
+                                                                } else if (guild.sort_order === 1) {
+                                                                    if (a.name.toLowerCase() < b.name.toLowerCase()) {
+                                                                        return -1;
+                                                                    } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
+                                                                        return 1;
+                                                                    } else {
+                                                                        return 0;
+                                                                    }
+                                                                } else {
+                                                                    return 0;
+                                                                }
+                                                            } else if (guild.sort === 'influence') {
+                                                                if (guild.sort_order === -1) {
+                                                                    return b.influence - a.influence;
+                                                                } else if (guild.sort_order === 1) {
+                                                                    return a.influence - b.influence;
+                                                                } else {
+                                                                    return 0;
+                                                                }
+                                                            } else {
+                                                                return 0;
+                                                            }
+                                                        });
+                                                    }
+                                                    // Multipage is not needed for systems due to number of faction restriction but still keeping it
+                                                    (async (message, fieldRecord) => {
+                                                        let numberOfMessages = Math.ceil(fieldRecord.length / 24);
+                                                        for (let index = 0; index < numberOfMessages; index++) {
+                                                            let embed = new discord.RichEmbed();
+                                                            if (index === 0) {
+                                                                embed.setTitle("SYSTEM STATUS");
+                                                            } else {
+                                                                embed.setTitle(`SYSTEM STATUS - continued - Pg ${index + 1}`);
+                                                            }
+                                                            embed.setColor([255, 0, 255]);
+                                                            embed.addField(systemName, systemState, false);
+                                                            embed.setTimestamp(new Date());
+                                                            let limit = 0;
+                                                            if (fieldRecord.length > index * 24 + 24) {
+                                                                limit = index * 24 + 24;
+                                                            } else {
+                                                                limit = fieldRecord.length;
+                                                            }
+                                                            for (let recordIndex = index * 24; recordIndex < limit; recordIndex++) {
+                                                                embed.addField(fieldRecord[recordIndex].fieldTitle, fieldRecord[recordIndex].fieldDescription);
+                                                            }
+                                                            try {
+                                                                await message.channel.send({ embed });
+                                                            } catch (err) {
+                                                                console.log(err);
+                                                            }
+                                                        }
+                                                    })(message, fieldRecord);
+                                                }
+                                            })
                                             .catch(err => {
+                                                message.channel.send(Responses.getResponse(Responses.FAIL));
                                                 console.log(err);
                                             });
                                     })
                                     .catch(err => {
                                         message.channel.send(Responses.getResponse(Responses.FAIL));
                                         console.log(err);
-                                    })
+                                    });
                             }
                         } else {
                             if (error) {
