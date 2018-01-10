@@ -204,6 +204,13 @@ export interface CronJobStoreSchema {
     time: String;
 }
 
+export interface FieldRecordSchema {
+    fieldTitle: string,
+    fieldDescription: string,
+    influence: number,
+    name: string
+}
+
 
 export type FactionsV4 = PaginateResult<FactionSchema>;
 export type PopulatedSystemsV4 = PaginateResult<PopulatedSystemSchema>;

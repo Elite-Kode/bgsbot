@@ -19,6 +19,8 @@ export interface IGuild {
     bgs_channel_id: string,
     bgs_role_id: string,
     bgs_time: string,
+    sort: string,
+    sort_order: number,
     admin_roles_id: string[],
     forbidden_roles_id: string[],
     created_at: Date,

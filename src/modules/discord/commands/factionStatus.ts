@@ -21,7 +21,7 @@ import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
 import { Access } from './../access';
-import { EBGSFactionsV4WOHistory } from "../../../interfaces/typings";
+import { EBGSFactionsV4WOHistory, FieldRecordSchema } from "../../../interfaces/typings";
 import { OptionsWithUrl } from 'request';
 
 export class FactionStatus {
@@ -74,10 +74,7 @@ export class FactionStatus {
                                 let factionName = responseFaction.name;
                                 let government = responseFaction.government;
                                 let presence = responseFaction.faction_presence;
-                                let embed = new discord.RichEmbed();
-                                embed.setTitle("FACTION STATUS");
-                                embed.setColor([255, 0, 255]);
-                                embed.addField(factionName, government, false);
+                                let fieldRecord: FieldRecordSchema[] = [];
                                 presence.forEach(system => {
                                     let systemName = system.system_name;
                                     let state = system.state;
@@ -115,11 +112,83 @@ export class FactionStatus {
                                         })
                                     }
                                     factionDetail += `Recovering States : ${recoveringStates}`;
-                                    embed.addField(systemName, factionDetail);
+                                    fieldRecord.push({
+                                        fieldTitle: systemName,
+                                        fieldDescription: factionDetail,
+                                        influence: influence,
+                                        name: systemName
+                                    });
                                 });
-                                embed.setTimestamp(new Date());
-                                message.channel.send({ embed })
+                                this.db.model.guild.findOne({ guild_id: message.guild.id })
+                                    .then(guild => {
+                                        if (guild) {
+                                            if (guild.sort && guild.sort_order && guild.sort_order !== 0) {
+                                                fieldRecord.sort((a, b) => {
+                                                    if (guild.sort === 'name') {
+                                                        if (guild.sort_order === -1) {
+                                                            if (a.name.toLowerCase() < b.name.toLowerCase()) {
+                                                                return 1;
+                                                            } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
+                                                                return -1;
+                                                            } else {
+                                                                return 0;
+                                                            }
+                                                        } else if (guild.sort_order === 1) {
+                                                            if (a.name.toLowerCase() < b.name.toLowerCase()) {
+                                                                return -1;
+                                                            } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
+                                                                return 1;
+                                                            } else {
+                                                                return 0;
+                                                            }
+                                                        } else {
+                                                            return 0;
+                                                        }
+                                                    } else if (guild.sort === 'influence') {
+                                                        if (guild.sort_order === -1) {
+                                                            return b.influence - a.influence;
+                                                        } else if (guild.sort_order === 1) {
+                                                            return a.influence - b.influence;
+                                                        } else {
+                                                            return 0;
+                                                        }
+                                                    } else {
+                                                        return 0;
+                                                    }
+                                                });
+                                            }
+                                            (async (message, fieldRecord) => {
+                                                let numberOfMessages = Math.ceil(fieldRecord.length / 24);
+                                                for (let index = 0; index < numberOfMessages; index++) {
+                                                    let embed = new discord.RichEmbed();
+                                                    if (index === 0) {
+                                                        embed.setTitle("FACTION STATUS");
+                                                    } else {
+                                                        embed.setTitle(`FACTION STATUS - continued - Pg ${index + 1}`);
+                                                    }
+                                                    embed.setColor([255, 0, 255]);
+                                                    embed.addField(factionName, government, false);
+                                                    embed.setTimestamp(new Date());
+                                                    let limit = 0;
+                                                    if (fieldRecord.length > index * 24 + 24) {
+                                                        limit = index * 24 + 24;
+                                                    } else {
+                                                        limit = fieldRecord.length;
+                                                    }
+                                                    for (let recordIndex = index * 24; recordIndex < limit; recordIndex++) {
+                                                        embed.addField(fieldRecord[recordIndex].fieldTitle, fieldRecord[recordIndex].fieldDescription);
+                                                    }
+                                                    try {
+                                                        await message.channel.send({ embed });
+                                                    } catch (err) {
+                                                        console.log(err);
+                                                    }
+                                                }
+                                            })(message, fieldRecord);
+                                        }
+                                    })
                                     .catch(err => {
+                                        message.channel.send(Responses.getResponse(Responses.FAIL));
                                         console.log(err);
                                     });
                             }
