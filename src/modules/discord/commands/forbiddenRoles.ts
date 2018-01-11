@@ -187,10 +187,14 @@ export class ForbiddenRoles {
 
     help() {
         return [
-            'Test1',
-            'Test2',
-            'Test3',
-            ['Test4']
+            'forbiddenroles',
+            'Adds, removes or lists the roles that should be forbidden from accessing BGSBot',
+            'forbiddenroles <add|remove|list> <role id>',
+            [
+                '`@BGSBot forbiddenroles add 1234564789012345678`',
+                '`@BGSBot forbiddenroles remove 123456789012345678`',
+                '`@BGSBot forbiddenroles list`'
+            ]
         ];
     }
 }

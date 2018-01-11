@@ -25,10 +25,12 @@ export class Hi{
 
     help() {
         return [
-            'Test1',
-            'Test2',
-            'Test3',
-            ['Test4']
+            'hi',
+            'A sanity check to see if the bot is responding',
+            'hi',
+            [
+                '`@BGSBot hi`'
+            ]
         ];
     }
 }

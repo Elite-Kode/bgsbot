@@ -181,10 +181,14 @@ export class BGSChannel {
 
     help() {
         return [
-            'Test1',
-            'Test2',
-            'Test3',
-            ['Test4']
+            'bgschannel',
+            'Sets, removes or shows the channel set up for BGS reporting',
+            'bgschannel <set|remove|show> <channel id>',
+            [
+                '`@BGSBot bgschannel set 1234564789012345678`',
+                '`@BGSBot bgschannel remove`',
+                '`@BGSBot bgschannel show`'
+            ]
         ];
     }
 }

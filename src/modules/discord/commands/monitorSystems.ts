@@ -229,10 +229,15 @@ export class MonitorSystems {
 
     help() {
         return [
-            'Test1',
-            'Test2',
-            'Test3',
-            ['Test4']
+            'monitorsystems',
+            'Adds a system to monitor for displaying in the BGS Report. A system can be optionally added as a primary for more detailed results',
+            'monitorsystems <add|addprimary|remove|list> <system name>',
+            [
+                '`@BGSBot monitorsystems add qa\'wakana`',
+                '`@BGSBot monitorsystems addprimary qa\'wakana`',
+                '`@BGSBot monitorsystems remove qa\'wakana`',
+                '`@BGSBot monitorsystems list`'
+            ]
         ];
     }
 }

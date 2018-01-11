@@ -871,10 +871,15 @@ export class BGSReport {
 
     help() {
         return [
-            'Test1',
-            'Test2',
-            'Test3',
-            ['Test4']
+            'bgsrole',
+            'Gets the BGS Report or sets, unsets, shows the time when the BGS Report will be automatically generated',
+            'bgsreport <get|settime|showtime|unsettime> <time in UTC>',
+            [
+                '`@BGSBot bgsreport get`',
+                '`@BGSBot bgsreport settime 15:25:36`',
+                '`@BGSBot bgsreport showtime`',
+                '`@BGSBot bgsreport unsettime`'
+            ]
         ];
     }
 }

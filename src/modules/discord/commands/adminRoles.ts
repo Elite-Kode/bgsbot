@@ -186,10 +186,14 @@ export class AdminRoles {
 
     help() {
         return [
-            'Test1',
-            'Test2',
-            'Test3',
-            ['Test4']
+            'adminroles',
+            'Adds, removes or lists the roles that should have administorial capability over BGSBot',
+            'adminroles <add|remove|list> <role id>',
+            [
+                '`@BGSBot adminroles add 1234564789012345678`',
+                '`@BGSBot adminroles remove 123456789012345678`',
+                '`@BGSBot adminroles list`'
+            ]
         ];
     }
 }

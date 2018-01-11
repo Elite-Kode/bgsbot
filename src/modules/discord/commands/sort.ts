@@ -209,10 +209,16 @@ export class Sort {
 
     help() {
         return [
-            'Test1',
-            'Test2',
-            'Test3',
-            ['Test4']
+            'sort',
+            'Sets, removes or shows your sorting settings. This helps in sorting your reports in a predefined order. Use disable to temporarily disable sorting',
+            'sort <set|remove|show> <name|influence> <increasing|decreasing|disable>',
+            [
+                '`@BGSBot sort set name increasing`',
+                '`@BGSBot sort set influence decreasing`',
+                '`@BGSBot sort set influence disable`',
+                '`@BGSBot sort remove`',
+                '`@BGSBot sort show`'
+            ]
         ];
     }
 }

@@ -181,10 +181,14 @@ export class BGSRole {
 
     help() {
         return [
-            'Test1',
-            'Test2',
-            'Test3',
-            ['Test4']
+            'bgsrole',
+            'Sets, removes or shows the role set up for using the general commands of BGSBot',
+            'bgsrole <set|remove|show> <role id>',
+            [
+                '`@BGSBot bgsrole set 123456789012345678`',
+                '`@BGSBot bgsrole remove`',
+                '`@BGSBot bgsrole show`'
+            ]
         ];
     }
 }

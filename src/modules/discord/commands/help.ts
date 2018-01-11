@@ -141,7 +141,7 @@ export class Help {
     }
 
     helpDescription(command: HelpSchema, embed: RichEmbed, message: Message) {
-        embed.addField("Command:", `-${command.command}`);
+        embed.addField("Command:", `@BGSBot ${command.command}`);
         embed.addField("Description", command.helpMessage);
         embed.addField("Template", command.template);
         let exampleString = "";
@@ -159,10 +159,12 @@ export class Help {
 
     help() {
         return [
-            'Test1',
-            'Test2',
-            'Test3',
-            ['Test4']
+            'help',
+            'Gets this help document in a DM',
+            'help',
+            [
+                '`@BGSBot help`'
+            ]
         ];
     }
 }

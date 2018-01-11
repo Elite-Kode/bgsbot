@@ -119,10 +119,13 @@ export class MyGuild {
 
     help() {
         return [
-            'Test1',
-            'Test2',
-            'Test3',
-            ['Test4']
+            'myguild',
+            'Sets or removes your guild from BGSBot. Setting your guild is necessary for the bot to function',
+            'myguild <set|remove>',
+            [
+                '`@BGSBot myguild set`',
+                '`@BGSBot myguild remove`'
+            ]
         ];
     }
 }

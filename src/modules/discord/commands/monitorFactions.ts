@@ -224,10 +224,15 @@ export class MonitorFactions {
 
     help() {
         return [
-            'Test1',
-            'Test2',
-            'Test3',
-            ['Test4']
+            'monitorfactions',
+            'Adds a faction to monitor for displaying in the BGS Report. A faction can be optionally added as a primary for more detailed results',
+            'monitorfactions <add|addprimary|remove|list> <faction name>',
+            [
+                '`@BGSBot monitorfactions add knights of karma`',
+                '`@BGSBot monitorfactions addprimary knights of karma`',
+                '`@BGSBot monitorfactions remove knights of karma`',
+                '`@BGSBot monitorfactions list`'
+            ]
         ];
     }
 }

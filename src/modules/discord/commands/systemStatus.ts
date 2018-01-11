@@ -269,10 +269,12 @@ export class SystemStatus {
 
     help() {
         return [
-            'Test1',
-            'Test2',
-            'Test3',
-            ['Test4']
+            'systemStatus',
+            'Gets the details of a system',
+            'systemStatus get <system name>',
+            [
+                '`@BGSBot systemStatus get qa\'wakana`'
+            ]
         ];
     }
 }

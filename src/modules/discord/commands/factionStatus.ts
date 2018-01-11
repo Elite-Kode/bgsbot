@@ -216,10 +216,12 @@ export class FactionStatus {
 
     help() {
         return [
-            'Test1',
-            'Test2',
-            'Test3',
-            ['Test4']
+            'factionStatus',
+            'Gets the details of a faction',
+            'factionStatus get <faction name>',
+            [
+                '`@BGSBot factionStatus get knights of karma`'
+            ]
         ];
     }
 }
