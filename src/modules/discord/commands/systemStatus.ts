@@ -227,7 +227,7 @@ export class SystemStatus {
                                                                 embed.addField(fieldRecord[recordIndex].fieldTitle, fieldRecord[recordIndex].fieldDescription);
                                                             }
                                                             try {
-                                                                await message.channel.send({ embed });
+                                                                await message.channel.send(embed);
                                                             } catch (err) {
                                                                 console.log(err);
                                                             }
@@ -265,5 +265,14 @@ export class SystemStatus {
         } else {
             return "↔️";
         }
+    }
+
+    help() {
+        return [
+            'Test1',
+            'Test2',
+            'Test3',
+            ['Test4']
+        ];
     }
 }

@@ -141,7 +141,7 @@ export class BGSChannel {
                                     let id = `${guild.bgs_channel_id} - @${message.guild.roles.get(guild.bgs_channel_id).name}\n`;
                                     embed.addField("Ids and Names", id);
                                     embed.setTimestamp(new Date());
-                                    message.channel.send({ embed })
+                                    message.channel.send(embed)
                                         .catch(err => {
                                             console.log(err);
                                         });
@@ -177,5 +177,14 @@ export class BGSChannel {
             .catch(() => {
                 message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
             })
+    }
+
+    help() {
+        return [
+            'Test1',
+            'Test2',
+            'Test3',
+            ['Test4']
+        ];
     }
 }

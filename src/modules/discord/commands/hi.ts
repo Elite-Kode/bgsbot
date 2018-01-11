@@ -22,4 +22,13 @@ export class Hi{
             message.channel.send("Hey there!");
         }
     }
+
+    help() {
+        return [
+            'Test1',
+            'Test2',
+            'Test3',
+            ['Test4']
+        ];
+    }
 }

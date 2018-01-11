@@ -158,7 +158,7 @@ export class BGSReport {
                                     embed.setColor([255, 0, 255]);
                                     embed.addField("Ids and Names", `${guild.bgs_time} UTC`);
                                     embed.setTimestamp(new Date());
-                                    message.channel.send({ embed })
+                                    message.channel.send(embed)
                                         .catch(err => {
                                             console.log(err);
                                         });
@@ -843,16 +843,7 @@ export class BGSReport {
                         embed.addField(fieldRecord[recordIndex].fieldTitle, fieldRecord[recordIndex].fieldDescription);
                     }
                     embedArray.push(embed);
-                    // try {
-                    //     await message.channel.send({ embed });
-                    // } catch (err) {
-                    //     console.log(err);
-                    // }
                 }
-                // primarySystemResults.forEach(system => {
-                //     embed.addField(system[0], system[1]);
-                // });
-                // embed.setTimestamp(new Date());
                 return embedArray;
             } else {
                 throw "Your guild is not set yet";
@@ -876,5 +867,14 @@ export class BGSReport {
         return text
             .split(/\s/)
             .reduce((accumulator, word) => accumulator + word.charAt(0), '');
+    }
+
+    help() {
+        return [
+            'Test1',
+            'Test2',
+            'Test3',
+            ['Test4']
+        ];
     }
 }

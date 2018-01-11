@@ -184,7 +184,7 @@ export class MonitorFactions {
                                     });
                                     embed.addField("Factions", factionList);
                                     embed.setTimestamp(new Date());
-                                    message.channel.send({ embed })
+                                    message.channel.send(embed)
                                         .catch(err => {
                                             console.log(err);
                                         });
@@ -220,5 +220,14 @@ export class MonitorFactions {
             .catch(() => {
                 message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
             })
+    }
+
+    help() {
+        return [
+            'Test1',
+            'Test2',
+            'Test3',
+            ['Test4']
+        ];
     }
 }

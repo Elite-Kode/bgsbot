@@ -116,4 +116,13 @@ export class MyGuild {
                 message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
             })
     }
+
+    help() {
+        return [
+            'Test1',
+            'Test2',
+            'Test3',
+            ['Test4']
+        ];
+    }
 }
