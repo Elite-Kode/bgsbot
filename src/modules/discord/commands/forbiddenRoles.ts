@@ -147,7 +147,7 @@ export class ForbiddenRoles {
                                     });
                                     embed.addField("Ids and Names", idList);
                                     embed.setTimestamp(new Date());
-                                    message.channel.send({ embed })
+                                    message.channel.send(embed)
                                         .catch(err => {
                                             console.log(err);
                                         });
@@ -183,5 +183,18 @@ export class ForbiddenRoles {
             .catch(() => {
                 message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
             })
+    }
+
+    help() {
+        return [
+            'forbiddenroles',
+            'Adds, removes or lists the roles that should be forbidden from accessing BGSBot',
+            'forbiddenroles <add|remove|list> <role id>',
+            [
+                '`@BGSBot forbiddenroles add 1234564789012345678`',
+                '`@BGSBot forbiddenroles remove 123456789012345678`',
+                '`@BGSBot forbiddenroles list`'
+            ]
+        ];
     }
 }

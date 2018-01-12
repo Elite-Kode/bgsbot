@@ -146,7 +146,7 @@ export class AdminRoles {
                                     });
                                     embed.addField("Ids and Names", idList);
                                     embed.setTimestamp(new Date());
-                                    message.channel.send({ embed })
+                                    message.channel.send(embed)
                                         .catch(err => {
                                             console.log(err);
                                         });
@@ -182,5 +182,18 @@ export class AdminRoles {
             .catch(() => {
                 message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
             })
+    }
+
+    help() {
+        return [
+            'adminroles',
+            'Adds, removes or lists the roles that should have administorial capability over BGSBot',
+            'adminroles <add|remove|list> <role id>',
+            [
+                '`@BGSBot adminroles add 1234564789012345678`',
+                '`@BGSBot adminroles remove 123456789012345678`',
+                '`@BGSBot adminroles list`'
+            ]
+        ];
     }
 }

@@ -141,7 +141,7 @@ export class BGSRole {
                                     let id = `${guild.bgs_role_id} - @${message.guild.roles.get(guild.bgs_role_id).name}\n`;
                                     embed.addField("Ids and Names", id);
                                     embed.setTimestamp(new Date());
-                                    message.channel.send({ embed })
+                                    message.channel.send(embed)
                                         .catch(err => {
                                             console.log(err);
                                         });
@@ -177,5 +177,18 @@ export class BGSRole {
             .catch(() => {
                 message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
             })
+    }
+
+    help() {
+        return [
+            'bgsrole',
+            'Sets, removes or shows the role set up for using the general commands of BGSBot',
+            'bgsrole <set|remove|show> <role id>',
+            [
+                '`@BGSBot bgsrole set 123456789012345678`',
+                '`@BGSBot bgsrole remove`',
+                '`@BGSBot bgsrole show`'
+            ]
+        ];
     }
 }

@@ -157,7 +157,7 @@ export class Sort {
                             if (guild) {
                                 if (guild.sort && guild.sort.length !== 0 && guild.sort_order) {
                                     let embed = new discord.RichEmbed();
-                                    embed.setTitle("BGS Channel");
+                                    embed.setTitle("Sorting");
                                     embed.setColor([255, 0, 255]);
                                     let sortOrder = 'Disabled';
                                     if (guild.sort_order > 0) {
@@ -169,14 +169,14 @@ export class Sort {
                                     embed.addField("Sort Type: ", guild.sort);
                                     embed.addField("Sort Order: ", sortOrder);
                                     embed.setTimestamp(new Date());
-                                    message.channel.send({ embed })
+                                    message.channel.send(embed)
                                         .catch(err => {
                                             console.log(err);
                                         });
                                 } else {
                                     message.channel.send(Responses.getResponse(Responses.FAIL))
                                         .then(() => {
-                                            message.channel.send("You don't have a bgs channel set up");
+                                            message.channel.send("You don't have sorting set up");
                                         })
                                         .catch(err => {
                                             console.log(err);
@@ -205,5 +205,20 @@ export class Sort {
             .catch(() => {
                 message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
             })
+    }
+
+    help() {
+        return [
+            'sort',
+            'Sets, removes or shows your sorting settings. This helps in sorting your reports in a predefined order. Use disable to temporarily disable sorting',
+            'sort <set|remove|show> <name|influence> <increasing|decreasing|disable>',
+            [
+                '`@BGSBot sort set name increasing`',
+                '`@BGSBot sort set influence decreasing`',
+                '`@BGSBot sort set influence disable`',
+                '`@BGSBot sort remove`',
+                '`@BGSBot sort show`'
+            ]
+        ];
     }
 }

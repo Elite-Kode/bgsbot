@@ -33,8 +33,16 @@ export class AutoReport {
                         if (bgsChannel && bgsChannel.type === 'text') {
                             let bgsReport = new BGSReport();
                             bgsReport.getBGSReportEmbed(guild.guild_id)
-                                .then(embed => {
-                                    (bgsChannel as TextChannel).send(embed);
+                                .then(embedArray => {
+                                    (async (bgsChannel, embedArray) => {
+                                        for (let index = 0; index < embedArray.length; index++) {
+                                            try {
+                                                await (bgsChannel as TextChannel).send(embedArray[index]);
+                                            } catch (err) {
+                                                console.log(err);
+                                            }
+                                        }
+                                    })(bgsChannel, embedArray);
                                 });
                         } else {
                             console.log(`Guild ${guild.guild_id} has not been set up`)
@@ -69,8 +77,16 @@ export class AutoReport {
                         if (bgsChannel && bgsChannel.type === 'text') {
                             let bgsReport = new BGSReport();
                             bgsReport.getBGSReportEmbed(guild.guild_id)
-                                .then(embed => {
-                                    (bgsChannel as TextChannel).send(embed);
+                                .then(embedArray => {
+                                    (async (bgsChannel, embedArray) => {
+                                        for (let index = 0; index < embedArray.length; index++) {
+                                            try {
+                                                await (bgsChannel as TextChannel).send(embedArray[index]);
+                                            } catch (err) {
+                                                console.log(err);
+                                            }
+                                        }
+                                    })(bgsChannel, embedArray);
                                 });
                         } else {
                             console.log(`Guild ${guild.guild_id} has not been set up`)
@@ -108,8 +124,16 @@ export class AutoReport {
                         if (bgsChannel && bgsChannel.type === 'text') {
                             let bgsReport = new BGSReport();
                             bgsReport.getBGSReportEmbed(guild.guild_id)
-                                .then(embed => {
-                                    (bgsChannel as TextChannel).send(embed);
+                                .then(embedArray => {
+                                    (async (bgsChannel, embedArray) => {
+                                        for (let index = 0; index < embedArray.length; index++) {
+                                            try {
+                                                await (bgsChannel as TextChannel).send(embedArray[index]);
+                                            } catch (err) {
+                                                console.log(err);
+                                            }
+                                        }
+                                    })(bgsChannel, embedArray);
                                 });
                         } else {
                             console.log(`Guild ${guild.guild_id} has not been set up`)

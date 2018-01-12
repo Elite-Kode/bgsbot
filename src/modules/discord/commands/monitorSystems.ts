@@ -189,7 +189,7 @@ export class MonitorSystems {
                                     });
                                     embed.addField("Systems", systemList);
                                     embed.setTimestamp(new Date());
-                                    message.channel.send({ embed })
+                                    message.channel.send(embed)
                                         .catch(err => {
                                             console.log(err);
                                         });
@@ -225,5 +225,19 @@ export class MonitorSystems {
             .catch(() => {
                 message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
             })
+    }
+
+    help() {
+        return [
+            'monitorsystems',
+            'Adds a system to monitor for displaying in the BGS Report. A system can be optionally added as a primary for more detailed results',
+            'monitorsystems <add|addprimary|remove|list> <system name>',
+            [
+                '`@BGSBot monitorsystems add qa\'wakana`',
+                '`@BGSBot monitorsystems addprimary qa\'wakana`',
+                '`@BGSBot monitorsystems remove qa\'wakana`',
+                '`@BGSBot monitorsystems list`'
+            ]
+        ];
     }
 }

@@ -116,4 +116,16 @@ export class MyGuild {
                 message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
             })
     }
+
+    help() {
+        return [
+            'myguild',
+            'Sets or removes your guild from BGSBot. Setting your guild is necessary for the bot to function',
+            'myguild <set|remove>',
+            [
+                '`@BGSBot myguild set`',
+                '`@BGSBot myguild remove`'
+            ]
+        ];
+    }
 }

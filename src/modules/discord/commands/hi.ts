@@ -22,4 +22,15 @@ export class Hi{
             message.channel.send("Hey there!");
         }
     }
+
+    help() {
+        return [
+            'hi',
+            'A sanity check to see if the bot is responding',
+            'hi',
+            [
+                '`@BGSBot hi`'
+            ]
+        ];
+    }
 }

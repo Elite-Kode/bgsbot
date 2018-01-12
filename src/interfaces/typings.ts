@@ -211,6 +211,12 @@ export interface FieldRecordSchema {
     name: string
 }
 
+export interface HelpSchema {
+    command: string,
+    helpMessage: string,
+    template: string,
+    example: string[]
+}
 
 export type FactionsV4 = PaginateResult<FactionSchema>;
 export type PopulatedSystemsV4 = PaginateResult<PopulatedSystemSchema>;

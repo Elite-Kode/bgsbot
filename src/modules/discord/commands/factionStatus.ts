@@ -179,7 +179,7 @@ export class FactionStatus {
                                                         embed.addField(fieldRecord[recordIndex].fieldTitle, fieldRecord[recordIndex].fieldDescription);
                                                     }
                                                     try {
-                                                        await message.channel.send({ embed });
+                                                        await message.channel.send(embed);
                                                     } catch (err) {
                                                         console.log(err);
                                                     }
@@ -212,5 +212,16 @@ export class FactionStatus {
         } else {
             return "↔️";
         }
+    }
+
+    help() {
+        return [
+            'factionStatus',
+            'Gets the details of a faction',
+            'factionStatus get <faction name>',
+            [
+                '`@BGSBot factionStatus get knights of karma`'
+            ]
+        ];
     }
 }

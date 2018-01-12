@@ -184,7 +184,7 @@ export class MonitorFactions {
                                     });
                                     embed.addField("Factions", factionList);
                                     embed.setTimestamp(new Date());
-                                    message.channel.send({ embed })
+                                    message.channel.send(embed)
                                         .catch(err => {
                                             console.log(err);
                                         });
@@ -220,5 +220,19 @@ export class MonitorFactions {
             .catch(() => {
                 message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
             })
+    }
+
+    help() {
+        return [
+            'monitorfactions',
+            'Adds a faction to monitor for displaying in the BGS Report. A faction can be optionally added as a primary for more detailed results',
+            'monitorfactions <add|addprimary|remove|list> <faction name>',
+            [
+                '`@BGSBot monitorfactions add knights of karma`',
+                '`@BGSBot monitorfactions addprimary knights of karma`',
+                '`@BGSBot monitorfactions remove knights of karma`',
+                '`@BGSBot monitorfactions list`'
+            ]
+        ];
     }
 }

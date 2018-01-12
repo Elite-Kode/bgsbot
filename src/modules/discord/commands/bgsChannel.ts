@@ -141,7 +141,7 @@ export class BGSChannel {
                                     let id = `${guild.bgs_channel_id} - @${message.guild.roles.get(guild.bgs_channel_id).name}\n`;
                                     embed.addField("Ids and Names", id);
                                     embed.setTimestamp(new Date());
-                                    message.channel.send({ embed })
+                                    message.channel.send(embed)
                                         .catch(err => {
                                             console.log(err);
                                         });
@@ -177,5 +177,18 @@ export class BGSChannel {
             .catch(() => {
                 message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
             })
+    }
+
+    help() {
+        return [
+            'bgschannel',
+            'Sets, removes or shows the channel set up for BGS reporting',
+            'bgschannel <set|remove|show> <channel id>',
+            [
+                '`@BGSBot bgschannel set 1234564789012345678`',
+                '`@BGSBot bgschannel remove`',
+                '`@BGSBot bgschannel show`'
+            ]
+        ];
     }
 }
