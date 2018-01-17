@@ -871,7 +871,7 @@ export class BGSReport {
 
     help() {
         return [
-            'bgsrole',
+            'bgsreport',
             'Gets the BGS Report or sets, unsets, shows the time when the BGS Report will be automatically generated',
             'bgsreport <get|settime|showtime|unsettime> <time in UTC>',
             [

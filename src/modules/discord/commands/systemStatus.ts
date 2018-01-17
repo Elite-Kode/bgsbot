@@ -108,7 +108,7 @@ export class SystemStatus {
                                                     let influence = responseFaction.faction_presence[systemIndex].influence;
                                                     let pendingStatesArray = responseFaction.faction_presence[systemIndex].pending_states;
                                                     let recoveringStatesArray = responseFaction.faction_presence[systemIndex].recovering_states;
-                                                    let updatedAt = moment(responseFaction.updated_at);
+                                                    let updatedAt = moment(responseSystem.updated_at);
                                                     let factionDetail = "";
                                                     factionDetail += `Last Updated : ${updatedAt.fromNow()} \n`;
                                                     factionDetail += `State : ${state}\n`;
