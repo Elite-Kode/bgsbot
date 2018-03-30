@@ -138,7 +138,7 @@ export class BGSChannel {
                                     let embed = new discord.RichEmbed();
                                     embed.setTitle("BGS Channel");
                                     embed.setColor([255, 0, 255]);
-                                    let id = `${guild.bgs_channel_id} - @${message.guild.roles.get(guild.bgs_channel_id).name}\n`;
+                                    let id = `${guild.bgs_channel_id} - @${message.guild.channels.get(guild.bgs_channel_id).name}\n`;
                                     embed.addField("Ids and Names", id);
                                     embed.setTimestamp(new Date());
                                     message.channel.send(embed)
