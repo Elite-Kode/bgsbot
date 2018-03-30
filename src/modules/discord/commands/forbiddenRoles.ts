@@ -143,7 +143,11 @@ export class ForbiddenRoles {
                                     embed.setColor([255, 0, 255]);
                                     let idList = "";
                                     guild.forbidden_roles_id.forEach(id => {
-                                        idList += `${id} - @${message.guild.roles.get(id).name}\n`;
+                                        if (message.guild.roles.has(id)) {
+                                            idList += `${id} - @${message.guild.roles.get(id).name}\n`;
+                                        } else {
+                                            idList += `${id} - Does not exist in Discord. Please delete this from BGSBot`;
+                                        }
                                     });
                                     embed.addField("Ids and Names", idList);
                                     embed.setTimestamp(new Date());

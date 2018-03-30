@@ -18,11 +18,13 @@ import * as discord from 'discord.js';
 import { DiscordSecrets } from '../../secrets';
 import { Responses } from './responseDict';
 import { Hi, Help, MyGuild, BGSRole, AdminRoles, ForbiddenRoles, BGSChannel, MonitorSystems, MonitorFactions, SystemStatus, FactionStatus, BGSReport, Sort } from './commands';
+import { HouseKeeping } from './houseKeeping';
 import { HelpSchema } from '../../interfaces/typings';
 
 export class DiscordClient {
     public client: discord.Client;
     private commandsMap: Map<string, any>;
+    private houseKeeping: HouseKeeping;
 
     constructor() {
         this.client = new discord.Client();
@@ -38,6 +40,7 @@ export class DiscordClient {
     public listen() {
         this.client.on("ready", () => {
             console.log("I am ready!");
+            this.houseKeeping = new HouseKeeping();
             this.initiateCommands();
             this.createHelp();
         });
@@ -75,6 +78,14 @@ export class DiscordClient {
                 helpObject.emojiCaught(messageReaction, user);
             }
         });
+
+        this.client.on("channelDelete", channel => {
+            this.houseKeeping.deletedChannel(channel);
+        });
+
+        this.client.on("roleDelete", role => {
+            this.houseKeeping.deletedRole(role);
+        })
     }
 
     private initiateCommands(): void {

@@ -138,7 +138,12 @@ export class BGSChannel {
                                     let embed = new discord.RichEmbed();
                                     embed.setTitle("BGS Channel");
                                     embed.setColor([255, 0, 255]);
-                                    let id = `${guild.bgs_channel_id} - @${message.guild.channels.get(guild.bgs_channel_id).name}\n`;
+                                    let id = "";
+                                    if (message.guild.channels.has(guild.bgs_channel_id)) {
+                                        id = `${guild.bgs_channel_id} - @${message.guild.channels.get(guild.bgs_channel_id).name}\n`;
+                                    } else {
+                                        id = `${guild.bgs_channel_id} - Does not exist in Discord. Please delete this from BGSBot`;
+                                    }
                                     embed.addField("Ids and Names", id);
                                     embed.setTimestamp(new Date());
                                     message.channel.send(embed)
