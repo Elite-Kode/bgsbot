@@ -75,8 +75,8 @@ export class Help {
     display(message: Message): void {
         let embed = new discord.RichEmbed();
         embed.setColor(6684774);
-        embed.setTitle(`:grey_question: KOKBOT Help`);
-        embed.setDescription(`Help Associated with KoKBot commands`);
+        embed.setTitle(`:grey_question: BGSBot Help`);
+        embed.setDescription(`Help Associated with BGSBot commands`);
 
         let length = this.helpArray.length;
 
