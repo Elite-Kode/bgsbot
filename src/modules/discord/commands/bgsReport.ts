@@ -566,8 +566,9 @@ export class BGSReport {
                                                                         }
                                                                     });
                                                                 }
-
-                                                                let factionDetail = `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}% (Currently in ${state}. Pending ${pendingStates})\n`;
+                                                                let factionDetail = "";
+                                                                factionDetail += `Last Updated : ${updatedAt.fromNow()} \n`;
+                                                                factionDetail += `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}% (Currently in ${state}. Pending ${pendingStates})\n`;
                                                                 resolve([factionDetail, factionName, influence]);
                                                             } else {
                                                                 resolve([`${this.acronym(faction.name)} Faction not found\n`, "", 0]);
