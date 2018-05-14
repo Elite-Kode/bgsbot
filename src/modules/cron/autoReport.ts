@@ -29,23 +29,32 @@ export class AutoReport {
                 try {
                     let cronPattern = `${guild.bgs_time.split(':')[2]} ${guild.bgs_time.split(':')[1]} ${guild.bgs_time.split(':')[0]} * * *`;
                     let cronJob = new CronJob(cronPattern, () => {
-                        let bgsChannel: GuildChannel = client.guilds.get(guild.guild_id).channels.get(guild.bgs_channel_id);
-                        if (bgsChannel && bgsChannel.type === 'text') {
-                            let bgsReport = new BGSReport();
-                            bgsReport.getBGSReportEmbed(guild.guild_id)
-                                .then(embedArray => {
-                                    (async (bgsChannel, embedArray) => {
-                                        for (let index = 0; index < embedArray.length; index++) {
-                                            try {
-                                                await (bgsChannel as TextChannel).send(embedArray[index]);
-                                            } catch (err) {
-                                                console.log(err);
+                        console.log('CRONjob execute');
+                        try{
+                            let bgsChannel: GuildChannel = client.guilds.get(guild.guild_id).channels.get(guild.bgs_channel_id);
+                            console.log('Guild id: '+guild.guild_id);
+                            console.log('Client Guild size: '+client.guilds.size);
+                            if (bgsChannel && bgsChannel.type === 'text') {
+                                let bgsReport = new BGSReport();
+                                bgsReport.getBGSReportEmbed(guild.guild_id)
+                                    .then(embedArray => {
+                                        (async (bgsChannel, embedArray) => {
+                                            for (let index = 0; index < embedArray.length; index++) {
+                                                try {
+                                                    await (bgsChannel as TextChannel).send(embedArray[index]);
+                                                } catch (err) {
+                                                    console.log(err);
+                                                }
                                             }
-                                        }
-                                    })(bgsChannel, embedArray);
-                                });
-                        } else {
-                            console.log(`Guild ${guild.guild_id} has not been set up`)
+                                        })(bgsChannel, embedArray);
+                                    });
+                            } else {
+                                console.log(`Guild ${guild.guild_id} has not been set up`)
+                            }
+                        } catch (err) {
+                            console.log(err);
+                            console.log('Guild id: '+guild.guild_id);
+                            console.log('Client Guild size: '+client.guilds.size);
                         }
                     });
                     this.jobs.push({
