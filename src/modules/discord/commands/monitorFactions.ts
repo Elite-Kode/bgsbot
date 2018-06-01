@@ -20,7 +20,7 @@ import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
 import { Access } from './../access';
-import { FactionsV4 } from "../../../interfaces/typings";
+import { EBGSFactionsV4WOHistory } from "../../../interfaces/typings";
 import { OptionsWithUrl } from 'request';
 
 export class MonitorFactions {
@@ -52,13 +52,13 @@ export class MonitorFactions {
                     let guildId = message.guild.id;
                     let factionName = argsArray.slice(1).join(" ");
                     let requestOptions: OptionsWithUrl = {
-                        url: "http://elitebgs.kodeblox.com/api/eddb/v3/factions",
+                        url: "http://elitebgs.kodeblox.com/api/ebgs/v4/factions",
                         method: "GET",
                         qs: { name: factionName },
                         json: true
                     }
 
-                    request(requestOptions, (error, response, body: FactionsV4) => {
+                    request(requestOptions, (error, response, body: EBGSFactionsV4WOHistory) => {
                         if (!error && response.statusCode == 200) {
                             if (body.total === 0) {
                                 message.channel.send(Responses.getResponse(Responses.FAIL))
