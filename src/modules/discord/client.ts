@@ -53,7 +53,8 @@ export class DiscordClient {
                     return false;
                 }
             }).length > 0) {
-                let messageString = message.content.replace(new RegExp(`<@!?${this.client.user.id}>`), "").replace(/\s+/g, ' ').trim();
+                //removed replace(/\s+/g, ' ') since its causing issues with faction names with multiple spaces
+                let messageString = message.content.replace(new RegExp(`<@!?${this.client.user.id}>`), "").trim();
                 let messageArray = messageString.split(" ");
                 let command = messageArray[0].toLowerCase();
                 let commandArguments: string = "";
