@@ -312,9 +312,7 @@ export class BGSReport {
                                                                         pendingStatesArray = systemElement.pending_states;
                                                                     }
                                                                 });
-                                                                let updatedAt = moment(systemResponse.updated_at);
                                                                 let factionDetail = "";
-                                                                factionDetail += `Last Updated : ${updatedAt.fromNow()} \n`;
                                                                 factionDetail += `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}%\n`;
                                                                 factionDetail += `Current ${this.acronym(factionName)} State : ${state}\n`;
 
@@ -387,12 +385,7 @@ export class BGSReport {
                                                                         }
                                                                     });
                                                                 }
-                                                                let factionDetail = "";
-                                                                if (noFactionMonitoredInSystem) {
-                                                                    let updatedAt = moment(systemResponse.updated_at);
-                                                                    factionDetail += `Last Updated : ${updatedAt.fromNow()} \n`;
-                                                                }
-                                                                factionDetail += `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}% (Currently in ${state}. Pending ${pendingStates})\n`;
+                                                                let factionDetail = `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}% (Currently in ${state}. Pending ${pendingStates})\n`;
                                                                 resolve([factionDetail, factionName, influence]);
                                                             } else {
                                                                 resolve([`${this.acronym(faction.name)} Faction not found\n`, "", 0]);
@@ -498,6 +491,7 @@ export class BGSReport {
                                                 });
                                             }
                                             let joined = "";
+                                            joined += `Last Updated : ${moment(systemResponse.updated_at).fromNow()} \n`;
                                             primaryFieldRecord.concat(secondaryFieldRecord).forEach(record => {
                                                 joined += record.fieldDescription;
                                             });
@@ -584,9 +578,7 @@ export class BGSReport {
                                                                         }
                                                                     });
                                                                 }
-                                                                let factionDetail = "";
-                                                                factionDetail += `Last Updated : ${updatedAt.fromNow()} \n`;
-                                                                factionDetail += `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}% (Currently in ${state}. Pending ${pendingStates})\n`;
+                                                                let factionDetail = `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}% (Currently in ${state}. Pending ${pendingStates})\n`;
                                                                 resolve([factionDetail, factionName, influence]);
                                                             } else {
                                                                 resolve([`${this.acronym(faction.name)} Faction not found\n`, "", 0]);
@@ -642,12 +634,7 @@ export class BGSReport {
                                                                         }
                                                                     });
                                                                 }
-                                                                let factionDetail = "";
-                                                                if (noFactionMonitoredInSystem) {
-                                                                    let updatedAt = moment(systemResponse.updated_at);
-                                                                    factionDetail += `Last Updated : ${updatedAt.fromNow()} \n`;
-                                                                }
-                                                                factionDetail += `${this.acronym(factionName)} : ${(influence * 100).toFixed(1)}% (${state}. Pending ${pendingStates})\n`;
+                                                                let factionDetail = `${this.acronym(factionName)} : ${(influence * 100).toFixed(1)}% (${state}. Pending ${pendingStates})\n`;
                                                                 resolve([factionDetail, factionName, influence]);
                                                             } else {
                                                                 resolve([`${this.acronym(faction.name)} Faction not found\n`, "", 0]);
@@ -753,6 +740,7 @@ export class BGSReport {
                                                 });
                                             }
                                             let joined = "";
+                                            joined += `Last Updated : ${moment(systemResponse.updated_at).fromNow()} \n`;
                                             primaryFieldRecord.concat(secondaryFieldRecord).forEach(record => {
                                                 joined += record.fieldDescription;
                                             });

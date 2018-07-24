@@ -67,7 +67,6 @@ export class Access {
                             resolve(true);
                         } else {
                             reject();
-                            // resolve(true);
                         }
                     })
             }
