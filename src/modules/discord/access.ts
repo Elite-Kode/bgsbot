@@ -22,50 +22,54 @@ export class Access {
     public static readonly BGS: string = "bgs";
     public static readonly FORBIDDEN: string = "forbidden";
 
-    public static has(member: discord.GuildMember, perms: string[]): Promise<boolean> {
+    public static has(member: discord.GuildMember, perms: string[], allowAdmin = false): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            let db = App.db;
-            let guildId = member.guild.id;
-            let roles = member.roles;
-            db.model.guild.findOne({ guild_id: guildId })
-                .then(guild => {
-                    let bool = false;
-                    if (guild) {
-                        perms.forEach((permission, index) => {
-                            switch (permission) {
-                                case "admin": {
-                                    let adminRoles = guild.admin_roles_id;
-                                    adminRoles.forEach((role, index) => {
-                                        if (roles.has(role)) {
+            if (allowAdmin && member.hasPermission("ADMINISTRATOR")) {
+                resolve(true);
+            } else {
+                let db = App.db;
+                let guildId = member.guild.id;
+                let roles = member.roles;
+                db.model.guild.findOne({ guild_id: guildId })
+                    .then(guild => {
+                        let bool = false;
+                        if (guild) {
+                            perms.forEach((permission, index) => {
+                                switch (permission) {
+                                    case "admin": {
+                                        let adminRoles = guild.admin_roles_id;
+                                        adminRoles.forEach((role, index) => {
+                                            if (roles.has(role)) {
+                                                bool = true;
+                                            }
+                                        });
+                                    }
+                                        break;
+                                    case "bgs": {
+                                        let bgsRole = guild.bgs_role_id;
+                                        if (roles.has(bgsRole)) {
                                             bool = true;
                                         }
-                                    });
-                                }
-                                    break;
-                                case "bgs": {
-                                    let bgsRole = guild.bgs_role_id;
-                                    if (roles.has(bgsRole)) {
-                                        bool = true;
+                                    }
+                                    case "forbidden": {
+                                        let forbiddenRoles = guild.forbidden_roles_id;
+                                        forbiddenRoles.forEach((role, index) => {
+                                            if (roles.has(role)) {
+                                                bool = false;
+                                            }
+                                        });
                                     }
                                 }
-                                case "forbidden": {
-                                    let forbiddenRoles = guild.forbidden_roles_id;
-                                    forbiddenRoles.forEach((role, index) => {
-                                        if (roles.has(role)) {
-                                            bool = false;
-                                        }
-                                    });
-                                }
-                            }
-                        })
-                    }
+                            })
+                        }
 
-                    if (bool) {
-                        resolve(true);
-                    } else {
-                        reject();
-                    }
-                })
+                        if (bool) {
+                            resolve(true);
+                        } else {
+                            reject();
+                        }
+                    })
+            }
         });
     }
 }

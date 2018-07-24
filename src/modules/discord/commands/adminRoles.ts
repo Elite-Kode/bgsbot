@@ -87,7 +87,7 @@ export class AdminRoles {
     }
 
     remove(message: discord.Message, argsArray: string[]) {
-        Access.has(message.member, [Access.ADMIN, Access.FORBIDDEN])
+        Access.has(message.member, [Access.ADMIN, Access.FORBIDDEN], true)
             .then(() => {
                 if (argsArray.length === 2) {
                     let guildId = message.guild.id;
@@ -128,7 +128,7 @@ export class AdminRoles {
     }
 
     list(message: discord.Message, argsArray: string[]) {
-        Access.has(message.member, [Access.ADMIN, Access.FORBIDDEN])
+        Access.has(message.member, [Access.ADMIN, Access.FORBIDDEN], true)
             .then(() => {
                 if (argsArray.length === 1) {
                     let guildId = message.guild.id;

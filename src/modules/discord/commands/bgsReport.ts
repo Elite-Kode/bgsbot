@@ -75,8 +75,8 @@ export class BGSReport {
                     message.channel.send(Responses.getResponse(Responses.NOPARAMS));
                 }
             })
-            .catch(err => {
-                console.log(err);
+            .catch(() => {
+                message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
             });
     }
 
@@ -275,6 +275,13 @@ export class BGSReport {
                                     let systemResponse = body.docs[0];
                                     let primaryFactionPromises: Promise<[string, string, number]>[] = [];
                                     let secondaryFactionPromises: Promise<[string, string, number]>[] = [];
+                                    let noFactionMonitoredInSystem = true;
+                                    for (let faction of systemResponse.factions) {
+                                        if (primaryFactions.indexOf(faction.name) !== -1 || secondaryFactions.indexOf(faction.name) !== -1) {
+                                            noFactionMonitoredInSystem = false;
+                                            break;
+                                        }
+                                    }
                                     systemResponse.factions.forEach(faction => {
                                         if (primaryFactions.indexOf(faction.name) !== -1) {
                                             primaryFactionPromises.push(new Promise((resolve, reject) => {
@@ -305,9 +312,7 @@ export class BGSReport {
                                                                         pendingStatesArray = systemElement.pending_states;
                                                                     }
                                                                 });
-                                                                let updatedAt = moment(systemResponse.updated_at);
                                                                 let factionDetail = "";
-                                                                factionDetail += `Last Updated : ${updatedAt.fromNow()} \n`;
                                                                 factionDetail += `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}%\n`;
                                                                 factionDetail += `Current ${this.acronym(factionName)} State : ${state}\n`;
 
@@ -339,7 +344,7 @@ export class BGSReport {
                                                     }
                                                 });
                                             }));
-                                        } else if (secondaryFactions.indexOf(faction.name) !== -1) {
+                                        } else if (secondaryFactions.indexOf(faction.name) !== -1 || noFactionMonitoredInSystem) {
                                             secondaryFactionPromises.push(new Promise((resolve, reject) => {
                                                 let requestOptions: OptionsWithUrl = {
                                                     url: "http://elitebgs.kodeblox.com/api/ebgs/v4/factions",
@@ -380,7 +385,6 @@ export class BGSReport {
                                                                         }
                                                                     });
                                                                 }
-
                                                                 let factionDetail = `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}% (Currently in ${state}. Pending ${pendingStates})\n`;
                                                                 resolve([factionDetail, factionName, influence]);
                                                             } else {
@@ -487,6 +491,7 @@ export class BGSReport {
                                                 });
                                             }
                                             let joined = "";
+                                            joined += `Last Updated : ${moment(systemResponse.updated_at).fromNow()} \n`;
                                             primaryFieldRecord.concat(secondaryFieldRecord).forEach(record => {
                                                 joined += record.fieldDescription;
                                             });
@@ -522,6 +527,13 @@ export class BGSReport {
                                     let systemResponse = body.docs[0];
                                     let primaryFactionPromises: Promise<[string, string, number]>[] = [];
                                     let secondaryFactionPromises: Promise<[string, string, number]>[] = [];
+                                    let noFactionMonitoredInSystem = true;
+                                    for (let faction of systemResponse.factions) {
+                                        if (primaryFactions.indexOf(faction.name) !== -1 || secondaryFactions.indexOf(faction.name) !== -1) {
+                                            noFactionMonitoredInSystem = false;
+                                            break;
+                                        }
+                                    }
                                     systemResponse.factions.forEach(faction => {
                                         if (primaryFactions.indexOf(faction.name) !== -1) {
                                             primaryFactionPromises.push(new Promise((resolve, reject) => {
@@ -566,9 +578,7 @@ export class BGSReport {
                                                                         }
                                                                     });
                                                                 }
-                                                                let factionDetail = "";
-                                                                factionDetail += `Last Updated : ${updatedAt.fromNow()} \n`;
-                                                                factionDetail += `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}% (Currently in ${state}. Pending ${pendingStates})\n`;
+                                                                let factionDetail = `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}% (Currently in ${state}. Pending ${pendingStates})\n`;
                                                                 resolve([factionDetail, factionName, influence]);
                                                             } else {
                                                                 resolve([`${this.acronym(faction.name)} Faction not found\n`, "", 0]);
@@ -583,7 +593,7 @@ export class BGSReport {
                                                     }
                                                 });
                                             }));
-                                        } else if (secondaryFactions.indexOf(faction.name) !== -1) {
+                                        } else if (secondaryFactions.indexOf(faction.name) !== -1 || noFactionMonitoredInSystem) {
                                             secondaryFactionPromises.push(new Promise((resolve, reject) => {
                                                 let requestOptions: OptionsWithUrl = {
                                                     url: "http://elitebgs.kodeblox.com/api/ebgs/v4/factions",
@@ -624,7 +634,6 @@ export class BGSReport {
                                                                         }
                                                                     });
                                                                 }
-
                                                                 let factionDetail = `${this.acronym(factionName)} : ${(influence * 100).toFixed(1)}% (${state}. Pending ${pendingStates})\n`;
                                                                 resolve([factionDetail, factionName, influence]);
                                                             } else {
@@ -731,6 +740,7 @@ export class BGSReport {
                                                 });
                                             }
                                             let joined = "";
+                                            joined += `Last Updated : ${moment(systemResponse.updated_at).fromNow()} \n`;
                                             primaryFieldRecord.concat(secondaryFieldRecord).forEach(record => {
                                                 joined += record.fieldDescription;
                                             });
