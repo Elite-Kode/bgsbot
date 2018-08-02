@@ -833,7 +833,31 @@ export class BGSReport {
                     });
                 }
                 let fieldRecord = primaryFieldRecord.concat(secondaryFieldRecord);
-                let numberOfMessages = Math.ceil(fieldRecord.length / 24);
+                let pagedFields: FieldRecordSchema[][] = [];
+                let fieldsInPage: FieldRecordSchema[] = [];
+                let charactersPerPageCount = 0;
+                for (let index = 0; index < fieldRecord.length; index++) {
+                    if (fieldsInPage.length < 24) {
+                        charactersPerPageCount += fieldRecord[index].fieldTitle.length + fieldRecord[index].fieldDescription.length;
+                    } else {
+                        pagedFields.push(fieldsInPage);
+                        fieldsInPage = [];
+                        charactersPerPageCount = 0;
+                    }
+                    if (charactersPerPageCount < 5000) {
+                        fieldsInPage.push(fieldRecord[index]);
+                    } else {
+                        pagedFields.push(fieldsInPage);
+                        fieldsInPage = [];
+                        charactersPerPageCount = 0;
+                    }
+                    if (index === fieldRecord.length - 1) {
+                        pagedFields.push(fieldsInPage);
+                        fieldsInPage = [];
+                        charactersPerPageCount = 0;
+                    }
+                }
+                let numberOfMessages = pagedFields.length;
                 let embedArray: RichEmbed[] = [];
                 for (let index = 0; index < numberOfMessages; index++) {
                     let embed = new discord.RichEmbed();
@@ -844,15 +868,11 @@ export class BGSReport {
                     }
                     embed.setColor([255, 0, 255]);
                     embed.setTimestamp(new Date());
-                    let limit = 0;
-                    if (fieldRecord.length > index * 24 + 24) {
-                        limit = index * 24 + 24;
-                    } else {
-                        limit = fieldRecord.length;
+
+                    for(let pagedField of pagedFields[index]){
+                        embed.addField(pagedField.fieldTitle, pagedField.fieldDescription);
                     }
-                    for (let recordIndex = index * 24; recordIndex < limit; recordIndex++) {
-                        embed.addField(fieldRecord[recordIndex].fieldTitle, fieldRecord[recordIndex].fieldDescription);
-                    }
+
                     embedArray.push(embed);
                 }
                 return embedArray;
