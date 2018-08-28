@@ -65,7 +65,7 @@ export class DiscordClient {
                     'custom.set': true
                 }).then(guild => {
                     if (guild) {
-                        this.custom.g483005833853009950.exec(message);
+                        this.custom[`g${guild.guild_id}`].exec(message);
                     } else {
                         this.processNormal(message)
                     }
