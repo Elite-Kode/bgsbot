@@ -18,6 +18,7 @@ import * as discord from 'discord.js';
 import App from '../../server';
 
 export class Access {
+    public static readonly ALL: string = "all";
     public static readonly ADMIN: string = "admin";
     public static readonly BGS: string = "bgs";
     public static readonly FORBIDDEN: string = "forbidden";
@@ -36,6 +37,10 @@ export class Access {
                         if (guild) {
                             perms.forEach((permission, index) => {
                                 switch (permission) {
+                                    case "all": {
+                                        bool = true;
+                                    }
+                                        break;
                                     case "admin": {
                                         let adminRoles = guild.admin_roles_id;
                                         adminRoles.forEach((role, index) => {

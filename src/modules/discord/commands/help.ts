@@ -47,7 +47,14 @@ export class Help {
     }
 
     addHelp(helpObject: HelpSchema): void {
-        this.helpArray.push(helpObject);
+        let indexOfHelp = this.helpArray.findIndex(help => {
+            return help.command === helpObject.command;
+        });
+        if (indexOfHelp === -1) {
+            this.helpArray.push(helpObject);
+        } else {
+            this.helpArray[indexOfHelp] = helpObject;
+        }
     }
 
     emojiCaught(msgReaction: MessageReaction, user: User): void {

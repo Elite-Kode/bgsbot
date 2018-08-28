@@ -20,11 +20,16 @@ import { Responses } from './responseDict';
 import { Hi, Help, MyGuild, BGSRole, AdminRoles, ForbiddenRoles, BGSChannel, MonitorSystems, MonitorFactions, SystemStatus, FactionStatus, BGSReport, Sort } from './commands';
 import { HouseKeeping } from './houseKeeping';
 import { HelpSchema } from '../../interfaces/typings';
+import App from '../../server';
+import { DB } from '../../db/index';
+import { CustomFunctionality } from './custom'
 
 export class DiscordClient {
     public client: discord.Client;
-    private commandsMap: Map<string, any>;
+    public commandsMap: Map<string, any>;
     private houseKeeping: HouseKeeping;
+    private db: DB;
+    private custom: CustomFunctionality;
 
     constructor() {
         this.client = new discord.Client();
@@ -43,6 +48,7 @@ export class DiscordClient {
             this.houseKeeping = new HouseKeeping();
             this.initiateCommands();
             this.createHelp();
+            this.initiateCustom();
         });
 
         this.client.on("message", (message) => {
@@ -53,20 +59,20 @@ export class DiscordClient {
                     return false;
                 }
             }).length > 0) {
-                //removed replace(/\s+/g, ' ') since its causing issues with faction names with multiple spaces
-                let messageString = message.content.replace(new RegExp(`<@!?${this.client.user.id}>`), "").trim();
-                let messageArray = messageString.split(" ");
-                let command = messageArray[0].toLowerCase();
-                let commandArguments: string = "";
-                if (messageArray.length > 1) {
-                    commandArguments = messageArray.slice(1, messageArray.length).join(" ");
-                }
-                if (this.commandsMap.has(command)) {
-                    console.log(command + " command requested");
-                    this.commandsMap.get(command).exec(message, commandArguments);
-                } else {
-                    message.channel.send(Responses.getResponse(Responses.NOTACOMMAND));
-                }
+                this.db = App.db;
+                this.db.model.guild.findOne({
+                    guild_id: message.guild.id,
+                    'custom.set': true
+                }).then(guild => {
+                    if (guild) {
+                        this.custom.g483005833853009950.exec(message);
+                    } else {
+                        this.processNormal(message)
+                    }
+                }).catch(err => {
+                    message.channel.send(Responses.getResponse(Responses.FAIL));
+                    console.log(err);
+                })
             }
         });
 
@@ -105,6 +111,10 @@ export class DiscordClient {
         this.commandsMap.set("sort", new Sort());
     }
 
+    private initiateCustom(): void {
+        this.custom = new CustomFunctionality();
+    }
+
     createHelp(): void {
         this.commandsMap.forEach((value, key) => {
             let helpArray: [string, string, string, string[]] = value.help();
@@ -116,5 +126,27 @@ export class DiscordClient {
             }
             this.commandsMap.get('help').addHelp(helpObject);
         });
+    }
+
+    public getCommandArguments(message: discord.Message) {
+        //removed replace(/\s+/g, ' ') since its causing issues with faction names with multiple spaces
+        let messageString = message.content.replace(new RegExp(`<@!?${this.client.user.id}>`), "").trim();
+        let messageArray = messageString.split(" ");
+        let command = messageArray[0].toLowerCase();
+        let commandArguments: string = "";
+        if (messageArray.length > 1) {
+            commandArguments = messageArray.slice(1, messageArray.length).join(" ");
+        }
+        return { command, commandArguments }
+    }
+
+    public processNormal(message: discord.Message): void {
+        let commandArguments = this.getCommandArguments(message);
+        if (this.commandsMap.has(commandArguments.command)) {
+            console.log(commandArguments.command + " command requested");
+            this.commandsMap.get(commandArguments.command).exec(message, commandArguments.commandArguments);
+        } else {
+            message.channel.send(Responses.getResponse(Responses.NOTACOMMAND));
+        }
     }
 }

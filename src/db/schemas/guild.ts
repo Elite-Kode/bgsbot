@@ -49,5 +49,9 @@ export let guildSchema: Schema = new Schema({
         primary: Boolean,
         faction_name: String,
         faction_name_lower: String
-    }]
+    }],
+    custom: {
+        set: Boolean,
+        requester_user_id: String
+    }
 });
