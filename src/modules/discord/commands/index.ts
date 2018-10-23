@@ -27,3 +27,5 @@ export * from './systemStatus';
 export * from './factionStatus';
 export * from './bgsReport';
 export * from './sort';
+export * from './chart';
+export * from './theme';
