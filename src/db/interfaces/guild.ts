@@ -21,11 +21,12 @@ export interface IGuild {
     bgs_time: string,
     sort: string,
     sort_order: number,
+    theme: string,
     admin_roles_id: string[],
     forbidden_roles_id: string[],
     created_at: Date,
     updated_at: Date,
-    monitor_systems: [{
+    monitor_systems: {
         primary: boolean,
         system_name: string,
         system_name_lower: string,
@@ -34,12 +35,12 @@ export interface IGuild {
             y: number,
             z: number
         }
-    }],
-    monitor_factions: [{
+    }[],
+    monitor_factions: {
         primary: boolean,
         faction_name: string,
         faction_name_lower: string
-    }],
+    }[],
     custom: {
         set: boolean,
         requester_user_id: string

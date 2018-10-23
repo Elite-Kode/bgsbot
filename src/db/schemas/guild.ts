@@ -26,6 +26,7 @@ export let guildSchema: Schema = new Schema({
     bgs_time: String,
     sort: String,
     sort_order: Number,         // 1 of increasing and -1 for decreasing and 0 for disable
+    theme: String,
     admin_roles_id: [String],
     forbidden_roles_id: [String],
     created_at: {
