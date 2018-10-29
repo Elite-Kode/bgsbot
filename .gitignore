@@ -46,4 +46,5 @@ secrets.ts
 
 # Custom code
 
-/src/modules/discord/custom
+/src/modules/discord/custom/*
+!/src/modules/discord/custom/index.ts
