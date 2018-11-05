@@ -16,6 +16,8 @@
 
 export interface IGuild {
     guild_id: string,
+	bgs_faction_name: string,
+    bgs_faction_name_lower: string
     bgs_channel_id: string,
     bgs_role_id: string,
     bgs_time: string,

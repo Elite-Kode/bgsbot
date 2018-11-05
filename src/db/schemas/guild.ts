@@ -21,7 +21,9 @@ export let guildSchema: Schema = new Schema({
         type: String,
         unique: true
     },
-    bgs_channel_id: String,
+	bgs_faction_name: String,    
+	bgs_faction_name_lower: String,
+	bgs_channel_id: String,
     bgs_role_id: String,
     bgs_time: String,
     sort: String,

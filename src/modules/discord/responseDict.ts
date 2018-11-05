@@ -12,17 +12,85 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *********************************************************************** 
+ * List of emoji shortcodes in discord
+ *:bowtie:
+ *:smile:
+ *:simple_smile:
+ *:laughing:
+ *:blush:
+ *:smiley:
+ *:relaxed:
+ *:smirk:
+ *:heart_eyes:
+ *:kissing_heart:
+ *:kissing_closed_eyes:
+ *:flushed:
+ *:relieved:
+ *:satisfied:
+ *:grin:
+ *:wink:
+ *:stuck_out_tongue_winking_eye:
+ *:stuck_out_tongue_closed_eyes:
+ *:grinning:
+ *:kissing:
+ *:kissing_smiling_eyes:
+ *:stuck_out_tongue:
+ *:sleeping:
+ *:worried:
+ *:frowning:
+ *:anguished:
+ *:open_mouth:
+ *:grimacing:
+ *:confused:
+ *:hushed:
+ *:expressionless:
+ *:unamused:
+ *:sweat_smile:
+ *:sweat:
+ *:disappointed_relieved:
+ *:weary:
+ *:pensive:
+ *:disappointed:
+ *:confounded:
+ *:fearful:
+ *:cold_sweat:
+ *:persevere:
+ *:cry:
+ *:sob:
+ *:joy:
+ *:astonished:
+ *:scream:
+ *:neckbeard:
+ *:tired_face:
+ *:angry:
+ *:rage:
+ *:triumph:
+ *:sleepy:
+ *:yum:
+ *:mask:
+ *:sunglasses:
+ *:dizzy_face:
+ *:imp:
+ *:smiling_imp:
+ *:neutral_face:
+ *:no_mouth:
+ *:innocent:
+ *:alien:
+ * *****************************************************************
  */
 
 export class Responses {
     public static readonly SUCCESS = [
         "Your wish is my command!",
         "All done boss! :thumbsup:",
-        "It is done! :ok_hand:"
+        "It is done! :ok_hand:",
+		"It was hard but I got there! :weary:",
+		"Wow that was fun. Let's do it again! :grinning:" 
     ];
     public static readonly FAIL = [
         "Um...sorry couldn't do that",
-        "Computer says no",
+        "Computer says no :thumbsdown:",
         "Oops! problem... :frowning:",
         "Eeek! problems :frowning:"
     ];

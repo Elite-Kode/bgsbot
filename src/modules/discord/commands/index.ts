@@ -19,6 +19,7 @@ export * from './help';
 export * from './myGuild';
 export * from './bgsRole';
 export * from './adminRoles';
+export * from './bgsFaction';
 export * from './forbiddenRoles';
 export * from './bgsChannel';
 export * from './monitorSystems';
@@ -29,3 +30,5 @@ export * from './bgsReport';
 export * from './sort';
 export * from './chart';
 export * from './theme';
+export * from './purge';
+

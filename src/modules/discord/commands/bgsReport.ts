@@ -15,16 +15,16 @@
  */
 
 import * as discord from 'discord.js';
-import * as request from 'request';
-import * as moment from 'moment';
-import App from '../../../server';
-import { Responses } from '../responseDict';
-import { DB } from '../../../db/index';
-import { Access } from './../access';
-import { EBGSFactionsV4WOHistory, EBGSSystemsV4WOHistory, FieldRecordSchema } from "../../../interfaces/typings";
-import { OptionsWithUrl } from 'request';
 import { RichEmbed } from 'discord.js';
+import * as moment from 'moment';
+import * as request from 'request';
+import { OptionsWithUrl } from 'request';
+import { DB } from '../../../db/index';
+import { EBGSFactionsV4WOHistory, EBGSSystemsV4WOHistory, FieldRecordSchema } from "../../../interfaces/typings";
+import App from '../../../server';
 import { AutoReport } from '../../cron/autoReport';
+import { Responses } from '../responseDict';
+import { Access } from './../access';
 
 export class BGSReport {
     db: DB;
@@ -239,7 +239,31 @@ export class BGSReport {
             if (guild) {
                 let primaryFactions: string[] = [];
                 let secondaryFactions: string[] = [];
-                guild.monitor_factions.forEach(faction => {
+				let bgsFactionLower = guild.bgs_faction_name_lower;
+				let bgsFaction = guild.bgs_faction_name;
+				let bgsFactionInf = 0;
+				let infDiff = 0;
+                let bgsFactionInfs = new Array();
+				if (bgsFactionLower) {
+                    let requestOptions: OptionsWithUrl = {
+                        url: "http://elitebgs.kodeblox.com/api/ebgs/v4/factions",
+                        method: "GET",
+                        qs: { name: bgsFactionLower },
+                        json: true
+                    }
+                    request(requestOptions, (error, response, body: EBGSFactionsV4WOHistory) => {
+                            if (body.total === 0) {
+                                console.log("Faction not found");
+                            } else {
+                            let factionResponse = body.docs[0];
+                                let influence = 0;
+                                factionResponse.faction_presence.forEach(systemElement => {
+									(bgsFactionInfs[systemElement.system_name] = systemElement.influence);
+                                });                            
+                        }  
+                    });
+				}
+				guild.monitor_factions.forEach(faction => {
                     if (faction.primary) {
                         primaryFactions.push(faction.faction_name);
                     } else {
@@ -303,15 +327,32 @@ export class BGSReport {
                                                             if (systemIndex !== -1) {
                                                                 let factionName = factionResponse.name;
                                                                 let state = "";
+																let wState = "";
                                                                 let influence = 0;
                                                                 let pendingStatesArray = [];
                                                                 factionResponse.faction_presence.forEach(systemElement => {
                                                                     if (systemElement.system_name_lower === system.toLowerCase()) {
                                                                         state = systemElement.state;
                                                                         influence = systemElement.influence;
+																		bgsFactionInf = bgsFactionInfs[systemElement.system_name];
+																		infDiff = Math.round(Math.abs((bgsFactionInf * 100) - (influence * 100)));   
                                                                         pendingStatesArray = systemElement.pending_states;
                                                                     }
                                                                 });
+																if (infDiff <= 5 ) {
+																	if (infDiff == 0) {
+																		wState = " :small_red_triangle:";
+																	}else{
+																		wState = " :warning:";
+																	}
+                                                                }
+                                                                if ((state === "war") || (state === "civilwar") || (state === "election")) {
+                                                                    if (state === "election") {
+                                                                       wState += ":ballot_box:"; 
+                                                                    }else{
+                                                                        wState += ":skull_crossbones:";
+                                                                    }
+                                                                }																
                                                                 let factionDetail = "";
                                                                 factionDetail += `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}%\n`;
                                                                 factionDetail += `Current ${this.acronym(factionName)} State : ${state}\n`;
@@ -329,7 +370,7 @@ export class BGSReport {
                                                                     });
                                                                 }
 
-                                                                factionDetail += `Pending ${this.acronym(factionName)} State : ${pendingStates}\n`;
+                                                                factionDetail += `Pending ${this.acronym(factionName)} State : ${pendingStates}${wState}\n`;
                                                                 resolve([factionDetail, factionName, influence]);
                                                             } else {
                                                                 resolve([`${this.acronym(faction.name)} Faction not found\n`, "", 0]);
@@ -364,12 +405,15 @@ export class BGSReport {
                                                             if (systemIndex !== -1) {
                                                                 let factionName = factionResponse.name;
                                                                 let state = "";
+																let wState = "";
                                                                 let influence = 0;
                                                                 let pendingStatesArray = [];
                                                                 factionResponse.faction_presence.forEach(systemElement => {
                                                                     if (systemElement.system_name_lower === system.toLowerCase()) {
                                                                         state = systemElement.state;
                                                                         influence = systemElement.influence;
+																		bgsFactionInf = bgsFactionInfs[systemElement.system_name];
+																		infDiff = Math.round(Math.abs((bgsFactionInf * 100) - (influence * 100)));   
                                                                         pendingStatesArray = systemElement.pending_states;
                                                                     }
                                                                 });
@@ -385,7 +429,21 @@ export class BGSReport {
                                                                         }
                                                                     });
                                                                 }
-                                                                let factionDetail = `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}% (Currently in ${state}. Pending ${pendingStates})\n`;
+																if (infDiff <= 5 ) {
+																	if (infDiff == 0) {
+																		wState = " :small_red_triangle:";
+																	}else{
+																		wState = " :warning:";
+																	}
+																}
+                                                                if ((state === "war") || (state === "civilwar") || (state === "election")) {
+                                                                    if (state === "election") {
+                                                                       wState += ":ballot_box:"; 
+                                                                    }else{
+                                                                        wState += ":skull_crossbones:";
+                                                                    }
+                                                                }																
+                                                                let factionDetail = `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}% (Currently in ${state}. Pending ${pendingStates})${wState}\n`;
                                                                 resolve([factionDetail, factionName, influence]);
                                                             } else {
                                                                 resolve([`${this.acronym(faction.name)} Faction not found\n`, "", 0]);
@@ -555,12 +613,15 @@ export class BGSReport {
                                                             if (systemIndex !== -1) {
                                                                 let factionName = factionResponse.name;
                                                                 let state = "";
-                                                                let influence = 0;
+                                                                let wState = "";
+                                                             let influence = 0;
                                                                 let pendingStatesArray = [];
                                                                 factionResponse.faction_presence.forEach(systemElement => {
                                                                     if (systemElement.system_name_lower === system.toLowerCase()) {
                                                                         state = systemElement.state;
                                                                         influence = systemElement.influence;
+																		bgsFactionInf = bgsFactionInfs[systemElement.system_name];
+																		infDiff = Math.round(Math.abs((bgsFactionInf * 100) - (influence * 100)));   
                                                                         pendingStatesArray = systemElement.pending_states;
                                                                     }
                                                                 });
@@ -578,7 +639,21 @@ export class BGSReport {
                                                                         }
                                                                     });
                                                                 }
-                                                                let factionDetail = `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}% (Currently in ${state}. Pending ${pendingStates})\n`;
+																if (infDiff <= 5 ) {
+																	if (infDiff == 0) {
+																		wState = " :small_red_triangle:";
+																	}else{
+																		wState = " :warning:";
+																	}
+																}
+                                                                if ((state === "war") || (state === "civilwar") || (state === "election")) {
+                                                                    if (state === "election") {
+                                                                       wState += ":ballot_box:"; 
+                                                                    }else{
+                                                                        wState += ":skull_crossbones:";
+                                                                    }
+                                                                }																
+                                                                let factionDetail = `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}% (Currently in ${state}. Pending ${pendingStates})${wState}\n`;
                                                                 resolve([factionDetail, factionName, influence]);
                                                             } else {
                                                                 resolve([`${this.acronym(faction.name)} Faction not found\n`, "", 0]);
@@ -613,12 +688,15 @@ export class BGSReport {
                                                             if (systemIndex !== -1) {
                                                                 let factionName = factionResponse.name;
                                                                 let state = "";
+                                                                let wState = "";
                                                                 let influence = 0;
                                                                 let pendingStatesArray = [];
                                                                 factionResponse.faction_presence.forEach(systemElement => {
                                                                     if (systemElement.system_name_lower === system.toLowerCase()) {
                                                                         state = systemElement.state;
                                                                         influence = systemElement.influence;
+																		bgsFactionInf = bgsFactionInfs[systemElement.system_name];
+																		infDiff = Math.round(Math.abs((bgsFactionInf * 100) - (influence * 100)));   
                                                                         pendingStatesArray = systemElement.pending_states;
                                                                     }
                                                                 });
@@ -634,7 +712,23 @@ export class BGSReport {
                                                                         }
                                                                     });
                                                                 }
-                                                                let factionDetail = `${this.acronym(factionName)} : ${(influence * 100).toFixed(1)}% (${state}. Pending ${pendingStates})\n`;
+																if (infDiff <= 5 ) {
+																	if (infDiff == 0) {
+																		wState += " :small_red_triangle:";
+																		if (state === "war" ) {
+																		}
+																	}else{
+																		wState += " :warning:";
+																	}
+																}
+                                                                if ((state === "war") || (state === "civilwar") || (state === "election")) {
+                                                                    if (state === "election") {
+                                                                       wState += ":ballot_box:"; 
+                                                                    }else{
+                                                                        wState += ":skull_crossbones:";
+                                                                    }
+                                                                }																
+                                                                let factionDetail = `${this.acronym(factionName)} : ${(influence * 100).toFixed(1)}% (${state}. Pending ${pendingStates})${wState}\n`;
                                                                 resolve([factionDetail, factionName, influence]);
                                                             } else {
                                                                 resolve([`${this.acronym(faction.name)} Faction not found\n`, "", 0]);

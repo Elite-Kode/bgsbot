@@ -17,7 +17,7 @@
 import * as discord from 'discord.js';
 import { DiscordSecrets } from '../../secrets';
 import { Responses } from './responseDict';
-import { Hi, Help, MyGuild, BGSRole, AdminRoles, ForbiddenRoles, BGSChannel, MonitorSystems, MonitorFactions, SystemStatus, FactionStatus, BGSReport, Sort, Chart, Theme } from './commands';
+import { Hi, Help, MyGuild, BGSRole, AdminRoles, ForbiddenRoles, BGSChannel, BGSFaction, MonitorSystems, MonitorFactions, SystemStatus, FactionStatus, BGSReport, Sort, Chart, Theme, Purge} from './commands';
 import { HouseKeeping } from './houseKeeping';
 import { HelpSchema } from '../../interfaces/typings';
 import App from '../../server';
@@ -101,6 +101,7 @@ export class DiscordClient {
         this.commandsMap.set("myguild", new MyGuild());
         this.commandsMap.set("bgsrole", new BGSRole());
         this.commandsMap.set("adminroles", new AdminRoles());
+        this.commandsMap.set("bgsfaction", new BGSFaction());
         this.commandsMap.set("forbiddenroles", new ForbiddenRoles());
         this.commandsMap.set("bgschannel", new BGSChannel());
         this.commandsMap.set("monitorsystems", new MonitorSystems());
@@ -111,6 +112,7 @@ export class DiscordClient {
         this.commandsMap.set("sort", new Sort());
         this.commandsMap.set("chart", new Chart());
         this.commandsMap.set("theme", new Theme());
+        this.commandsMap.set("purge", new Purge());
     }
 
     private initiateCustom(): void {
