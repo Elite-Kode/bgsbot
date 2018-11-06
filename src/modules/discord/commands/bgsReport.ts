@@ -944,7 +944,6 @@ export class BGSReport {
                         pagedFields.push(fieldsInPage);
                         fieldsInPage = [];
                         charactersPerPageCount = 0;
-						index -= 1;
                     }
                     if (index === fieldRecord.length - 1) {
                         pagedFields.push(fieldsInPage);
