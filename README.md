@@ -15,16 +15,25 @@ Special mention for the awesome group I am in, [Knights of Karma](http://knights
 Additional functionality by Commander Themadoll
 
 Added command to Purge the channel
+
 @BGSBot purge channel
 
+
 Added commands to set/unset/show BGS Faction
+
 @BGSBot bgsfaction set/unset/show
 
+
 Added Icons to expose BGS conflict states visually.
+
 :skull_crossbones:      to indicate war/civil war
+
 :small_red_triangle:    to indicate BGS faction of interest
+
 :ballot_box:            to indicate election
+
 :warning:               to indicate factions that are less than 5% apart.
+
 
 ## License
 
