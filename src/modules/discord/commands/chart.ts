@@ -97,10 +97,12 @@ export class Chart {
         return [
             'chart',
             'Generates a chart for the last 7 days',
-            'chart get <factions|systems> <influence|state> <system name|faction name>',
+            'chart get <factions|systems> <influence|state|pending|recovering> <system name|faction name>',
             [
                 '`@BGSBot chart get systems influence qa\'wakana`',
-                '`@BGSBot chart get factions state knights of karma`'
+                '`@BGSBot chart get factions state knights of karma`',
+                '`@BGSBot chart get factions pending knights of karma`',
+                '`@BGSBot chart get factions recovering knights of karma`'
             ]
         ];
     }
