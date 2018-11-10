@@ -843,6 +843,7 @@ export class BGSReport {
                         pagedFields.push(fieldsInPage);
                         fieldsInPage = [];
                         charactersPerPageCount = 0;
+                        index--;
                     }
                     if (charactersPerPageCount < 5000) {
                         fieldsInPage.push(fieldRecord[index]);
@@ -850,6 +851,7 @@ export class BGSReport {
                         pagedFields.push(fieldsInPage);
                         fieldsInPage = [];
                         charactersPerPageCount = 0;
+                        index--;
                     }
                     if (index === fieldRecord.length - 1) {
                         pagedFields.push(fieldsInPage);
