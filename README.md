@@ -26,13 +26,18 @@ Added commands to set/unset/show BGS Faction
 
 Added Icons to expose BGS conflict states visually.
 
-:skull_crossbones:      to indicate war/civil war
-
-:small_red_triangle:    to indicate BGS faction of interest
+:crown: to indicate controlling faction
+:small_red_triangle:    to indicate BGS faction of interest and any faction that has equal inf.
+:warning:               to indicate factions with infs that are less than 5% apart.
+:chart_with_upwards_trend: to indicate boom
+:chart_with_downwards_trend: to indicate bust
+:skull_crossbones:      to indicate famine
+:biohazard: to inidicate outbreak
+:cross_swords: to indicate war
+:dagger: to indicate civil war
 
 :ballot_box:            to indicate election
 
-:warning:               to indicate factions that are less than 5% apart.
 
 
 ## License
