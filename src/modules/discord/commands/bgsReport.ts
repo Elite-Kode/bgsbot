@@ -83,6 +83,7 @@ export class BGSReport {
     settime(message: discord.Message, argsArray: string[]): void {
         Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN])
             .then(() => {
+
                 if (argsArray.length === 2) {
                     let guildId = message.guild.id;
                     let time = argsArray[1].split(':').map(element => {
@@ -300,6 +301,7 @@ export class BGSReport {
                                     let primaryFactionPromises: Promise<[string, string, number]>[] = [];
                                     let secondaryFactionPromises: Promise<[string, string, number]>[] = [];
                                     let noFactionMonitoredInSystem = true;
+									let controlFaction = systemResponse.controlling_minor_faction;
                                     for (let faction of systemResponse.factions) {
                                         if (primaryFactions.indexOf(faction.name) !== -1 || secondaryFactions.indexOf(faction.name) !== -1) {
                                             noFactionMonitoredInSystem = false;
@@ -327,10 +329,10 @@ export class BGSReport {
                                                             if (systemIndex !== -1) {
                                                                 let factionName = factionResponse.name;
                                                                 let state = "";
-																let wState = "";
+																let wState +="";
                                                                 let influence = 0;
                                                                 let pendingStatesArray = [];
-                                                                factionResponse.faction_presence.forEach(systemElement => {
+																factionResponse.faction_presence.forEach(systemElement => {
                                                                     if (systemElement.system_name_lower === system.toLowerCase()) {
                                                                         state = systemElement.state;
                                                                         influence = systemElement.influence;
@@ -339,20 +341,38 @@ export class BGSReport {
                                                                         pendingStatesArray = systemElement.pending_states;
                                                                     }
                                                                 });
+																if (controlFaction === factionName.toLowerCase()) {
+																	wState += ":crown:";
+																}
 																if (infDiff <= 5 ) {
 																	if (infDiff == 0) {
-																		wState = " :small_red_triangle:";
+																		wState += " :small_red_triangle:";
 																	}else{
-																		wState = " :warning:";
+																		wState += " :warning:";
 																	}
                                                                 }
-                                                                if ((state === "war") || (state === "civilwar") || (state === "election")) {
-                                                                    if (state === "election") {
-                                                                       wState += ":ballot_box:"; 
-                                                                    }else{
-                                                                        wState += ":skull_crossbones:";
-                                                                    }
-                                                                }																
+                                                                switch (state) {
+                                                                case "war": 
+																    wState += ":crossed_swords:";
+																	break;
+                                                                case "civilwar":
+																	wState += ":dagger:";
+																	break;
+																case "election":
+																	wState += ":ballot_box:";
+																	break;
+																case "famine":
+																	wState += ":skull_crossbones:";
+																	break;
+																case "outbreak":
+																	wState += ":biohazard:";
+																	break;
+																case "boom":
+																	wState += ":chart_with_upwards_trend:";
+																	break;
+																case "bust":
+																	wState += ":chart_with_downwards_trend:";
+																}
                                                                 let factionDetail = "";
                                                                 factionDetail += `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}%\n`;
                                                                 factionDetail += `Current ${this.acronym(factionName)} State : ${state}\n`;
@@ -405,7 +425,7 @@ export class BGSReport {
                                                             if (systemIndex !== -1) {
                                                                 let factionName = factionResponse.name;
                                                                 let state = "";
-																let wState = "";
+																let wState +="";
                                                                 let influence = 0;
                                                                 let pendingStatesArray = [];
                                                                 factionResponse.faction_presence.forEach(systemElement => {
@@ -429,20 +449,38 @@ export class BGSReport {
                                                                         }
                                                                     });
                                                                 }
+																if (controlFaction === factionName.toLowerCase()) {
+																	wState += ":crown:";
+																}
 																if (infDiff <= 5 ) {
 																	if (infDiff == 0) {
-																		wState = " :small_red_triangle:";
+																		wState += " :small_red_triangle:";
 																	}else{
-																		wState = " :warning:";
+																		wState += " :warning:";
 																	}
 																}
-                                                                if ((state === "war") || (state === "civilwar") || (state === "election")) {
-                                                                    if (state === "election") {
-                                                                       wState += ":ballot_box:"; 
-                                                                    }else{
-                                                                        wState += ":skull_crossbones:";
-                                                                    }
-                                                                }																
+                                                                switch (state) {
+                                                                case "war": 
+																    wState += ":crossed_swords:";
+																	break;
+                                                                case "civilwar":
+																	wState += ":dagger:";
+																	break;
+																case "election":
+																	wState += ":ballot_box:";
+																	break;
+																case "famine":
+																	wState += ":skull_crossbones:";
+																	break;
+																case "outbreak":
+																	wState += ":biohazard:";
+																	break;
+																case "boom":
+																	wState += ":chart_with_upwards_trend:";
+																	break;
+																case "bust":
+																	wState += ":chart_with_downwards_trend:";
+																}
                                                                 let factionDetail = `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}% (Currently in ${state}. Pending ${pendingStates})${wState}\n`;
                                                                 resolve([factionDetail, factionName, influence]);
                                                             } else {
@@ -586,6 +624,7 @@ export class BGSReport {
                                     let primaryFactionPromises: Promise<[string, string, number]>[] = [];
                                     let secondaryFactionPromises: Promise<[string, string, number]>[] = [];
                                     let noFactionMonitoredInSystem = true;
+									let controlFaction = systemResponse.controlling_minor_faction;
                                     for (let faction of systemResponse.factions) {
                                         if (primaryFactions.indexOf(faction.name) !== -1 || secondaryFactions.indexOf(faction.name) !== -1) {
                                             noFactionMonitoredInSystem = false;
@@ -613,8 +652,8 @@ export class BGSReport {
                                                             if (systemIndex !== -1) {
                                                                 let factionName = factionResponse.name;
                                                                 let state = "";
-                                                                let wState = "";
-                                                             let influence = 0;
+                                                                let wState +="";
+																let influence = 0;
                                                                 let pendingStatesArray = [];
                                                                 factionResponse.faction_presence.forEach(systemElement => {
                                                                     if (systemElement.system_name_lower === system.toLowerCase()) {
@@ -639,20 +678,38 @@ export class BGSReport {
                                                                         }
                                                                     });
                                                                 }
+																if (controlFaction === factionName.toLowerCase()) {
+																	wState += ":crown:";
+																}
 																if (infDiff <= 5 ) {
 																	if (infDiff == 0) {
-																		wState = " :small_red_triangle:";
+																		wState += " :small_red_triangle:";
 																	}else{
-																		wState = " :warning:";
+																		wState += " :warning:";
 																	}
 																}
-                                                                if ((state === "war") || (state === "civilwar") || (state === "election")) {
-                                                                    if (state === "election") {
-                                                                       wState += ":ballot_box:"; 
-                                                                    }else{
-                                                                        wState += ":skull_crossbones:";
-                                                                    }
-                                                                }																
+                                                                switch (state) {
+                                                                case "war": 
+																    wState += ":crossed_swords:";
+																	break;
+                                                                case "civilwar":
+																	wState += ":dagger:";
+																	break;
+																case "election":
+																	wState += ":ballot_box:";
+																	break;
+																case "famine":
+																	wState += ":skull_crossbones:";
+																	break;
+																case "outbreak":
+																	wState += ":biohazard:";
+																	break;
+																case "boom":
+																	wState += ":chart_with_upwards_trend:";
+																	break;
+																case "bust":
+																	wState += ":chart_with_downwards_trend:";
+																}
                                                                 let factionDetail = `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}% (Currently in ${state}. Pending ${pendingStates})${wState}\n`;
                                                                 resolve([factionDetail, factionName, influence]);
                                                             } else {
@@ -688,7 +745,7 @@ export class BGSReport {
                                                             if (systemIndex !== -1) {
                                                                 let factionName = factionResponse.name;
                                                                 let state = "";
-                                                                let wState = "";
+                                                                let wState +="";
                                                                 let influence = 0;
                                                                 let pendingStatesArray = [];
                                                                 factionResponse.faction_presence.forEach(systemElement => {
@@ -712,22 +769,38 @@ export class BGSReport {
                                                                         }
                                                                     });
                                                                 }
+																if (controlFaction === factionName.toLowerCase()) {
+																	wState += ":crown:";
+																}
 																if (infDiff <= 5 ) {
 																	if (infDiff == 0) {
-																		wState += " :small_red_triangle:";
-																		if (state === "war" ) {
-																		}
+																		wState +=" :small_red_triangle:";
 																	}else{
-																		wState += " :warning:";
+																		wState +=" :warning:";
 																	}
 																}
-                                                                if ((state === "war") || (state === "civilwar") || (state === "election")) {
-                                                                    if (state === "election") {
-                                                                       wState += ":ballot_box:"; 
-                                                                    }else{
-                                                                        wState += ":skull_crossbones:";
-                                                                    }
-                                                                }																
+                                                                switch (state) {
+                                                                case "war": 
+																    wState += ":crossed_swords:";
+																	break;
+                                                                case "civilwar":
+																	wState += ":dagger:";
+																	break;
+																case "election":
+																	wState += ":ballot_box:";
+																	break;
+																case "famine":
+																	wState += ":skull_crossbones:";
+																	break;
+																case "outbreak":
+																	wState += ":biohazard:";
+																	break;
+																case "boom":
+																	wState += ":chart_with_upwards_trend:";
+																	break;
+																case "bust":
+																	wState += ":chart_with_downwards_trend:";
+																}
                                                                 let factionDetail = `${this.acronym(factionName)} : ${(influence * 100).toFixed(1)}% (${state}. Pending ${pendingStates})${wState}\n`;
                                                                 resolve([factionDetail, factionName, influence]);
                                                             } else {
