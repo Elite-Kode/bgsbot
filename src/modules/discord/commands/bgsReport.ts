@@ -329,7 +329,7 @@ export class BGSReport {
                                                             if (systemIndex !== -1) {
                                                                 let factionName = factionResponse.name;
                                                                 let state = "";
-																let wState +="";
+																let wState = "";
                                                                 let influence = 0;
                                                                 let pendingStatesArray = [];
 																factionResponse.faction_presence.forEach(systemElement => {
@@ -425,7 +425,7 @@ export class BGSReport {
                                                             if (systemIndex !== -1) {
                                                                 let factionName = factionResponse.name;
                                                                 let state = "";
-																let wState +="";
+																let wState = "";
                                                                 let influence = 0;
                                                                 let pendingStatesArray = [];
                                                                 factionResponse.faction_presence.forEach(systemElement => {
@@ -652,7 +652,7 @@ export class BGSReport {
                                                             if (systemIndex !== -1) {
                                                                 let factionName = factionResponse.name;
                                                                 let state = "";
-                                                                let wState +="";
+                                                                let wState = "";
 																let influence = 0;
                                                                 let pendingStatesArray = [];
                                                                 factionResponse.faction_presence.forEach(systemElement => {
@@ -745,7 +745,7 @@ export class BGSReport {
                                                             if (systemIndex !== -1) {
                                                                 let factionName = factionResponse.name;
                                                                 let state = "";
-                                                                let wState +="";
+                                                                let wState = "";
                                                                 let influence = 0;
                                                                 let pendingStatesArray = [];
                                                                 factionResponse.faction_presence.forEach(systemElement => {
@@ -1017,7 +1017,7 @@ export class BGSReport {
                         pagedFields.push(fieldsInPage);
                         fieldsInPage = [];
                         charactersPerPageCount = 0;
-						index -= 1;
+						index --;
                     }
                     if (index === fieldRecord.length - 1) {
                         pagedFields.push(fieldsInPage);
