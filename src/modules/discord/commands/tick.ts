@@ -14,18 +14,22 @@
  * limitations under the License.
  */
 
-import * as discord from 'discord.js';
+import * as request from 'request';
+import * as moment from 'moment';
+import { Message, RichEmbed } from 'discord.js';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
 import { Access } from './../access';
+import { TickV4 } from "../../../interfaces/typings";
+import { OptionsWithUrl } from 'request';
 
-export class Theme {
+export class Tick {
     db: DB;
     constructor() {
         this.db = App.db;
     }
-    exec(message: discord.Message, commandArguments: string): void {
+    exec(message: Message, commandArguments: string): void {
         let argsArray: string[] = [];
         if (commandArguments.length !== 0) {
             argsArray = commandArguments.split(" ");
@@ -42,47 +46,80 @@ export class Theme {
         }
     }
 
-    set(message: discord.Message, argsArray: string[]) {
-        Access.has(message.member, [Access.ADMIN, Access.FORBIDDEN])
+    get(message: Message, argsArray: string[]): void {
+        Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN])
             .then(() => {
-                if (argsArray.length === 2) {
-                    let guildId = message.guild.id;
-                    let theme = argsArray[1].toLowerCase();
-
-                    if ((theme === 'light' || theme === 'dark')) {
-                        this.db.model.guild.findOneAndUpdate(
-                            { guild_id: guildId },
-                            {
-                                updated_at: new Date(),
-                                theme: theme
-                            })
-                            .then(guild => {
-                                if (guild) {
-                                    message.channel.send(Responses.getResponse(Responses.SUCCESS));
-                                } else {
-                                    message.channel.send(Responses.getResponse(Responses.FAIL))
-                                        .then(() => {
-                                            message.channel.send("Your guild is not set yet");
-                                        })
-                                        .catch(err => {
-                                            console.log(err);
-                                        });
-                                }
-                            })
-                            .catch(err => {
-                                message.channel.send(Responses.getResponse(Responses.FAIL));
-                                console.log(err);
-                            })
-                    } else {
-                        message.channel.send(Responses.getResponse(Responses.FAIL))
-                            .then(() => {
-                                message.channel.send("Theme name is incorrect.");
-                            })
-                            .catch(err => {
-                                console.log(err);
-                            });
+                if (argsArray.length === 1) {
+                    let requestOptions: OptionsWithUrl = {
+                        url: "https://elitebgs.kodeblox.com/api/ebgs/v4/ticks",
+                        method: "GET",
+                        json: true
                     }
-                } else if (argsArray.length > 2) {
+
+                    request(requestOptions, (error, response, body: TickV4) => {
+                        if (!error && response.statusCode == 200) {
+                            if (body.length === 0) {
+                                message.channel.send(Responses.getResponse(Responses.FAIL));
+                            } else {
+                                let lastTick = body[0];
+                                let embed = new RichEmbed();
+                                embed.setTitle("Tick");
+                                embed.setColor([255, 0, 255]);
+                                let lastTickFormatted = moment(lastTick.time).utc().format('HH:mm');
+                                embed.addField("Last Tick", lastTickFormatted + ' UTC');
+                                embed.setTimestamp(new Date());
+                                message.channel.send(embed)
+                                    .catch(err => {
+                                        console.log(err);
+                                    });
+                            }
+                        } else {
+                            if (error) {
+                                console.log(error);
+                            } else {
+                                console.log(response.statusMessage);
+                            }
+                        }
+                    })
+                } else if (argsArray.length > 1) {
+                    message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+                } else {
+                    message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+                }
+            })
+    }
+
+    detect(message: Message, argsArray: string[]): void {
+        Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN])
+            .then(() => {
+                if (argsArray.length === 1) {
+                    let guildId = message.guild.id;
+
+                    this.db.model.guild.findOneAndUpdate(
+                        { guild_id: guildId },
+                        {
+                            updated_at: new Date(),
+                            announce_tick: true
+                        })
+                        .then(guild => {
+                            if (guild) {
+                                message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                            } else {
+                                message.channel.send(Responses.getResponse(Responses.FAIL))
+                                    .then(() => {
+                                        message.channel.send("Your guild is not set yet");
+                                    })
+                                    .catch(err => {
+                                        console.log(err);
+                                    });
+                            }
+                        })
+                        .catch(err => {
+                            message.channel.send(Responses.getResponse(Responses.FAIL));
+                            console.log(err);
+                        })
+
+                } else if (argsArray.length > 1) {
                     message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
                 } else {
                     message.channel.send(Responses.getResponse(Responses.NOPARAMS));
@@ -93,8 +130,8 @@ export class Theme {
             })
     }
 
-    remove(message: discord.Message, argsArray: string[]) {
-        Access.has(message.member, [Access.ADMIN, Access.FORBIDDEN])
+    stopdetect(message: Message, argsArray: string[]): void {
+        Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN])
             .then(() => {
                 if (argsArray.length === 1) {
                     let guildId = message.guild.id;
@@ -103,9 +140,7 @@ export class Theme {
                         { guild_id: guildId },
                         {
                             updated_at: new Date(),
-                            $unset: {
-                                theme: 1
-                            }
+                            announce_tick: false
                         })
                         .then(guild => {
                             if (guild) {
@@ -133,69 +168,15 @@ export class Theme {
             })
     }
 
-    show(message: discord.Message, argsArray: string[]) {
-        Access.has(message.member, [Access.ADMIN, Access.FORBIDDEN])
-            .then(() => {
-                if (argsArray.length === 1) {
-                    let guildId = message.guild.id;
-
-                    this.db.model.guild.findOne({ guild_id: guildId })
-                        .then(guild => {
-                            if (guild) {
-                                if (guild.theme) {
-                                    let embed = new discord.RichEmbed();
-                                    embed.setTitle("Theme");
-                                    embed.setColor([255, 0, 255]);
-                                    embed.addField("Theme: ", guild.theme);
-                                    embed.setTimestamp(new Date());
-                                    message.channel.send(embed)
-                                        .catch(err => {
-                                            console.log(err);
-                                        });
-                                } else {
-                                    message.channel.send(Responses.getResponse(Responses.FAIL))
-                                        .then(() => {
-                                            message.channel.send("You don't have sorting set up");
-                                        })
-                                        .catch(err => {
-                                            console.log(err);
-                                        });
-                                }
-                            } else {
-                                message.channel.send(Responses.getResponse(Responses.FAIL))
-                                    .then(() => {
-                                        message.channel.send("Your guild is not set yet");
-                                    })
-                                    .catch(err => {
-                                        console.log(err);
-                                    });
-                            }
-                        })
-                        .catch(err => {
-                            message.channel.send(Responses.getResponse(Responses.FAIL));
-                            console.log(err);
-                        })
-                } else if (argsArray.length > 1) {
-                    message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
-                } else {
-                    message.channel.send(Responses.getResponse(Responses.NOPARAMS));
-                }
-            })
-            .catch(() => {
-                message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
-            })
-    }
-
     help() {
         return [
-            'theme',
-            'Sets, removes or shows your current theme. Used in charts and other areas. Defaults to light',
-            'theme <set|remove|show> <light|dark>',
+            'tick',
+            'Gets the last tick or sets and removes the automatic announcement of the tick',
+            'tick <get|detect|stopdetect>',
             [
-                '`@BGSBot theme set dark`',
-                '`@BGSBot theme set light`',
-                '`@BGSBot theme remove`',
-                '`@BGSBot theme show`'
+                '`@BGSBot tick get`',
+                '`@BGSBot tick detect`',
+                '`@BGSBot tick stopdetect`'
             ]
         ];
     }

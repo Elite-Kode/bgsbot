@@ -218,6 +218,13 @@ export interface HelpSchema {
     example: string[]
 }
 
+export interface TickSchema {
+    _id: string;
+    __v: number;
+    time: string;
+    updated_at: string;
+}
+
 export type FactionsV4 = PaginateResult<FactionSchema>;
 export type PopulatedSystemsV4 = PaginateResult<PopulatedSystemSchema>;
 export type EBGSFactionsV4 = PaginateResult<EBGSFactionV4Schema>;
@@ -225,3 +232,4 @@ export type EBGSSystemsV4 = PaginateResult<EBGSSystemV4Schema>;
 export type EBGSFactionsV4WOHistory = PaginateResult<EBGSFactionV4SchemaWOHistory>;
 export type EBGSSystemsV4WOHistory = PaginateResult<EBGSSystemV4SchemaWOHistory>;
 export type CronJobStore = CronJobStoreSchema;
+export type TickV4 = TickSchema[];

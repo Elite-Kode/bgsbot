@@ -17,7 +17,7 @@
 import * as discord from 'discord.js';
 import { DiscordSecrets } from '../../secrets';
 import { Responses } from './responseDict';
-import { Hi, Help, MyGuild, BGSRole, AdminRoles, ForbiddenRoles, BGSChannel, MonitorSystems, MonitorFactions, SystemStatus, FactionStatus, BGSReport, Sort, Chart, Theme } from './commands';
+import { Hi, Help, MyGuild, BGSRole, AdminRoles, ForbiddenRoles, BGSChannel, MonitorSystems, MonitorFactions, SystemStatus, FactionStatus, BGSReport, Sort, Chart, Theme, Tick } from './commands';
 import { HouseKeeping } from './houseKeeping';
 import { HelpSchema } from '../../interfaces/typings';
 import App from '../../server';
@@ -111,6 +111,7 @@ export class DiscordClient {
         this.commandsMap.set("sort", new Sort());
         this.commandsMap.set("chart", new Chart());
         this.commandsMap.set("theme", new Theme());
+        this.commandsMap.set("tick", new Tick());
     }
 
     private initiateCustom(): void {
