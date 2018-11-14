@@ -82,7 +82,7 @@ export class Theme {
                                 console.log(err);
                             });
                     }
-                } else if (argsArray.length > 3) {
+                } else if (argsArray.length > 2) {
                     message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
                 } else {
                     message.channel.send(Responses.getResponse(Responses.NOPARAMS));
@@ -192,8 +192,8 @@ export class Theme {
             'Sets, removes or shows your current theme. Used in charts and other areas. Defaults to light',
             'theme <set|remove|show> <light|dark>',
             [
-                '`@BGSBot theme set name dark`',
-                '`@BGSBot theme set name light`',
+                '`@BGSBot theme set dark`',
+                '`@BGSBot theme set light`',
                 '`@BGSBot theme remove`',
                 '`@BGSBot theme show`'
             ]

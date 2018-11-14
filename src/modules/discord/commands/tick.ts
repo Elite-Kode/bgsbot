@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import * as discord from 'discord.js';
 import * as request from 'request';
 import * as moment from 'moment';
+import { Message, RichEmbed } from 'discord.js';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
@@ -29,7 +29,7 @@ export class Tick {
     constructor() {
         this.db = App.db;
     }
-    exec(message: discord.Message, commandArguments: string): void {
+    exec(message: Message, commandArguments: string): void {
         let argsArray: string[] = [];
         if (commandArguments.length !== 0) {
             argsArray = commandArguments.split(" ");
@@ -46,7 +46,7 @@ export class Tick {
         }
     }
 
-    get(message: discord.Message, argsArray: string[]): void {
+    get(message: Message, argsArray: string[]): void {
         Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN])
             .then(() => {
                 if (argsArray.length === 1) {
@@ -62,7 +62,7 @@ export class Tick {
                                 message.channel.send(Responses.getResponse(Responses.FAIL));
                             } else {
                                 let lastTick = body[0];
-                                let embed = new discord.RichEmbed();
+                                let embed = new RichEmbed();
                                 embed.setTitle("Tick");
                                 embed.setColor([255, 0, 255]);
                                 let lastTickFormatted = moment(lastTick.time).utc().format('HH:mm');
@@ -89,13 +89,94 @@ export class Tick {
             })
     }
 
+    detect(message: Message, argsArray: string[]): void {
+        Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN])
+            .then(() => {
+                if (argsArray.length === 1) {
+                    let guildId = message.guild.id;
+
+                    this.db.model.guild.findOneAndUpdate(
+                        { guild_id: guildId },
+                        {
+                            updated_at: new Date(),
+                            announce_tick: true
+                        })
+                        .then(guild => {
+                            if (guild) {
+                                message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                            } else {
+                                message.channel.send(Responses.getResponse(Responses.FAIL))
+                                    .then(() => {
+                                        message.channel.send("Your guild is not set yet");
+                                    })
+                                    .catch(err => {
+                                        console.log(err);
+                                    });
+                            }
+                        })
+                        .catch(err => {
+                            message.channel.send(Responses.getResponse(Responses.FAIL));
+                            console.log(err);
+                        })
+
+                } else if (argsArray.length > 1) {
+                    message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+                } else {
+                    message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+                }
+            })
+            .catch(() => {
+                message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
+            })
+    }
+
+    stopdetect(message: Message, argsArray: string[]): void {
+        Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN])
+            .then(() => {
+                if (argsArray.length === 1) {
+                    let guildId = message.guild.id;
+
+                    this.db.model.guild.findOneAndUpdate(
+                        { guild_id: guildId },
+                        {
+                            updated_at: new Date(),
+                            announce_tick: false
+                        })
+                        .then(guild => {
+                            if (guild) {
+                                message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                            } else {
+                                message.channel.send(Responses.getResponse(Responses.FAIL))
+                                    .then(() => {
+                                        message.channel.send("Your guild is not set yet");
+                                    })
+                                    .catch(err => {
+                                        console.log(err);
+                                    });
+                            }
+                        })
+                        .catch(err => {
+                            message.channel.send(Responses.getResponse(Responses.FAIL));
+                            console.log(err);
+                        })
+                } else {
+                    message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+                }
+            })
+            .catch(() => {
+                message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
+            })
+    }
+
     help() {
         return [
             'tick',
-            'Gets the last tick',
-            'tick get',
+            'Gets the last tick or sets and removes the automatic announcement of the tick',
+            'tick <get|detect|stopdetect>',
             [
-                '`@BGSBot tick get`'
+                '`@BGSBot tick get`',
+                '`@BGSBot tick detect`',
+                '`@BGSBot tick stopdetect`'
             ]
         ];
     }

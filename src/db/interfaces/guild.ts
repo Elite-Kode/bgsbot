@@ -19,6 +19,7 @@ export interface IGuild {
     bgs_channel_id: string,
     bgs_role_id: string,
     bgs_time: string,
+    announce_tick: boolean,
     sort: string,
     sort_order: number,
     theme: string,
