@@ -29,3 +29,4 @@ export * from './bgsReport';
 export * from './sort';
 export * from './chart';
 export * from './theme';
+export * from './tick';

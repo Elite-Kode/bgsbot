@@ -16,7 +16,6 @@
 
 import * as discord from 'discord.js';
 import { Responses } from '../responseDict';
-import { Hi, MyGuild, BGSRole, AdminRoles, ForbiddenRoles, BGSChannel, MonitorSystems, MonitorFactions, SystemStatus, FactionStatus, BGSReport, Sort } from '../commands';
 import { Message, RichEmbed, MessageReaction, User } from 'discord.js';
 import { HelpSchema } from '../../../interfaces/typings';
 
