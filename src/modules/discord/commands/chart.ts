@@ -48,8 +48,16 @@ export class Chart {
     get(message: discord.Message, argsArray: string[]): void {
         Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN])
             .then(() => {
-                if (argsArray.length >= 4) {
-                    let systemName: string = argsArray.slice(3).join(" ").toLowerCase();
+                if (argsArray.length >= 4 || (argsArray.length === 2 && argsArray[1] === 'tick')) {
+                    let url: string;
+                    let name: string;
+                    if (argsArray[1] === 'tick') {
+                        url = `http://elitebgs.kodeblox.com/chartgenerator/${argsArray[1]}`;
+                        name = null;
+                    } else {
+                        url = `http://elitebgs.kodeblox.com/chartgenerator/${argsArray[1]}/${argsArray[2]}`;
+                        name = argsArray.slice(3).join(" ").toLowerCase();
+                    }
                     let timenow = Date.now();
 
                     this.db.model.guild.findOne({ guild_id: message.guild.id })
@@ -60,10 +68,10 @@ export class Chart {
                                     theme = guild.theme;
                                 }
                                 let requestOptions: OptionsWithUrl = {
-                                    url: `http://elitebgs.kodeblox.com/chartgenerator/${argsArray[1]}/${argsArray[2]}`,
+                                    url: url,
                                     method: "GET",
                                     qs: {
-                                        name: systemName,
+                                        name: name,
                                         timemin: timenow - 10 * 24 * 60 * 60 * 1000,
                                         timemax: timenow,
                                         theme: theme
@@ -89,6 +97,8 @@ export class Chart {
                             message.channel.send(Responses.getResponse(Responses.FAIL));
                             console.log(err);
                         });
+                } else {
+                    message.channel.send(Responses.getResponse(Responses.NOPARAMS));
                 }
             })
     }
@@ -97,12 +107,13 @@ export class Chart {
         return [
             'chart',
             'Generates a chart for the last 7 days',
-            'chart get <factions|systems> <influence|state|pending|recovering> <system name|faction name>',
+            'chart get <factions|systems|tick> <influence|state|pending|recovering> <system name|faction name>',
             [
                 '`@BGSBot chart get systems influence qa\'wakana`',
                 '`@BGSBot chart get factions state knights of karma`',
                 '`@BGSBot chart get factions pending knights of karma`',
-                '`@BGSBot chart get factions recovering knights of karma`'
+                '`@BGSBot chart get factions recovering knights of karma`',
+                '`@BGSBot chart get tick`'
             ]
         ];
     }
