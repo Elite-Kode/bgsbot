@@ -17,8 +17,8 @@ Added commands to set/unset/show BGS Faction
 
 Added command to expose timing of tick event.
 
-@BGSBot tick get
-@BGSBot tick detect
+@BGSBot tick get<br>
+@BGSBot tick detect<br>
 @BGSBot tick stopdetect
 
 
