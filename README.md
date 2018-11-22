@@ -4,6 +4,38 @@ A [Discord](https://discordapp.com/ "Discord") bot for Elite Dangerous player gr
 
 For more details please refer the [wiki](https://github.com/SayakMukhopadhyay/bgsbot/wiki "BGSBot Wiki")
 
+## Additional functionality
+
+Added command to Purge the channel
+
+@BGSBot purge channel
+
+
+Added commands to set/unset/show BGS Faction
+
+@BGSBot bgsfaction set/unset/show
+
+Added command to expose timing of tick event.
+
+@BGSBot tick get<br>
+@BGSBot tick detect<br>
+@BGSBot tick stopdetect
+
+
+Added Icons to expose BGS conflict states visually.
+
+:crown: to indicate controlling faction<br>
+:small_red_triangle:    to indicate BGS faction of interest and any faction that has equal inf.<br>
+:warning:               to indicate factions with infs that are less than 5% apart.<br>
+:chart_with_upwards_trend: to indicate boom<br>
+:chart_with_downwards_trend: to indicate bust<br>
+:skull_and_crossbones:      to indicate famine<br>
+:biohazard: to inidicate outbreak<br>
+:crossed_swords: to indicate war<br>
+:dagger: to indicate civil war<br>
+:ballot_box:            to indicate election
+
+
 ## Contributing
 
 If you find a bug, please create an issue in the issue tracker in Github, properly detailing the bug and reproduction steps.
