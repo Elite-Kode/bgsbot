@@ -1,5 +1,5 @@
 /*
- * KodeBlox Copyright 2017 Sayak Mukhopadhyay
+ * KodeBlox Copyright 2018 Sayak Mukhopadhyay
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,4 @@
  * limitations under the License.
  */
 
-export * from './hi';
-export * from './help';
-export * from './myGuild';
-export * from './bgsRole';
-export * from './adminRoles';
-export * from './bgsFaction';
-export * from './forbiddenRoles';
-export * from './bgsChannel';
-export * from './monitorSystems';
-export * from './monitorFactions';
-export * from './systemStatus';
-export * from './factionStatus';
-export * from './bgsReport';
-export * from './sort';
-export * from './chart';
-export * from './theme';
-export * from './purge';
-export * from './tick';
+export * from './tickDetector';

@@ -32,8 +32,6 @@ export class AutoReport {
                         console.log('CRONjob execute');
                         try{
                             let bgsChannel: GuildChannel = client.guilds.get(guild.guild_id).channels.get(guild.bgs_channel_id);
-                            console.log('Guild id: '+guild.guild_id);
-                            console.log('Client Guild size: '+client.guilds.size);
                             if (bgsChannel && bgsChannel.type === 'text') {
                                 let bgsReport = new BGSReport();
                                 bgsReport.getBGSReportEmbed(guild.guild_id)

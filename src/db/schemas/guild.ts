@@ -26,6 +26,7 @@ export let guildSchema: Schema = new Schema({
 	bgs_channel_id: String,
     bgs_role_id: String,
     bgs_time: String,
+	announce_tick: Boolean,
     sort: String,
     sort_order: Number,         // 1 of increasing and -1 for decreasing and 0 for disable
     theme: String,

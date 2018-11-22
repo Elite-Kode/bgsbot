@@ -43,7 +43,7 @@ Thumbs.db
 
 # Secrets
 secrets.ts
-secrets.ts.dist
+
 # Custom code
 
 /src/modules/discord/custom

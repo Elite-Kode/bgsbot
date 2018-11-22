@@ -21,6 +21,7 @@ import IndexRouter from './routes/index';
 import { DiscordClient } from './modules/discord/client';
 import { DB } from './db';
 import { AutoReport } from './modules/cron/index';
+import { TickDetector } from './modules/listener/index';
 
 class App {
     public express: express.Application;
@@ -34,6 +35,7 @@ class App {
         this.discordClient = new DiscordClient();
         this.db = new DB();
         this.cron();
+        this.listener();
     }
 
     private middleware(): void {
@@ -48,6 +50,16 @@ class App {
         this.db.model.guild.find()
             .then(guilds => {
                 AutoReport.initiateJob(guilds, this.discordClient.client)
+            })
+            .catch(err => {
+                console.log(err);
+            });
+    }
+
+    private listener(): void {
+        this.db.model.guild.find()
+            .then(guilds => {
+                TickDetector.initiateSocket(guilds, this.discordClient.client)
             })
             .catch(err => {
                 console.log(err);
