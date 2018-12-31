@@ -48,51 +48,48 @@ export class BGSReport {
         }
     }
 
-    get(message: discord.Message, argsArray: string[]): void {
-        Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN])
-            .then(() => {
-                if (argsArray.length === 1) {
-                    let guildId = message.guild.id;
-                    this.getBGSReportEmbed(guildId)
-                        .then(embedArray => {
-                            (async (message, embedArray) => {
-                                for (let index = 0; index < embedArray.length; index++) {
-                                    try {
-                                        await message.channel.send(embedArray[index]);
-                                    } catch (err) {
-                                        console.log(err);
-                                    }
-                                }
-                            })(message, embedArray);
-                        })
-                        .catch(err => {
-                            message.channel.send(Responses.getResponse(Responses.FAIL));
+    async get(message: discord.Message, argsArray: string[]) {
+        try {
+            await Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
+            if (argsArray.length === 1) {
+                let guildId = message.guild.id;
+                try {
+                    let embedArray = await this.getBGSReportEmbed(guildId);
+                    for (let index = 0; index < embedArray.length; index++) {
+                        try {
+                            await message.channel.send(embedArray[index]);
+                        } catch (err) {
                             console.log(err);
-                        });
-                } else if (argsArray.length > 1) {
-                    message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
-                } else {
-                    message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+                        }
+                    }
+                } catch (err) {
+                    message.channel.send(Responses.getResponse(Responses.FAIL));
+                    console.log(err);
                 }
-            })
-            .catch(() => {
-                message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
-            });
+            } else if (argsArray.length > 1) {
+                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+            } else {
+                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+            }
+        } catch (err) {
+            message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
+        }
     }
 
-    settime(message: discord.Message, argsArray: string[]): void {
-        Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN])
-            .then(() => {
-                if (argsArray.length === 2) {
-                    let guildId = message.guild.id;
-                    let time = argsArray[1].split(':').map(element => {
-                        return parseInt(element);
-                    });
-                    if (time.length === 3
-                        && time[0] >= 0 && time[0] < 24
-                        && time[1] >= 0 && time[1] < 59
-                        && time[2] >= 0 && time[2] < 59) {
-                        this.db.model.guild.findOneAndUpdate(
+    async settime(message: discord.Message, argsArray: string[]) {
+        try {
+            await Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
+            if (argsArray.length === 2) {
+                let guildId = message.guild.id;
+                let time = argsArray[1].split(':').map(element => {
+                    return parseInt(element);
+                });
+                if (time.length === 3
+                    && time[0] >= 0 && time[0] < 24
+                    && time[1] >= 0 && time[1] < 59
+                    && time[2] >= 0 && time[2] < 59) {
+                    try {
+                        let guild = await this.db.model.guild.findOneAndUpdate(
                             { guild_id: guildId },
                             {
                                 updated_at: new Date(),
@@ -104,133 +101,122 @@ export class BGSReport {
                                     return elementString;
                                 }).join(":")
                             },
-                            { new: true })
-                            .then(guild => {
-                                if (guild) {
-                                    message.channel.send(Responses.getResponse(Responses.SUCCESS));
-                                    AutoReport.createJob(guild, message.client);
-                                } else {
-                                    message.channel.send(Responses.getResponse(Responses.FAIL))
-                                        .then(() => {
-                                            message.channel.send("Your guild is not set yet");
-                                        })
-                                        .catch(err => {
-                                            console.log(err);
-                                        });
-                                }
-                            })
-                            .catch(err => {
-                                message.channel.send(Responses.getResponse(Responses.FAIL));
+                            { new: true });
+                        if (guild) {
+                            message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                            AutoReport.createJob(guild, message.client);
+                        } else {
+                            try {
+                                await message.channel.send(Responses.getResponse(Responses.FAIL));
+                                message.channel.send("Your guild is not set yet");
+                            } catch (err) {
                                 console.log(err);
-                            })
-                    } else {
-                        message.channel.send(Responses.getResponse(Responses.FAIL))
-                            .then(() => {
-                                message.channel.send("Time must be of the form HH:mm:ss");
-                            })
-                            .catch(err => {
-                                console.log(err);
-                            });
-                    }
-                } else if (argsArray.length > 2) {
-                    message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
-                } else {
-                    message.channel.send(Responses.getResponse(Responses.NOPARAMS));
-                }
-            })
-            .catch(() => {
-                message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
-            });
-    }
-
-    showtime(message: discord.Message, argsArray: string[]): void {
-        Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN])
-            .then(() => {
-                if (argsArray.length === 1) {
-                    let guildId = message.guild.id;
-
-                    this.db.model.guild.findOne({ guild_id: guildId })
-                        .then(guild => {
-                            if (guild) {
-                                if (guild.bgs_time && guild.bgs_time.length !== 0) {
-                                    let embed = new discord.RichEmbed();
-                                    embed.setTitle("BGS Reporting Time");
-                                    embed.setColor([255, 0, 255]);
-                                    embed.addField("Ids and Names", `${guild.bgs_time} UTC`);
-                                    embed.setTimestamp(new Date());
-                                    message.channel.send(embed)
-                                        .catch(err => {
-                                            console.log(err);
-                                        });
-                                } else {
-                                    message.channel.send(Responses.getResponse(Responses.FAIL))
-                                        .then(() => {
-                                            message.channel.send("You don't have a bgs reporting time set up");
-                                        })
-                                        .catch(err => {
-                                            console.log(err);
-                                        });
-                                }
-                            } else {
-                                message.channel.send(Responses.getResponse(Responses.FAIL))
-                                    .then(() => {
-                                        message.channel.send("Your guild is not set yet");
-                                    })
-                                    .catch(err => {
-                                        console.log(err);
-                                    });
                             }
-                        })
-                        .catch(err => {
-                            message.channel.send(Responses.getResponse(Responses.FAIL));
-                            console.log(err);
-                        })
+                        }
+                    } catch (err) {
+                        message.channel.send(Responses.getResponse(Responses.FAIL));
+                        console.log(err);
+                    }
                 } else {
-                    message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+                    try {
+                        await message.channel.send(Responses.getResponse(Responses.FAIL));
+                        message.channel.send("Time must be of the form HH:mm:ss");
+                    } catch (err) {
+                        console.log(err);
+                    }
                 }
-            })
-            .catch(() => {
-                message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
-            });
+            } else if (argsArray.length > 2) {
+                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+            } else {
+                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+            }
+        } catch (err) {
+            message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
+        }
     }
 
-    unsettime(message: discord.Message, argsArray: string[]): void {
-        Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN])
-            .then(() => {
-                if (argsArray.length === 1) {
-                    let guildId = message.guild.id;
+    async showtime(message: discord.Message, argsArray: string[]) {
+        try {
+            await Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
+            if (argsArray.length === 1) {
+                let guildId = message.guild.id;
 
-                    this.db.model.guild.findOneAndUpdate(
+                try {
+                    let guild = await this.db.model.guild.findOne({ guild_id: guildId });
+                    if (guild) {
+                        if (guild.bgs_time && guild.bgs_time.length !== 0) {
+                            let embed = new discord.RichEmbed();
+                            embed.setTitle("BGS Reporting Time");
+                            embed.setColor([255, 0, 255]);
+                            embed.addField("Ids and Names", `${guild.bgs_time} UTC`);
+                            embed.setTimestamp(new Date());
+                            try {
+                                message.channel.send(embed);
+                            } catch (err) {
+                                console.log(err);
+                            }
+                        } else {
+                            try {
+                                await message.channel.send(Responses.getResponse(Responses.FAIL));
+                                message.channel.send("You don't have a bgs reporting time set up");
+                            } catch (err) {
+                                console.log(err);
+                            }
+                        }
+                    } else {
+                        try {
+                            await message.channel.send(Responses.getResponse(Responses.FAIL));
+                            message.channel.send("Your guild is not set yet");
+                        } catch (err) {
+                            console.log(err);
+                        }
+                    }
+                } catch (err) {
+                    message.channel.send(Responses.getResponse(Responses.FAIL));
+                    console.log(err);
+                }
+            } else {
+                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+            }
+        } catch (err) {
+            message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
+        }
+    }
+
+    async unsettime(message: discord.Message, argsArray: string[]) {
+        try {
+            await Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
+            if (argsArray.length === 1) {
+                let guildId = message.guild.id;
+
+                try {
+                    let guild = await this.db.model.guild.findOneAndUpdate(
                         { guild_id: guildId },
                         {
                             updated_at: new Date(),
                             $unset: { bgs_time: 1 }
-                        })
-                        .then(guild => {
-                            if (guild) {
-                                message.channel.send(Responses.getResponse(Responses.SUCCESS));
-                                AutoReport.deleteJob(guild, message.client);
-                            } else {
-                                message.channel.send(Responses.getResponse(Responses.FAIL))
-                                    .then(() => {
-                                        message.channel.send("Your guild is not set yet");
-                                    })
-                                    .catch(err => {
-                                        console.log(err);
-                                    });
-                            }
-                        })
-                        .catch(err => {
-                            message.channel.send(Responses.getResponse(Responses.FAIL));
+                        });
+                    if (guild) {
+                        message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                        AutoReport.deleteJob(guild, message.client);
+                    } else {
+                        try {
+                            await message.channel.send(Responses.getResponse(Responses.FAIL));
+                            message.channel.send("Your guild is not set yet");
+                        } catch (err) {
                             console.log(err);
-                        })
-                } else {
-                    message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+                        }
+                    }
+                } catch (err) {
+                    message.channel.send(Responses.getResponse(Responses.FAIL));
+                    console.log(err);
                 }
-            })
-            .catch(() => {
-                message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
-            });
+            } else {
+                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+            }
+        } catch (err) {
+            message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
+        }
     }
 
     public async getBGSReportEmbed(guildId: string): Promise<RichEmbed[]> {
@@ -871,7 +857,7 @@ export class BGSReport {
                     embed.setColor([255, 0, 255]);
                     embed.setTimestamp(new Date());
 
-                    for(let pagedField of pagedFields[index]){
+                    for (let pagedField of pagedFields[index]) {
                         embed.addField(pagedField.fieldTitle, pagedField.fieldDescription);
                     }
 

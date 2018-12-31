@@ -21,6 +21,9 @@ import { guildSchema } from './schemas';
 
 import { IModel, IGuildModel } from './models';
 
+import App from '../server';
+import { BugsnagClient } from '../bugsnag';
+
 export class DB {
     private options: mongoose.ConnectionOptions;
     private userName: string;
@@ -68,12 +71,10 @@ export class DB {
             console.log('Mongoose connection disconnected');
         });
 
-        process.on('SIGINT', () => {
-            mongoose.connection.close()
-                .then(() => {
-                    console.log('Connection closed via app termination');
-                    process.exit(0);
-                });
+        process.on('SIGINT', async () => {
+            await mongoose.connection.close();
+            console.log('Connection closed via app termination');
+            process.exit(0);
         });
     }
 

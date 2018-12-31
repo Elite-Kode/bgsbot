@@ -51,7 +51,7 @@ export class DiscordClient {
             this.initiateCustom();
         });
 
-        this.client.on("message", (message) => {
+        this.client.on("message", async (message) => {
             if (message.mentions.users.filterArray(user => {
                 if (user.id === this.client.user.id) {
                     return true;
@@ -60,19 +60,20 @@ export class DiscordClient {
                 }
             }).length > 0) {
                 this.db = App.db;
-                this.db.model.guild.findOne({
-                    guild_id: message.guild.id,
-                    'custom.set': true
-                }).then(guild => {
+                try {
+                    let guild = await this.db.model.guild.findOne({
+                        guild_id: message.guild.id,
+                        'custom.set': true
+                    });
                     if (guild) {
                         this.custom[`g${guild.guild_id}`].exec(message);
                     } else {
                         this.processNormal(message)
                     }
-                }).catch(err => {
+                } catch (err) {
                     message.channel.send(Responses.getResponse(Responses.FAIL));
                     console.log(err);
-                })
+                }
             }
         });
 

@@ -7,6 +7,8 @@
         "startdev": "cross-env NODE_ENV=development gulp"
     },
     "dependencies": {
+        "@bugsnag/js": "^5.1.0",
+        "@bugsnag/plugin-express": "^5.1.0",
         "content-disposition": "^0.5.2",
         "cron": "^1.4.1",
         "debug": "^4.1.0",

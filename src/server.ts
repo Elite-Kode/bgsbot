@@ -22,23 +22,30 @@ import { DiscordClient } from './modules/discord/client';
 import { DB } from './db';
 import { AutoReport } from './modules/cron/index';
 import { TickDetector } from './modules/listener/index';
+import { BugsnagClient } from './bugsnag';
 
 class App {
     public express: express.Application;
     public db: DB;
     public discordClient: DiscordClient;
+    public bugsnagClient: BugsnagClient;
+    private bugsnagClientMiddleware;
 
     constructor() {
         this.express = express();
-        this.middleware();
         this.routes();
         this.discordClient = new DiscordClient();
         this.db = new DB();
         this.cron();
         this.listener();
+        this.bugsnagClient = new BugsnagClient();
+        this.bugsnagClientMiddleware = this.bugsnagClient.client.getPlugin('express');
+        this.express.use(this.bugsnagClientMiddleware.requestHandler);
+        this.middleware();
     }
 
     private middleware(): void {
+        this.express.use(this.bugsnagClientMiddleware.errorHandler);
         this.express.use(logger('dev'));
     }
 
