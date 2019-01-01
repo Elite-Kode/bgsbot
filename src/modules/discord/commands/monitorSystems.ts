@@ -45,186 +45,179 @@ export class MonitorSystems {
         }
     }
 
-    add(message: discord.Message, argsArray: string[], primary: boolean = false) {
-        Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN])
-            .then(() => {
-                if (argsArray.length >= 2) {
-                    let guildId = message.guild.id;
-                    let systemName = argsArray.slice(1).join(" ");
-                    let requestOptions: OptionsWithUrl = {
-                        url: "http://elitebgs.kodeblox.com/api/ebgs/v4/systems",
-                        method: "GET",
-                        qs: { name: systemName },
-                        json: true
-                    }
-
-                    request(requestOptions, (error, response, body: EBGSSystemsV4WOHistory) => {
-                        if (!error && response.statusCode == 200) {
-                            if (body.total === 0) {
-                                message.channel.send(Responses.getResponse(Responses.FAIL))
-                                    .then(() => {
-                                        message.channel.send("System not found");
-                                    })
-                                    .catch(err => {
-                                        console.log(err);
-                                    });
-                            } else {
-                                let responseSystem = body.docs[0];
-                                let systemName = responseSystem.name;
-                                let systemNameLower = responseSystem.name_lower;
-                                let monitorSystems = {
-                                    system_name: systemName,
-                                    system_name_lower: systemNameLower,
-                                    primary: primary,
-                                    system_pos: {
-                                        x: responseSystem.x,
-                                        y: responseSystem.y,
-                                        z: responseSystem.z
-                                    }
-                                }
-                                this.db.model.guild.findOneAndUpdate(
-                                    { guild_id: guildId },
-                                    {
-                                        updated_at: new Date(),
-                                        $addToSet: { monitor_systems: monitorSystems }
-                                    })
-                                    .then(guild => {
-                                        if (guild) {
-                                            message.channel.send(Responses.getResponse(Responses.SUCCESS));
-                                        } else {
-                                            message.channel.send(Responses.getResponse(Responses.FAIL))
-                                                .then(() => {
-                                                    message.channel.send("Your guild is not set yet");
-                                                })
-                                                .catch(err => {
-                                                    console.log(err);
-                                                });
-                                        }
-                                    })
-                                    .catch(err => {
-                                        message.channel.send(Responses.getResponse(Responses.FAIL));
-                                        console.log(err);
-                                    })
-                            }
-                        } else {
-                            if (error) {
-                                console.log(error);
-                            } else {
-                                console.log(response.statusMessage);
-                            }
-                        }
-                    });
-                } else {
-                    message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+    async add(message: discord.Message, argsArray: string[], primary: boolean = false) {
+        try {
+            await Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
+            if (argsArray.length >= 2) {
+                let guildId = message.guild.id;
+                let systemName = argsArray.slice(1).join(" ");
+                let requestOptions: OptionsWithUrl = {
+                    url: "http://elitebgs.kodeblox.com/api/ebgs/v4/systems",
+                    method: "GET",
+                    qs: { name: systemName },
+                    json: true
                 }
-            })
-            .catch(() => {
-                message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
-            })
+
+                request(requestOptions, (error, response, body: EBGSSystemsV4WOHistory) => {
+                    if (!error && response.statusCode == 200) {
+                        if (body.total === 0) {
+                            message.channel.send(Responses.getResponse(Responses.FAIL))
+                                .then(() => {
+                                    message.channel.send("System not found");
+                                })
+                                .catch(err => {
+                                    console.log(err);
+                                });
+                        } else {
+                            let responseSystem = body.docs[0];
+                            let systemName = responseSystem.name;
+                            let systemNameLower = responseSystem.name_lower;
+                            let monitorSystems = {
+                                system_name: systemName,
+                                system_name_lower: systemNameLower,
+                                primary: primary,
+                                system_pos: {
+                                    x: responseSystem.x,
+                                    y: responseSystem.y,
+                                    z: responseSystem.z
+                                }
+                            }
+                            this.db.model.guild.findOneAndUpdate(
+                                { guild_id: guildId },
+                                {
+                                    updated_at: new Date(),
+                                    $addToSet: { monitor_systems: monitorSystems }
+                                })
+                                .then(guild => {
+                                    if (guild) {
+                                        message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                                    } else {
+                                        message.channel.send(Responses.getResponse(Responses.FAIL))
+                                            .then(() => {
+                                                message.channel.send("Your guild is not set yet");
+                                            })
+                                            .catch(err => {
+                                                console.log(err);
+                                            });
+                                    }
+                                })
+                                .catch(err => {
+                                    message.channel.send(Responses.getResponse(Responses.FAIL));
+                                    console.log(err);
+                                })
+                        }
+                    } else {
+                        if (error) {
+                            console.log(error);
+                        } else {
+                            console.log(response.statusMessage);
+                        }
+                    }
+                });
+            } else {
+                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+            }
+        } catch (err) {
+            message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
+        }
     }
 
     addprimary(message: discord.Message, argsArray: string[]) {
         this.add(message, argsArray, true);
     }
 
-    remove(message: discord.Message, argsArray: string[]) {
-        Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN])
-            .then(() => {
-                if (argsArray.length >= 2) {
-                    let guildId = message.guild.id;
-                    let systemName = argsArray.slice(1).join(" ").toLowerCase();
+    async remove(message: discord.Message, argsArray: string[]) {
+        try {
+            await Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
+            if (argsArray.length >= 2) {
+                let guildId = message.guild.id;
+                let systemName = argsArray.slice(1).join(" ").toLowerCase();
 
-                    this.db.model.guild.findOneAndUpdate(
+                try {
+                    let guild = await this.db.model.guild.findOneAndUpdate(
                         { guild_id: guildId },
                         {
                             updated_at: new Date(),
                             $pull: { monitor_systems: { system_name_lower: systemName } }
-                        })
-                        .then(guild => {
-                            if (guild) {
-                                message.channel.send(Responses.getResponse(Responses.SUCCESS));
-                            } else {
-                                message.channel.send(Responses.getResponse(Responses.FAIL))
-                                    .then(() => {
-                                        message.channel.send("Your guild is not set yet");
-                                    })
-                                    .catch(err => {
-                                        console.log(err);
-                                    });
-                            }
-                        })
-                        .catch(err => {
-                            message.channel.send(Responses.getResponse(Responses.FAIL));
+                        });
+                    if (guild) {
+                        message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                    } else {
+                        try {
+                            await message.channel.send(Responses.getResponse(Responses.FAIL));
+                            message.channel.send("Your guild is not set yet");
+                        } catch (err) {
                             console.log(err);
-                        })
-                } else {
-                    message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+                        }
+                    }
+                } catch (err) {
+                    message.channel.send(Responses.getResponse(Responses.FAIL));
+                    console.log(err);
                 }
-            })
-            .catch(() => {
-                message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
-            })
+            } else {
+                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+            }
+        } catch (err) {
+            message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
+        }
     }
 
-    list(message: discord.Message, argsArray: string[]) {
-        Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN])
-            .then(() => {
-                if (argsArray.length === 1) {
-                    let guildId = message.guild.id;
+    async list(message: discord.Message, argsArray: string[]) {
+        try {
+            await Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
+            if (argsArray.length === 1) {
+                let guildId = message.guild.id;
 
-                    this.db.model.guild.findOne({ guild_id: guildId })
-                        .then(guild => {
-                            if (guild) {
-                                if (guild.monitor_systems && guild.monitor_systems.length !== 0) {
-                                    let embed = new discord.RichEmbed();
-                                    embed.setTitle("MONITORED SYSTEMS");
-                                    embed.setColor([255, 0, 255]);
-                                    let systemList = "";
-                                    guild.monitor_systems.forEach(system => {
-                                        systemList += `${system.system_name}`;
-                                        if (system.primary) {
-                                            systemList += ` | PRIMARY`;
-                                        }
-                                        systemList += `\n`;
-                                    });
-                                    embed.addField("Systems", systemList);
-                                    embed.setTimestamp(new Date());
-                                    message.channel.send(embed)
-                                        .catch(err => {
-                                            console.log(err);
-                                        });
-                                } else {
-                                    message.channel.send(Responses.getResponse(Responses.FAIL))
-                                        .then(() => {
-                                            message.channel.send("You don't have any monitored system set up");
-                                        })
-                                        .catch(err => {
-                                            console.log(err);
-                                        });
+                try {
+                    let guild = await this.db.model.guild.findOne({ guild_id: guildId });
+                    if (guild) {
+                        if (guild.monitor_systems && guild.monitor_systems.length !== 0) {
+                            let embed = new discord.RichEmbed();
+                            embed.setTitle("MONITORED SYSTEMS");
+                            embed.setColor([255, 0, 255]);
+                            let systemList = "";
+                            guild.monitor_systems.forEach(system => {
+                                systemList += `${system.system_name}`;
+                                if (system.primary) {
+                                    systemList += ` | PRIMARY`;
                                 }
-                            } else {
-                                message.channel.send(Responses.getResponse(Responses.FAIL))
-                                    .then(() => {
-                                        message.channel.send("Your guild is not set yet");
-                                    })
-                                    .catch(err => {
-                                        console.log(err);
-                                    });
+                                systemList += `\n`;
+                            });
+                            embed.addField("Systems", systemList);
+                            embed.setTimestamp(new Date());
+                            try {
+                                message.channel.send(embed);
+                            } catch (err) {
+                                console.log(err);
                             }
-                        })
-                        .catch(err => {
-                            message.channel.send(Responses.getResponse(Responses.FAIL));
+                        } else {
+                            try {
+                                await message.channel.send(Responses.getResponse(Responses.FAIL));
+                                message.channel.send("You don't have any monitored system set up");
+                            } catch (err) {
+                                console.log(err);
+                            }
+                        }
+                    } else {
+                        try {
+                            await message.channel.send(Responses.getResponse(Responses.FAIL));
+                            message.channel.send("Your guild is not set yet");
+                        } catch (err) {
                             console.log(err);
-                        })
-                } else if (argsArray.length > 1) {
-                    message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
-                } else {
-                    message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+                        }
+                    }
+                } catch (err) {
+                    message.channel.send(Responses.getResponse(Responses.FAIL));
+                    console.log(err);
                 }
-            })
-            .catch(() => {
-                message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
-            })
+            } else if (argsArray.length > 1) {
+                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+            } else {
+                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+            }
+        } catch (err) {
+            message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
+        }
     }
 
     help() {

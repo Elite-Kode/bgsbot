@@ -42,40 +42,37 @@ export class MyGuild {
         }
     }
 
-    set(message: discord.Message, argsArray: string[]) {
+    async set(message: discord.Message, argsArray: string[]) {
         // Only the server admins can set the guild
         if (message.member.hasPermission("ADMINISTRATOR")) {
             if (argsArray.length === 1) {
                 let guildId = message.guild.id;
 
-                this.db.model.guild.findOne({ guild_id: guildId })
-                    .then(guild => {
-                        if (guild) {
-                            message.channel.send(Responses.getResponse(Responses.FAIL))
-                                .then(() => {
-                                    message.channel.send("Your guild is already set");
-                                })
-                                .catch(err => {
-                                    console.log(err);
-                                });
-                        } else {
-                            this.db.model.guild.create({
+                try {
+                    let guild = await this.db.model.guild.findOne({ guild_id: guildId });
+                    if (guild) {
+                        try {
+                            await message.channel.send(Responses.getResponse(Responses.FAIL));
+                            message.channel.send("Your guild is already set");
+                        } catch (err) {
+                            console.log(err);
+                        }
+                    } else {
+                        try {
+                            await this.db.model.guild.create({
                                 guild_id: guildId,
                                 updated_at: new Date(),
-                            })
-                                .then(guild => {
-                                    message.channel.send(Responses.getResponse(Responses.SUCCESS));
-                                })
-                                .catch(err => {
-                                    message.channel.send(Responses.getResponse(Responses.FAIL));
-                                    console.log(err);
-                                })
+                            });
+                            message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                        } catch (err) {
+                            message.channel.send(Responses.getResponse(Responses.FAIL));
+                            console.log(err);
                         }
-                    })
-                    .catch(err => {
-                        message.channel.send(Responses.getResponse(Responses.FAIL));
-                        console.log(err);
-                    })
+                    }
+                } catch (err) {
+                    message.channel.send(Responses.getResponse(Responses.FAIL));
+                    console.log(err);
+                }
             } else {
                 message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
             }
@@ -84,37 +81,34 @@ export class MyGuild {
         }
     }
 
-    remove(message: discord.Message, argsArray: string[]) {
-        Access.has(message.member, [Access.ADMIN, Access.FORBIDDEN])
-            .then(() => {
-                if (argsArray.length === 1) {
-                    let guildId = message.guild.id;
+    async remove(message: discord.Message, argsArray: string[]) {
+        try {
+            await Access.has(message.member, [Access.ADMIN, Access.FORBIDDEN]);
+            if (argsArray.length === 1) {
+                let guildId = message.guild.id;
 
-                    this.db.model.guild.findOneAndRemove({ guild_id: guildId })
-                        .then(guild => {
-                            if (guild) {
-                                message.channel.send(Responses.getResponse(Responses.SUCCESS));
-                            } else {
-                                message.channel.send(Responses.getResponse(Responses.FAIL))
-                                    .then(() => {
-                                        message.channel.send("Your guild is not set yet");
-                                    })
-                                    .catch(err => {
-                                        console.log(err);
-                                    });
-                            }
-                        })
-                        .catch(err => {
-                            message.channel.send(Responses.getResponse(Responses.FAIL));
+                try {
+                    let guild = await this.db.model.guild.findOneAndRemove({ guild_id: guildId });
+                    if (guild) {
+                        message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                    } else {
+                        try {
+                            await message.channel.send(Responses.getResponse(Responses.FAIL));
+                            message.channel.send("Your guild is not set yet");
+                        } catch (err) {
                             console.log(err);
-                        })
-                } else {
-                    message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+                        }
+                    }
+                } catch (err) {
+                    message.channel.send(Responses.getResponse(Responses.FAIL));
+                    console.log(err);
                 }
-            })
-            .catch(() => {
-                message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
-            })
+            } else {
+                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+            }
+        } catch (err) {
+            message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
+        }
     }
 
     help() {

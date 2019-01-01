@@ -101,17 +101,11 @@ export class BGSRole {
                         message.channel.send(Responses.getResponse(Responses.SUCCESS));
                     } else {
                         try {
-
+                            await message.channel.send(Responses.getResponse(Responses.FAIL));
+                            message.channel.send("Your guild is not set yet");
                         } catch (err) {
-
+                            console.log(err);
                         }
-                        message.channel.send(Responses.getResponse(Responses.FAIL))
-                            .then(() => {
-                                message.channel.send("Your guild is not set yet");
-                            })
-                            .catch(err => {
-                                console.log(err);
-                            });
                     }
                 } catch (err) {
                     message.channel.send(Responses.getResponse(Responses.FAIL));
@@ -125,63 +119,60 @@ export class BGSRole {
         }
     }
 
-    show(message: discord.Message, argsArray: string[]) {
-        Access.has(message.member, [Access.ADMIN, Access.FORBIDDEN])
-            .then(() => {
-                if (argsArray.length === 1) {
-                    let guildId = message.guild.id;
+    async show(message: discord.Message, argsArray: string[]) {
+        try {
+            await Access.has(message.member, [Access.ADMIN, Access.FORBIDDEN]);
+            if (argsArray.length === 1) {
+                let guildId = message.guild.id;
 
-                    this.db.model.guild.findOne({ guild_id: guildId })
-                        .then(guild => {
-                            if (guild) {
-                                if (guild.bgs_role_id && guild.bgs_role_id.length !== 0) {
-                                    let embed = new discord.RichEmbed();
-                                    embed.setTitle("BGS Role");
-                                    embed.setColor([255, 0, 255]);
-                                    let id = "";
-                                    if (message.guild.channels.has(guild.bgs_channel_id)) {
-                                        id = `${guild.bgs_role_id} - @${message.guild.roles.get(guild.bgs_role_id).name}\n`;
-                                    } else {
-                                        id = `${guild.bgs_role_id} - Does not exist in Discord. Please delete this from BGSBot`;
-                                    }
-                                    embed.addField("Ids and Names", id);
-                                    embed.setTimestamp(new Date());
-                                    message.channel.send(embed)
-                                        .catch(err => {
-                                            console.log(err);
-                                        });
-                                } else {
-                                    message.channel.send(Responses.getResponse(Responses.FAIL))
-                                        .then(() => {
-                                            message.channel.send("You don't have a bgs role set up");
-                                        })
-                                        .catch(err => {
-                                            console.log(err);
-                                        });
-                                }
+                try {
+                    let guild = await this.db.model.guild.findOne({ guild_id: guildId });
+                    if (guild) {
+                        if (guild.bgs_role_id && guild.bgs_role_id.length !== 0) {
+                            let embed = new discord.RichEmbed();
+                            embed.setTitle("BGS Role");
+                            embed.setColor([255, 0, 255]);
+                            let id = "";
+                            if (message.guild.channels.has(guild.bgs_channel_id)) {
+                                id = `${guild.bgs_role_id} - @${message.guild.roles.get(guild.bgs_role_id).name}\n`;
                             } else {
-                                message.channel.send(Responses.getResponse(Responses.FAIL))
-                                    .then(() => {
-                                        message.channel.send("Your guild is not set yet");
-                                    })
-                                    .catch(err => {
-                                        console.log(err);
-                                    });
+                                id = `${guild.bgs_role_id} - Does not exist in Discord. Please delete this from BGSBot`;
                             }
-                        })
-                        .catch(err => {
-                            message.channel.send(Responses.getResponse(Responses.FAIL));
+                            embed.addField("Ids and Names", id);
+                            embed.setTimestamp(new Date());
+                            try {
+                                message.channel.send(embed);
+                            } catch (err) {
+                                console.log(err);
+                            }
+                        } else {
+                            try {
+                                await message.channel.send(Responses.getResponse(Responses.FAIL));
+                                message.channel.send("You don't have a bgs role set up");
+                            } catch (err) {
+                                console.log(err);
+                            }
+                        }
+                    } else {
+                        try {
+                            await message.channel.send(Responses.getResponse(Responses.FAIL));
+                            message.channel.send("Your guild is not set yet");
+                        } catch (err) {
                             console.log(err);
-                        })
-                } else if (argsArray.length > 1) {
-                    message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
-                } else {
-                    message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+                        }
+                    }
+                } catch (err) {
+                    message.channel.send(Responses.getResponse(Responses.FAIL));
+                    console.log(err);
                 }
-            })
-            .catch(() => {
-                message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
-            })
+            } else if (argsArray.length > 1) {
+                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+            } else {
+                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+            }
+        } catch (err) {
+            message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
+        }
     }
 
     help() {

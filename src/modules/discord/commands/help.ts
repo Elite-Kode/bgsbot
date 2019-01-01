@@ -78,7 +78,7 @@ export class Help {
         }
     }
 
-    display(message: Message): void {
+    async display(message: Message) {
         let embed = new discord.RichEmbed();
         embed.setColor(6684774);
         embed.setTitle(`:grey_question: BGSBot Help`);
@@ -95,26 +95,22 @@ export class Help {
         let displayCommands = displayArray[this.displayState];
 
         if (this.helpDepth === 0) {
-            this.helpList(displayCommands, embed, message)
-                .then(returnMessage => {
-                    this.helpMessageID = (returnMessage as Message).id
-                    this.helpEmoji(displayCommands, this.displayState, maxDisplayState, returnMessage as Message);
-                })
-                .catch(err => {
-                    console.log(err);
-                });
+            try {
+                let returnMessage = await this.helpList(displayCommands, embed, message);
+                this.helpMessageID = (returnMessage as Message).id
+                this.helpEmoji(displayCommands, this.displayState, maxDisplayState, returnMessage as Message);
+            } catch (err) {
+                console.log(err);
+            }
         } else if (this.helpDepth === 1) {
-            this.helpDescription(this.helpArray[this.displayState * 10 + this.numberSelected - 1], embed, message)
-                .then(returnMessage => {
-                    this.helpMessageID = (returnMessage as Message).id;
-                    (returnMessage as Message).react("⬅")
-                        .catch(err => {
-                            console.log(err);
-                        });
-                })
-                .catch(err => {
-                    console.log(err);
-                });
+            try {
+                let returnMessage = await this.helpDescription(this.helpArray[this.displayState * 10 + this.numberSelected - 1], embed, message);
+                this.helpMessageID = (returnMessage as Message).id
+                this.helpMessageID = (returnMessage as Message).id;
+                (returnMessage as Message).react("⬅");
+            } catch (err) {
+                console.log(err);
+            }
         }
     }
 

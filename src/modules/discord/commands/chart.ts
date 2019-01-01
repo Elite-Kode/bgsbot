@@ -45,62 +45,63 @@ export class Chart {
         }
     }
 
-    get(message: discord.Message, argsArray: string[]): void {
-        Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN])
-            .then(() => {
-                if (argsArray.length >= 4 || (argsArray.length === 2 && argsArray[1] === 'tick')) {
-                    let url: string;
-                    let name: string;
-                    if (argsArray[1] === 'tick') {
-                        url = `http://elitebgs.kodeblox.com/chartgenerator/${argsArray[1]}`;
-                        name = null;
-                    } else {
-                        url = `http://elitebgs.kodeblox.com/chartgenerator/${argsArray[1]}/${argsArray[2]}`;
-                        name = argsArray.slice(3).join(" ").toLowerCase();
-                    }
-                    let timenow = Date.now();
-
-                    this.db.model.guild.findOne({ guild_id: message.guild.id })
-                        .then(guild => {
-                            if (guild) {
-                                let theme = 'light';
-                                if (guild.theme) {
-                                    theme = guild.theme;
-                                }
-                                let requestOptions: OptionsWithUrl = {
-                                    url: url,
-                                    method: "GET",
-                                    qs: {
-                                        name: name,
-                                        timemin: timenow - 10 * 24 * 60 * 60 * 1000,
-                                        timemax: timenow,
-                                        theme: theme
-                                    },
-                                    encoding: null
-                                }
-
-                                request(requestOptions, (error, response, body: Buffer) => {
-                                    if (!error && response.statusCode == 200) {
-                                        let attachment = new discord.Attachment(body, contentDisposition.parse(response.headers['content-disposition']).parameters.filename);
-                                        message.channel.send(attachment);
-                                    } else {
-                                        if (error) {
-                                            console.log(error);
-                                        } else {
-                                            console.log(response.statusMessage);
-                                        }
-                                    }
-                                });
-                            }
-                        })
-                        .catch(err => {
-                            message.channel.send(Responses.getResponse(Responses.FAIL));
-                            console.log(err);
-                        });
+    async get(message: discord.Message, argsArray: string[]) {
+        try {
+            await Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
+            if (argsArray.length >= 4 || (argsArray.length === 2 && argsArray[1] === 'tick')) {
+                let url: string;
+                let name: string;
+                if (argsArray[1] === 'tick') {
+                    url = `http://elitebgs.kodeblox.com/chartgenerator/${argsArray[1]}`;
+                    name = null;
                 } else {
-                    message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+                    url = `http://elitebgs.kodeblox.com/chartgenerator/${argsArray[1]}/${argsArray[2]}`;
+                    name = argsArray.slice(3).join(" ").toLowerCase();
                 }
-            })
+                let timenow = Date.now();
+
+                try {
+                    let guild = await this.db.model.guild.findOne({ guild_id: message.guild.id });
+                    if (guild) {
+                        let theme = 'light';
+                        if (guild.theme) {
+                            theme = guild.theme;
+                        }
+                        let requestOptions: OptionsWithUrl = {
+                            url: url,
+                            method: "GET",
+                            qs: {
+                                name: name,
+                                timemin: timenow - 10 * 24 * 60 * 60 * 1000,
+                                timemax: timenow,
+                                theme: theme
+                            },
+                            encoding: null
+                        }
+
+                        request(requestOptions, (error, response, body: Buffer) => {
+                            if (!error && response.statusCode == 200) {
+                                let attachment = new discord.Attachment(body, contentDisposition.parse(response.headers['content-disposition']).parameters.filename);
+                                message.channel.send(attachment);
+                            } else {
+                                if (error) {
+                                    console.log(error);
+                                } else {
+                                    console.log(response.statusMessage);
+                                }
+                            }
+                        });
+                    }
+                } catch (err) {
+                    message.channel.send(Responses.getResponse(Responses.FAIL));
+                    console.log(err);
+                }
+            } else {
+                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+            }
+        } catch (err) {
+            message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
+        }
     }
 
     help() {

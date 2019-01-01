@@ -24,81 +24,85 @@ export class HouseKeeping {
         this.db = App.db;
     }
 
-    deletedChannel(channel: discord.Channel) {
+    async deletedChannel(channel: discord.Channel) {
         if (channel.type === 'text') {
             let guildId = (channel as discord.TextChannel).guild.id;
-            this.db.model.guild.findOneAndUpdate(
-                {
-                    guild_id: guildId,
-                    bgs_channel_id: channel.id
-                },
-                {
-                    updated_at: new Date(),
-                    $unset: { bgs_channel_id: 1 }
-                })
-                .then(guild => {
-                    if (guild) {
-                        console.log("Channel deleted");
-                    }
-                })
-                .catch(err => {
-                    console.log(err);
-                })
+
+            try {
+                let guild = await this.db.model.guild.findOneAndUpdate(
+                    {
+                        guild_id: guildId,
+                        bgs_channel_id: channel.id
+                    },
+                    {
+                        updated_at: new Date(),
+                        $unset: { bgs_channel_id: 1 }
+                    });
+                if (guild) {
+                    console.log("Channel deleted");
+                }
+            } catch (err) {
+                console.log(err);
+            }
         }
     }
 
-    deletedRole(role: discord.Role) {
+    async deletedRole(role: discord.Role) {
         let guildId = role.guild.id;
-        this.db.model.guild.findOneAndUpdate(
-            {
-                guild_id: guildId,
-                bgs_role_id: role.id
-            },
-            {
-                updated_at: new Date(),
-                $unset: { bgs_role_id: 1 }
-            })
-            .then(guild => {
+        let bgsRole = async () => {
+            try {
+                let guild = await this.db.model.guild.findOneAndUpdate(
+                    {
+                        guild_id: guildId,
+                        bgs_role_id: role.id
+                    },
+                    {
+                        updated_at: new Date(),
+                        $unset: { bgs_role_id: 1 }
+                    });
                 if (guild) {
                     console.log("Role deleted");
                 }
-            })
-            .catch(err => {
+            } catch (err) {
                 console.log(err);
-            })
-        this.db.model.guild.findOneAndUpdate(
-            {
-                guild_id: guildId,
-                admin_roles_id: role.id
-            },
-            {
-                updated_at: new Date(),
-                $pull: { admin_roles_id: role.id }
-            })
-            .then(guild => {
+            }
+        }
+        let adminRole = async () => {
+            try {
+                let guild = await this.db.model.guild.findOneAndUpdate(
+                    {
+                        guild_id: guildId,
+                        admin_roles_id: role.id
+                    },
+                    {
+                        updated_at: new Date(),
+                        $pull: { admin_roles_id: role.id }
+                    })
                 if (guild) {
                     console.log("Role deleted");
                 }
-            })
-            .catch(err => {
+            } catch (err) {
                 console.log(err);
-            })
-        this.db.model.guild.findOneAndUpdate(
-            {
-                guild_id: guildId,
-                forbidden_roles_id: role.id
-            },
-            {
-                updated_at: new Date(),
-                $pull: { forbidden_roles_id: role.id }
-            })
-            .then(guild => {
+            }
+        }
+        let forbiddenRole = async () => {
+            try {
+                let guild = await this.db.model.guild.findOneAndUpdate(
+                    {
+                        guild_id: guildId,
+                        forbidden_roles_id: role.id
+                    },
+                    {
+                        updated_at: new Date(),
+                        $pull: { forbidden_roles_id: role.id }
+                    })
                 if (guild) {
                     console.log("Role deleted");
                 }
-            })
-            .catch(err => {
+            } catch (err) {
                 console.log(err);
-            })
+            }
+        }
+        await Promise.all([bgsRole, adminRole, forbiddenRole]);
     }
 }

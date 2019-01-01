@@ -42,148 +42,137 @@ export class Theme {
         }
     }
 
-    set(message: discord.Message, argsArray: string[]) {
-        Access.has(message.member, [Access.ADMIN, Access.FORBIDDEN])
-            .then(() => {
-                if (argsArray.length === 2) {
-                    let guildId = message.guild.id;
-                    let theme = argsArray[1].toLowerCase();
+    async set(message: discord.Message, argsArray: string[]) {
+        try {
+            await Access.has(message.member, [Access.ADMIN, Access.FORBIDDEN]);
+            if (argsArray.length === 2) {
+                let guildId = message.guild.id;
+                let theme = argsArray[1].toLowerCase();
 
-                    if ((theme === 'light' || theme === 'dark')) {
-                        this.db.model.guild.findOneAndUpdate(
+                if ((theme === 'light' || theme === 'dark')) {
+                    try {
+                        let guild = await this.db.model.guild.findOneAndUpdate(
                             { guild_id: guildId },
                             {
                                 updated_at: new Date(),
                                 theme: theme
-                            })
-                            .then(guild => {
-                                if (guild) {
-                                    message.channel.send(Responses.getResponse(Responses.SUCCESS));
-                                } else {
-                                    message.channel.send(Responses.getResponse(Responses.FAIL))
-                                        .then(() => {
-                                            message.channel.send("Your guild is not set yet");
-                                        })
-                                        .catch(err => {
-                                            console.log(err);
-                                        });
-                                }
-                            })
-                            .catch(err => {
-                                message.channel.send(Responses.getResponse(Responses.FAIL));
-                                console.log(err);
-                            })
-                    } else {
-                        message.channel.send(Responses.getResponse(Responses.FAIL))
-                            .then(() => {
-                                message.channel.send("Theme name is incorrect.");
-                            })
-                            .catch(err => {
-                                console.log(err);
                             });
+                        if (guild) {
+                            message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                        } else {
+                            try {
+                                await message.channel.send(Responses.getResponse(Responses.FAIL));
+                                message.channel.send("Your guild is not set yet");
+                            } catch (err) {
+                                console.log(err);
+                            }
+                        }
+                    } catch (err) {
+                        message.channel.send(Responses.getResponse(Responses.FAIL));
+                        console.log(err);
                     }
-                } else if (argsArray.length > 2) {
-                    message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
                 } else {
-                    message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+                    try {
+                        await message.channel.send(Responses.getResponse(Responses.FAIL));
+                        message.channel.send("Theme name is incorrect.");
+                    } catch (err) {
+                        console.log(err);
+                    }
                 }
-            })
-            .catch(() => {
-                message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
-            })
+            } else if (argsArray.length > 2) {
+                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+            } else {
+                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+            }
+        } catch (err) {
+            message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
+        }
     }
 
-    remove(message: discord.Message, argsArray: string[]) {
-        Access.has(message.member, [Access.ADMIN, Access.FORBIDDEN])
-            .then(() => {
-                if (argsArray.length === 1) {
-                    let guildId = message.guild.id;
+    async remove(message: discord.Message, argsArray: string[]) {
+        try {
+            await Access.has(message.member, [Access.ADMIN, Access.FORBIDDEN]);
+            if (argsArray.length === 1) {
+                let guildId = message.guild.id;
 
-                    this.db.model.guild.findOneAndUpdate(
+                try {
+                    let guild = await this.db.model.guild.findOneAndUpdate(
                         { guild_id: guildId },
                         {
                             updated_at: new Date(),
                             $unset: {
                                 theme: 1
                             }
-                        })
-                        .then(guild => {
-                            if (guild) {
-                                message.channel.send(Responses.getResponse(Responses.SUCCESS));
-                            } else {
-                                message.channel.send(Responses.getResponse(Responses.FAIL))
-                                    .then(() => {
-                                        message.channel.send("Your guild is not set yet");
-                                    })
-                                    .catch(err => {
-                                        console.log(err);
-                                    });
-                            }
-                        })
-                        .catch(err => {
-                            message.channel.send(Responses.getResponse(Responses.FAIL));
+                        });
+                    if (guild) {
+                        message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                    } else {
+                        try {
+                            await message.channel.send(Responses.getResponse(Responses.FAIL));
+                            message.channel.send("Your guild is not set yet");
+                        } catch (err) {
                             console.log(err);
-                        })
-                } else {
-                    message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+                        }
+                    }
+                } catch (err) {
+                    message.channel.send(Responses.getResponse(Responses.FAIL));
+                    console.log(err);
                 }
-            })
-            .catch(() => {
-                message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
-            })
+            } else {
+                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+            }
+        } catch (err) {
+            message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
+        }
     }
 
-    show(message: discord.Message, argsArray: string[]) {
-        Access.has(message.member, [Access.ADMIN, Access.FORBIDDEN])
-            .then(() => {
-                if (argsArray.length === 1) {
-                    let guildId = message.guild.id;
+    async show(message: discord.Message, argsArray: string[]) {
+        try {
+            await Access.has(message.member, [Access.ADMIN, Access.FORBIDDEN]);
+            if (argsArray.length === 1) {
+                let guildId = message.guild.id;
 
-                    this.db.model.guild.findOne({ guild_id: guildId })
-                        .then(guild => {
-                            if (guild) {
-                                if (guild.theme) {
-                                    let embed = new discord.RichEmbed();
-                                    embed.setTitle("Theme");
-                                    embed.setColor([255, 0, 255]);
-                                    embed.addField("Theme: ", guild.theme);
-                                    embed.setTimestamp(new Date());
-                                    message.channel.send(embed)
-                                        .catch(err => {
-                                            console.log(err);
-                                        });
-                                } else {
-                                    message.channel.send(Responses.getResponse(Responses.FAIL))
-                                        .then(() => {
-                                            message.channel.send("You don't have sorting set up");
-                                        })
-                                        .catch(err => {
-                                            console.log(err);
-                                        });
-                                }
-                            } else {
-                                message.channel.send(Responses.getResponse(Responses.FAIL))
-                                    .then(() => {
-                                        message.channel.send("Your guild is not set yet");
-                                    })
-                                    .catch(err => {
-                                        console.log(err);
-                                    });
+                try {
+                    let guild = await this.db.model.guild.findOne({ guild_id: guildId });
+                    if (guild) {
+                        if (guild.theme) {
+                            let embed = new discord.RichEmbed();
+                            embed.setTitle("Theme");
+                            embed.setColor([255, 0, 255]);
+                            embed.addField("Theme: ", guild.theme);
+                            embed.setTimestamp(new Date());
+                            message.channel.send(embed)
+                                .catch(err => {
+                                    console.log(err);
+                                });
+                        } else {
+                            try {
+                                await message.channel.send(Responses.getResponse(Responses.FAIL));
+                                message.channel.send("You don't have sorting set up");;
+                            } catch (err) {
+                                console.log(err);
                             }
-                        })
-                        .catch(err => {
-                            message.channel.send(Responses.getResponse(Responses.FAIL));
+                        }
+                    } else {
+                        try {
+                            await message.channel.send(Responses.getResponse(Responses.FAIL));
+                            message.channel.send("Your guild is not set yet");
+                        } catch (err) {
                             console.log(err);
-                        })
-                } else if (argsArray.length > 1) {
-                    message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
-                } else {
-                    message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+                        }
+                    }
+                } catch (err) {
+                    message.channel.send(Responses.getResponse(Responses.FAIL));
+                    console.log(err);
                 }
-            })
-            .catch(() => {
-                message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
-            })
+            } else if (argsArray.length > 1) {
+                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+            } else {
+                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+            }
+        } catch (err) {
+            message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
+        }
     }
 
     help() {

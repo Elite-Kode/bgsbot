@@ -46,126 +46,122 @@ export class Tick {
         }
     }
 
-    get(message: Message, argsArray: string[]): void {
-        Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN])
-            .then(() => {
-                if (argsArray.length === 1) {
-                    let requestOptions: OptionsWithUrl = {
-                        url: "https://elitebgs.kodeblox.com/api/ebgs/v4/ticks",
-                        method: "GET",
-                        json: true
-                    }
-
-                    request(requestOptions, (error, response, body: TickV4) => {
-                        if (!error && response.statusCode == 200) {
-                            if (body.length === 0) {
-                                message.channel.send(Responses.getResponse(Responses.FAIL));
-                            } else {
-                                let lastTick = body[0];
-                                let embed = new RichEmbed();
-                                embed.setTitle("Tick");
-                                embed.setColor([255, 0, 255]);
-                                let lastTickFormatted = moment(lastTick.time).utc().format('HH:mm');
-                                embed.addField("Last Tick", lastTickFormatted + ' UTC');
-                                embed.setTimestamp(new Date());
-                                message.channel.send(embed)
-                                    .catch(err => {
-                                        console.log(err);
-                                    });
-                            }
-                        } else {
-                            if (error) {
-                                console.log(error);
-                            } else {
-                                console.log(response.statusMessage);
-                            }
-                        }
-                    })
-                } else if (argsArray.length > 1) {
-                    message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
-                } else {
-                    message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+    async get(message: Message, argsArray: string[]) {
+        try {
+            await Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
+            if (argsArray.length === 1) {
+                let requestOptions: OptionsWithUrl = {
+                    url: "https://elitebgs.kodeblox.com/api/ebgs/v4/ticks",
+                    method: "GET",
+                    json: true
                 }
-            })
+
+                request(requestOptions, (error, response, body: TickV4) => {
+                    if (!error && response.statusCode == 200) {
+                        if (body.length === 0) {
+                            message.channel.send(Responses.getResponse(Responses.FAIL));
+                        } else {
+                            let lastTick = body[0];
+                            let embed = new RichEmbed();
+                            embed.setTitle("Tick");
+                            embed.setColor([255, 0, 255]);
+                            let lastTickFormatted = moment(lastTick.time).utc().format('HH:mm');
+                            embed.addField("Last Tick", lastTickFormatted + ' UTC');
+                            embed.setTimestamp(new Date());
+                            message.channel.send(embed)
+                                .catch(err => {
+                                    console.log(err);
+                                });
+                        }
+                    } else {
+                        if (error) {
+                            console.log(error);
+                        } else {
+                            console.log(response.statusMessage);
+                        }
+                    }
+                })
+            } else if (argsArray.length > 1) {
+                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+            } else {
+                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+            }
+        } catch (err) {
+            message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
+        }
     }
 
-    detect(message: Message, argsArray: string[]): void {
-        Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN])
-            .then(() => {
-                if (argsArray.length === 1) {
-                    let guildId = message.guild.id;
+    async detect(message: Message, argsArray: string[]) {
+        try {
+            await Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
+            if (argsArray.length === 1) {
+                let guildId = message.guild.id;
 
-                    this.db.model.guild.findOneAndUpdate(
+                try {
+                    let guild = await this.db.model.guild.findOneAndUpdate(
                         { guild_id: guildId },
                         {
                             updated_at: new Date(),
                             announce_tick: true
-                        })
-                        .then(guild => {
-                            if (guild) {
-                                message.channel.send(Responses.getResponse(Responses.SUCCESS));
-                            } else {
-                                message.channel.send(Responses.getResponse(Responses.FAIL))
-                                    .then(() => {
-                                        message.channel.send("Your guild is not set yet");
-                                    })
-                                    .catch(err => {
-                                        console.log(err);
-                                    });
-                            }
-                        })
-                        .catch(err => {
-                            message.channel.send(Responses.getResponse(Responses.FAIL));
+                        });
+                    if (guild) {
+                        message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                    } else {
+                        try {
+                            await message.channel.send(Responses.getResponse(Responses.FAIL));
+                            message.channel.send("Your guild is not set yet");
+                        } catch (err) {
                             console.log(err);
-                        })
-
-                } else if (argsArray.length > 1) {
-                    message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
-                } else {
-                    message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+                        }
+                    }
+                } catch (err) {
+                    message.channel.send(Responses.getResponse(Responses.FAIL));
+                    console.log(err);
                 }
-            })
-            .catch(() => {
-                message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
-            })
+
+            } else if (argsArray.length > 1) {
+                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+            } else {
+                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+            }
+        } catch (err) {
+            message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
+        }
     }
 
-    stopdetect(message: Message, argsArray: string[]): void {
-        Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN])
-            .then(() => {
-                if (argsArray.length === 1) {
-                    let guildId = message.guild.id;
+    async stopdetect(message: Message, argsArray: string[]) {
+        try {
+            await Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
+            if (argsArray.length === 1) {
+                let guildId = message.guild.id;
 
-                    this.db.model.guild.findOneAndUpdate(
+                try {
+                    let guild = await this.db.model.guild.findOneAndUpdate(
                         { guild_id: guildId },
                         {
                             updated_at: new Date(),
                             announce_tick: false
-                        })
-                        .then(guild => {
-                            if (guild) {
-                                message.channel.send(Responses.getResponse(Responses.SUCCESS));
-                            } else {
-                                message.channel.send(Responses.getResponse(Responses.FAIL))
-                                    .then(() => {
-                                        message.channel.send("Your guild is not set yet");
-                                    })
-                                    .catch(err => {
-                                        console.log(err);
-                                    });
-                            }
-                        })
-                        .catch(err => {
-                            message.channel.send(Responses.getResponse(Responses.FAIL));
+                        });
+                    if (guild) {
+                        message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                    } else {
+                        try {
+                            await message.channel.send(Responses.getResponse(Responses.FAIL));
+                            message.channel.send("Your guild is not set yet");
+                        } catch (err) {
                             console.log(err);
-                        })
-                } else {
-                    message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+                        }
+                    }
+                } catch (err) {
+                    message.channel.send(Responses.getResponse(Responses.FAIL));
+                    console.log(err);
                 }
-            })
-            .catch(() => {
-                message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
-            })
+            } else {
+                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+            }
+        } catch (err) {
+            message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
+        }
     }
 
     help() {

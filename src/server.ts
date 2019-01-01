@@ -53,24 +53,22 @@ class App {
         this.express.use('/', IndexRouter);
     }
 
-    private cron(): void {
-        this.db.model.guild.find()
-            .then(guilds => {
-                AutoReport.initiateJob(guilds, this.discordClient.client)
-            })
-            .catch(err => {
-                console.log(err);
-            });
+    private async cron() {
+        try {
+            let guilds = await this.db.model.guild.find();
+            AutoReport.initiateJob(guilds, this.discordClient.client);
+        } catch (err) {
+            console.log(err);
+        }
     }
 
-    private listener(): void {
-        this.db.model.guild.find()
-            .then(guilds => {
-                TickDetector.initiateSocket(guilds, this.discordClient.client)
-            })
-            .catch(err => {
-                console.log(err);
-            });
+    private async listener() {
+        try {
+            let guilds = await this.db.model.guild.find();
+            TickDetector.initiateSocket(guilds, this.discordClient.client);
+        } catch (err) {
+            console.log(err);
+        }
     }
 }
 
