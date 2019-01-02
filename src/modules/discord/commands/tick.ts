@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import * as request from 'request';
+import * as request from 'request-promise-native';
 import * as moment from 'moment';
 import { Message, RichEmbed } from 'discord.js';
 import App from '../../../server';
@@ -22,7 +22,7 @@ import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
 import { Access } from './../access';
 import { TickV4 } from "../../../interfaces/typings";
-import { OptionsWithUrl } from 'request';
+import { OptionsWithUrl, FullResponse } from 'request-promise-native';
 
 export class Tick {
     db: DB;
@@ -52,35 +52,32 @@ export class Tick {
             if (argsArray.length === 1) {
                 let requestOptions: OptionsWithUrl = {
                     url: "https://elitebgs.kodeblox.com/api/ebgs/v4/ticks",
-                    method: "GET",
-                    json: true
+                    json: true,
+                    resolveWithFullResponse: true
                 }
 
-                request(requestOptions, (error, response, body: TickV4) => {
-                    if (!error && response.statusCode == 200) {
-                        if (body.length === 0) {
-                            message.channel.send(Responses.getResponse(Responses.FAIL));
-                        } else {
-                            let lastTick = body[0];
-                            let embed = new RichEmbed();
-                            embed.setTitle("Tick");
-                            embed.setColor([255, 0, 255]);
-                            let lastTickFormatted = moment(lastTick.time).utc().format('HH:mm');
-                            embed.addField("Last Tick", lastTickFormatted + ' UTC');
-                            embed.setTimestamp(new Date());
-                            message.channel.send(embed)
-                                .catch(err => {
-                                    console.log(err);
-                                });
-                        }
+                let response: FullResponse = await request.get(requestOptions);
+                if (response.statusCode == 200) {
+                    let body: TickV4 = response.body;
+                    if (body.length === 0) {
+                        message.channel.send(Responses.getResponse(Responses.FAIL));
                     } else {
-                        if (error) {
-                            console.log(error);
-                        } else {
-                            console.log(response.statusMessage);
+                        let lastTick = body[0];
+                        let embed = new RichEmbed();
+                        embed.setTitle("Tick");
+                        embed.setColor([255, 0, 255]);
+                        let lastTickFormatted = moment(lastTick.time).utc().format('HH:mm');
+                        embed.addField("Last Tick", lastTickFormatted + ' UTC');
+                        embed.setTimestamp(new Date());
+                        try {
+                            await message.channel.send(embed);
+                        } catch (err) {
+                            console.log(err);
                         }
                     }
-                })
+                } else {
+                    console.log(response.statusMessage);
+                }
             } else if (argsArray.length > 1) {
                 message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
             } else {

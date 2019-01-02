@@ -15,13 +15,13 @@
  */
 
 import * as discord from 'discord.js';
-import * as request from 'request';
+import * as request from 'request-promise-native';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
 import { Access } from './../access';
 import { EBGSFactionsV4WOHistory } from "../../../interfaces/typings";
-import { OptionsWithUrl } from 'request';
+import { OptionsWithUrl, FullResponse } from 'request-promise-native';
 
 export class MonitorFactions {
     db: DB;
@@ -53,62 +53,55 @@ export class MonitorFactions {
                 let factionName = argsArray.slice(1).join(" ");
                 let requestOptions: OptionsWithUrl = {
                     url: "http://elitebgs.kodeblox.com/api/ebgs/v4/factions",
-                    method: "GET",
                     qs: { name: factionName },
-                    json: true
+                    json: true,
+                    resolveWithFullResponse: true
                 }
 
-                request(requestOptions, (error, response, body: EBGSFactionsV4WOHistory) => {
-                    if (!error && response.statusCode == 200) {
-                        if (body.total === 0) {
-                            message.channel.send(Responses.getResponse(Responses.FAIL))
-                                .then(() => {
-                                    message.channel.send("Faction not found");
-                                })
-                                .catch(err => {
-                                    console.log(err);
-                                });
-                        } else {
-                            let responseFaction = body.docs[0];
-                            let factionName = responseFaction.name;
-                            let factionNameLower = responseFaction.name_lower;
-                            let monitorFactions = {
-                                faction_name: factionName,
-                                faction_name_lower: factionNameLower,
-                                primary: primary,
-                            }
-                            this.db.model.guild.findOneAndUpdate(
+                let response: FullResponse = await request.get(requestOptions);
+                if (response.statusCode == 200) {
+                    let body: EBGSFactionsV4WOHistory = response.body;
+                    if (body.total === 0) {
+                        try {
+                            await message.channel.send(Responses.getResponse(Responses.FAIL));
+                            message.channel.send("Faction not found");
+                        } catch (err) {
+                            console.log(err);
+                        }
+                    } else {
+                        let responseFaction = body.docs[0];
+                        let factionName = responseFaction.name;
+                        let factionNameLower = responseFaction.name_lower;
+                        let monitorFactions = {
+                            faction_name: factionName,
+                            faction_name_lower: factionNameLower,
+                            primary: primary,
+                        }
+                        try {
+                            let guild = await this.db.model.guild.findOneAndUpdate(
                                 { guild_id: guildId },
                                 {
                                     updated_at: new Date(),
                                     $addToSet: { monitor_factions: monitorFactions }
-                                })
-                                .then(guild => {
-                                    if (guild) {
-                                        message.channel.send(Responses.getResponse(Responses.SUCCESS));
-                                    } else {
-                                        message.channel.send(Responses.getResponse(Responses.FAIL))
-                                            .then(() => {
-                                                message.channel.send("Your guild is not set yet");
-                                            })
-                                            .catch(err => {
-                                                console.log(err);
-                                            });
-                                    }
-                                })
-                                .catch(err => {
-                                    message.channel.send(Responses.getResponse(Responses.FAIL));
+                                });
+                            if (guild) {
+                                message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                            } else {
+                                try {
+                                    await message.channel.send(Responses.getResponse(Responses.FAIL));
+                                    message.channel.send("Your guild is not set yet");
+                                } catch (err) {
                                     console.log(err);
-                                })
-                        }
-                    } else {
-                        if (error) {
-                            console.log(error);
-                        } else {
-                            console.log(response.statusMessage);
+                                }
+                            }
+                        } catch (err) {
+                            message.channel.send(Responses.getResponse(Responses.FAIL));
+                            console.log(err);
                         }
                     }
-                });
+                } else {
+                    console.log(response.statusMessage);
+                }
             } else {
                 message.channel.send(Responses.getResponse(Responses.NOPARAMS));
             }
@@ -180,10 +173,11 @@ export class MonitorFactions {
                             });
                             embed.addField("Factions", factionList);
                             embed.setTimestamp(new Date());
-                            message.channel.send(embed)
-                                .catch(err => {
-                                    console.log(err);
-                                });
+                            try {
+                                message.channel.send(embed);
+                            } catch (err) {
+                                console.log(err);
+                            }
                         } else {
                             try {
                                 await message.channel.send(Responses.getResponse(Responses.FAIL));

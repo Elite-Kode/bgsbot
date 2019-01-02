@@ -15,13 +15,13 @@
  */
 
 import * as discord from 'discord.js';
-import * as request from 'request';
+import * as request from 'request-promise-native';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
 import { Access } from './../access';
 import { EBGSSystemsV4WOHistory } from "../../../interfaces/typings";
-import { OptionsWithUrl } from 'request';
+import { OptionsWithUrl, FullResponse } from 'request-promise-native';
 
 export class MonitorSystems {
     db: DB;
@@ -53,67 +53,60 @@ export class MonitorSystems {
                 let systemName = argsArray.slice(1).join(" ");
                 let requestOptions: OptionsWithUrl = {
                     url: "http://elitebgs.kodeblox.com/api/ebgs/v4/systems",
-                    method: "GET",
                     qs: { name: systemName },
-                    json: true
+                    json: true,
+                    resolveWithFullResponse: true
                 }
 
-                request(requestOptions, (error, response, body: EBGSSystemsV4WOHistory) => {
-                    if (!error && response.statusCode == 200) {
-                        if (body.total === 0) {
-                            message.channel.send(Responses.getResponse(Responses.FAIL))
-                                .then(() => {
-                                    message.channel.send("System not found");
-                                })
-                                .catch(err => {
-                                    console.log(err);
-                                });
-                        } else {
-                            let responseSystem = body.docs[0];
-                            let systemName = responseSystem.name;
-                            let systemNameLower = responseSystem.name_lower;
-                            let monitorSystems = {
-                                system_name: systemName,
-                                system_name_lower: systemNameLower,
-                                primary: primary,
-                                system_pos: {
-                                    x: responseSystem.x,
-                                    y: responseSystem.y,
-                                    z: responseSystem.z
-                                }
+                let response: FullResponse = await request.get(requestOptions);
+                if (response.statusCode == 200) {
+                    let body: EBGSSystemsV4WOHistory = response.body;
+                    if (body.total === 0) {
+                        try {
+                            await message.channel.send(Responses.getResponse(Responses.FAIL));
+                            message.channel.send("System not found");
+                        } catch (err) {
+                            console.log(err);
+                        }
+                    } else {
+                        let responseSystem = body.docs[0];
+                        let systemName = responseSystem.name;
+                        let systemNameLower = responseSystem.name_lower;
+                        let monitorSystems = {
+                            system_name: systemName,
+                            system_name_lower: systemNameLower,
+                            primary: primary,
+                            system_pos: {
+                                x: responseSystem.x,
+                                y: responseSystem.y,
+                                z: responseSystem.z
                             }
-                            this.db.model.guild.findOneAndUpdate(
+                        }
+                        try {
+                            let guild = await this.db.model.guild.findOneAndUpdate(
                                 { guild_id: guildId },
                                 {
                                     updated_at: new Date(),
                                     $addToSet: { monitor_systems: monitorSystems }
-                                })
-                                .then(guild => {
-                                    if (guild) {
-                                        message.channel.send(Responses.getResponse(Responses.SUCCESS));
-                                    } else {
-                                        message.channel.send(Responses.getResponse(Responses.FAIL))
-                                            .then(() => {
-                                                message.channel.send("Your guild is not set yet");
-                                            })
-                                            .catch(err => {
-                                                console.log(err);
-                                            });
-                                    }
-                                })
-                                .catch(err => {
-                                    message.channel.send(Responses.getResponse(Responses.FAIL));
+                                });
+                            if (guild) {
+                                message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                            } else {
+                                try {
+                                    await message.channel.send(Responses.getResponse(Responses.FAIL));
+                                    message.channel.send("Your guild is not set yet");
+                                } catch (err) {
                                     console.log(err);
-                                })
-                        }
-                    } else {
-                        if (error) {
-                            console.log(error);
-                        } else {
-                            console.log(response.statusMessage);
+                                }
+                            }
+                        } catch (err) {
+                            message.channel.send(Responses.getResponse(Responses.FAIL));
+                            console.log(err);
                         }
                     }
-                });
+                } else {
+                    console.log(response.statusMessage);
+                }
             } else {
                 message.channel.send(Responses.getResponse(Responses.NOPARAMS));
             }

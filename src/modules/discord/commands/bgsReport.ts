@@ -15,14 +15,14 @@
  */
 
 import * as discord from 'discord.js';
-import * as request from 'request';
+import * as request from 'request-promise-native';
 import * as moment from 'moment';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
 import { Access } from './../access';
 import { EBGSFactionsV4WOHistory, EBGSSystemsV4WOHistory, FieldRecordSchema } from "../../../interfaces/typings";
-import { OptionsWithUrl } from 'request';
+import { OptionsWithUrl, FullResponse } from 'request-promise-native';
 import { RichEmbed } from 'discord.js';
 import { AutoReport } from '../../cron/autoReport';
 
@@ -246,505 +246,471 @@ export class BGSReport {
                 let secondarySystemPromises: Promise<[string, string, string]>[] = [];
 
                 primarySystems.forEach(system => {
-                    primarySystemPromises.push(new Promise((resolve, reject) => {
+                    primarySystemPromises.push((async () => {
                         let requestOptions: OptionsWithUrl = {
                             url: "http://elitebgs.kodeblox.com/api/ebgs/v4/systems",
-                            method: "GET",
                             qs: { name: system.toLowerCase() },
-                            json: true
+                            json: true,
+                            resolveWithFullResponse: true
                         }
-                        request(requestOptions, (error, response, body: EBGSSystemsV4WOHistory) => {
-                            if (!error && response.statusCode == 200) {
-                                if (body.total === 0) {
-                                    resolve([system, `${this.acronym(system)} System not found\n`, system]);
-                                } else {
-                                    let systemResponse = body.docs[0];
-                                    let primaryFactionPromises: Promise<[string, string, number]>[] = [];
-                                    let secondaryFactionPromises: Promise<[string, string, number]>[] = [];
-                                    let noFactionMonitoredInSystem = true;
-                                    for (let faction of systemResponse.factions) {
-                                        if (primaryFactions.indexOf(faction.name) !== -1 || secondaryFactions.indexOf(faction.name) !== -1) {
-                                            noFactionMonitoredInSystem = false;
-                                            break;
-                                        }
+                        let response: FullResponse = await request.get(requestOptions);
+                        if (response.statusCode == 200) {
+                            let body: EBGSSystemsV4WOHistory = response.body;
+                            if (body.total === 0) {
+                                return [system, `${this.acronym(system)} System not found\n`, system] as [string, string, string];
+                            } else {
+                                let systemResponse = body.docs[0];
+                                let primaryFactionPromises: Promise<[string, string, number]>[] = [];
+                                let secondaryFactionPromises: Promise<[string, string, number]>[] = [];
+                                let noFactionMonitoredInSystem = true;
+                                for (let faction of systemResponse.factions) {
+                                    if (primaryFactions.indexOf(faction.name) !== -1 || secondaryFactions.indexOf(faction.name) !== -1) {
+                                        noFactionMonitoredInSystem = false;
+                                        break;
                                     }
-                                    systemResponse.factions.forEach(faction => {
-                                        if (primaryFactions.indexOf(faction.name) !== -1) {
-                                            primaryFactionPromises.push(new Promise((resolve, reject) => {
-                                                let requestOptions: OptionsWithUrl = {
-                                                    url: "http://elitebgs.kodeblox.com/api/ebgs/v4/factions",
-                                                    method: "GET",
-                                                    qs: { name: faction.name_lower },
-                                                    json: true
-                                                }
-                                                request(requestOptions, (error, response, body: EBGSFactionsV4WOHistory) => {
-                                                    if (!error && response.statusCode == 200) {
-                                                        if (body.total === 0) {
-                                                            resolve([`${this.acronym(faction.name)} Faction not found\n`, faction.name, 0]);
-                                                        } else {
-                                                            let factionResponse = body.docs[0];
-                                                            let systemIndex = factionResponse.faction_presence.findIndex(element => {
-                                                                return element.system_name === system;
-                                                            });
-                                                            if (systemIndex !== -1) {
-                                                                let factionName = factionResponse.name;
-                                                                let state = "";
-                                                                let influence = 0;
-                                                                let pendingStatesArray = [];
-                                                                factionResponse.faction_presence.forEach(systemElement => {
-                                                                    if (systemElement.system_name_lower === system.toLowerCase()) {
-                                                                        state = systemElement.state;
-                                                                        influence = systemElement.influence;
-                                                                        pendingStatesArray = systemElement.pending_states;
-                                                                    }
-                                                                });
-                                                                let factionDetail = "";
-                                                                factionDetail += `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}%\n`;
-                                                                factionDetail += `Current ${this.acronym(factionName)} State : ${state}\n`;
-
-                                                                let pendingStates: string = "";
-                                                                if (pendingStatesArray.length === 0) {
-                                                                    pendingStates = "None";
-                                                                } else {
-                                                                    pendingStatesArray.forEach((pendingState, index, factionPendingStates) => {
-                                                                        let trend = this.getTrendIcon(pendingState.trend);
-                                                                        pendingStates = `${pendingStates}${pendingState.state}${trend}`;
-                                                                        if (index !== factionPendingStates.length - 1) {
-                                                                            pendingStates = `${pendingStates}, `
-                                                                        }
-                                                                    });
-                                                                }
-
-                                                                factionDetail += `Pending ${this.acronym(factionName)} State : ${pendingStates}\n`;
-                                                                resolve([factionDetail, factionName, influence]);
-                                                            } else {
-                                                                resolve([`${this.acronym(faction.name)} Faction not found\n`, "", 0]);
+                                }
+                                systemResponse.factions.forEach(faction => {
+                                    if (primaryFactions.indexOf(faction.name) !== -1) {
+                                        primaryFactionPromises.push((async () => {
+                                            let requestOptions: OptionsWithUrl = {
+                                                url: "http://elitebgs.kodeblox.com/api/ebgs/v4/factions",
+                                                qs: { name: faction.name_lower },
+                                                json: true,
+                                                resolveWithFullResponse: true
+                                            }
+                                            let response: FullResponse = await request.get(requestOptions);
+                                            if (response.statusCode == 200) {
+                                                let body: EBGSFactionsV4WOHistory = response.body;
+                                                if (body.total === 0) {
+                                                    return [`${this.acronym(faction.name)} Faction not found\n`, faction.name, 0] as [string, string, number];
+                                                } else {
+                                                    let factionResponse = body.docs[0];
+                                                    let systemIndex = factionResponse.faction_presence.findIndex(element => {
+                                                        return element.system_name === system;
+                                                    });
+                                                    if (systemIndex !== -1) {
+                                                        let factionName = factionResponse.name;
+                                                        let state = "";
+                                                        let influence = 0;
+                                                        let pendingStatesArray = [];
+                                                        factionResponse.faction_presence.forEach(systemElement => {
+                                                            if (systemElement.system_name_lower === system.toLowerCase()) {
+                                                                state = systemElement.state;
+                                                                influence = systemElement.influence;
+                                                                pendingStatesArray = systemElement.pending_states;
                                                             }
-                                                        }
-                                                    } else {
-                                                        if (error) {
-                                                            reject(error);
+                                                        });
+                                                        let factionDetail = "";
+                                                        factionDetail += `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}%\n`;
+                                                        factionDetail += `Current ${this.acronym(factionName)} State : ${state}\n`;
+
+                                                        let pendingStates: string = "";
+                                                        if (pendingStatesArray.length === 0) {
+                                                            pendingStates = "None";
                                                         } else {
-                                                            reject(response.statusMessage);
-                                                        }
-                                                    }
-                                                });
-                                            }));
-                                        } else if (secondaryFactions.indexOf(faction.name) !== -1 || noFactionMonitoredInSystem) {
-                                            secondaryFactionPromises.push(new Promise((resolve, reject) => {
-                                                let requestOptions: OptionsWithUrl = {
-                                                    url: "http://elitebgs.kodeblox.com/api/ebgs/v4/factions",
-                                                    method: "GET",
-                                                    qs: { name: faction.name_lower },
-                                                    json: true
-                                                }
-                                                request(requestOptions, (error, response, body: EBGSFactionsV4WOHistory) => {
-                                                    if (!error && response.statusCode == 200) {
-                                                        if (body.total === 0) {
-                                                            resolve([`${this.acronym(faction.name)} Faction not found\n`, faction.name, 0]);
-                                                        } else {
-                                                            let factionResponse = body.docs[0];
-                                                            let systemIndex = factionResponse.faction_presence.findIndex(element => {
-                                                                return element.system_name === system;
-                                                            });
-                                                            if (systemIndex !== -1) {
-                                                                let factionName = factionResponse.name;
-                                                                let state = "";
-                                                                let influence = 0;
-                                                                let pendingStatesArray = [];
-                                                                factionResponse.faction_presence.forEach(systemElement => {
-                                                                    if (systemElement.system_name_lower === system.toLowerCase()) {
-                                                                        state = systemElement.state;
-                                                                        influence = systemElement.influence;
-                                                                        pendingStatesArray = systemElement.pending_states;
-                                                                    }
-                                                                });
-                                                                let pendingStates: string = "";
-                                                                if (pendingStatesArray.length === 0) {
-                                                                    pendingStates = "None";
-                                                                } else {
-                                                                    pendingStatesArray.forEach((pendingState, index, factionPendingStates) => {
-                                                                        let trend = this.getTrendIcon(pendingState.trend);
-                                                                        pendingStates = `${pendingStates}${pendingState.state}${trend}`;
-                                                                        if (index !== factionPendingStates.length - 1) {
-                                                                            pendingStates = `${pendingStates}, `
-                                                                        }
-                                                                    });
+                                                            pendingStatesArray.forEach((pendingState, index, factionPendingStates) => {
+                                                                let trend = this.getTrendIcon(pendingState.trend);
+                                                                pendingStates = `${pendingStates}${pendingState.state}${trend}`;
+                                                                if (index !== factionPendingStates.length - 1) {
+                                                                    pendingStates = `${pendingStates}, `
                                                                 }
-                                                                let factionDetail = `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}% (Currently in ${state}. Pending ${pendingStates})\n`;
-                                                                resolve([factionDetail, factionName, influence]);
-                                                            } else {
-                                                                resolve([`${this.acronym(faction.name)} Faction not found\n`, "", 0]);
-                                                            }
+                                                            });
                                                         }
+
+                                                        factionDetail += `Pending ${this.acronym(factionName)} State : ${pendingStates}\n`;
+                                                        return [factionDetail, factionName, influence] as [string, string, number];
                                                     } else {
-                                                        if (error) {
-                                                            reject(error);
-                                                        } else {
-                                                            reject(response.statusMessage);
-                                                        }
+                                                        return [`${this.acronym(faction.name)} Faction not found\n`, "", 0] as [string, string, number];
                                                     }
-                                                });
-                                            }));
+                                                }
+                                            } else {
+                                                throw new Error(response.statusMessage);
+                                            }
+                                        })());
+                                    } else if (secondaryFactions.indexOf(faction.name) !== -1 || noFactionMonitoredInSystem) {
+                                        secondaryFactionPromises.push((async () => {
+                                            let requestOptions: OptionsWithUrl = {
+                                                url: "http://elitebgs.kodeblox.com/api/ebgs/v4/factions",
+                                                qs: { name: faction.name_lower },
+                                                json: true,
+                                                resolveWithFullResponse: true
+                                            }
+                                            let response: FullResponse = await request.get(requestOptions);
+                                            if (response.statusCode == 200) {
+                                                let body: EBGSFactionsV4WOHistory = response.body;
+                                                if (body.total === 0) {
+                                                    return [`${this.acronym(faction.name)} Faction not found\n`, faction.name, 0] as [string, string, 0];
+                                                } else {
+                                                    let factionResponse = body.docs[0];
+                                                    let systemIndex = factionResponse.faction_presence.findIndex(element => {
+                                                        return element.system_name === system;
+                                                    });
+                                                    if (systemIndex !== -1) {
+                                                        let factionName = factionResponse.name;
+                                                        let state = "";
+                                                        let influence = 0;
+                                                        let pendingStatesArray = [];
+                                                        factionResponse.faction_presence.forEach(systemElement => {
+                                                            if (systemElement.system_name_lower === system.toLowerCase()) {
+                                                                state = systemElement.state;
+                                                                influence = systemElement.influence;
+                                                                pendingStatesArray = systemElement.pending_states;
+                                                            }
+                                                        });
+                                                        let pendingStates: string = "";
+                                                        if (pendingStatesArray.length === 0) {
+                                                            pendingStates = "None";
+                                                        } else {
+                                                            pendingStatesArray.forEach((pendingState, index, factionPendingStates) => {
+                                                                let trend = this.getTrendIcon(pendingState.trend);
+                                                                pendingStates = `${pendingStates}${pendingState.state}${trend}`;
+                                                                if (index !== factionPendingStates.length - 1) {
+                                                                    pendingStates = `${pendingStates}, `
+                                                                }
+                                                            });
+                                                        }
+                                                        let factionDetail = `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}% (Currently in ${state}. Pending ${pendingStates})\n`;
+                                                        return [factionDetail, factionName, influence] as [string, string, number];
+                                                    } else {
+                                                        return [`${this.acronym(faction.name)} Faction not found\n`, "", 0] as [string, string, number];
+                                                    }
+                                                }
+                                            } else {
+                                                throw new Error(response.statusMessage);
+                                            }
+                                        })());
+                                    }
+                                });
+                                let promises = await Promise.all([Promise.all(primaryFactionPromises), Promise.all(secondaryFactionPromises)]);
+                                let primaryFieldRecord: FieldRecordSchema[] = [];
+                                let secondaryFieldRecord: FieldRecordSchema[] = [];
+                                promises[0].forEach(promise => {
+                                    primaryFieldRecord.push({
+                                        fieldTitle: "",
+                                        fieldDescription: promise[0],
+                                        influence: promise[2],
+                                        name: promise[1]
+                                    });
+                                });
+                                promises[1].forEach(promise => {
+                                    secondaryFieldRecord.push({
+                                        fieldTitle: "",
+                                        fieldDescription: promise[0],
+                                        influence: promise[2],
+                                        name: promise[1]
+                                    });
+                                });
+                                if (guild.sort && guild.sort_order && guild.sort_order !== 0) {
+                                    primaryFieldRecord.sort((a, b) => {
+                                        if (guild.sort === 'name') {
+                                            if (guild.sort_order === -1) {
+                                                if (a.name.toLowerCase() < b.name.toLowerCase()) {
+                                                    return 1;
+                                                } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
+                                                    return -1;
+                                                } else {
+                                                    return 0;
+                                                }
+                                            } else if (guild.sort_order === 1) {
+                                                if (a.name.toLowerCase() < b.name.toLowerCase()) {
+                                                    return -1;
+                                                } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
+                                                    return 1;
+                                                } else {
+                                                    return 0;
+                                                }
+                                            } else {
+                                                return 0;
+                                            }
+                                        } else if (guild.sort === 'influence') {
+                                            if (guild.sort_order === -1) {
+                                                return b.influence - a.influence;
+                                            } else if (guild.sort_order === 1) {
+                                                return a.influence - b.influence;
+                                            } else {
+                                                return 0;
+                                            }
+                                        } else {
+                                            return 0;
                                         }
                                     });
-                                    Promise.all([Promise.all(primaryFactionPromises), Promise.all(secondaryFactionPromises)])
-                                        .then(promises => {
-                                            let primaryFieldRecord: FieldRecordSchema[] = [];
-                                            let secondaryFieldRecord: FieldRecordSchema[] = [];
-                                            promises[0].forEach(promise => {
-                                                primaryFieldRecord.push({
-                                                    fieldTitle: "",
-                                                    fieldDescription: promise[0],
-                                                    influence: promise[2],
-                                                    name: promise[1]
-                                                });
-                                            });
-                                            promises[1].forEach(promise => {
-                                                secondaryFieldRecord.push({
-                                                    fieldTitle: "",
-                                                    fieldDescription: promise[0],
-                                                    influence: promise[2],
-                                                    name: promise[1]
-                                                });
-                                            });
-                                            if (guild.sort && guild.sort_order && guild.sort_order !== 0) {
-                                                primaryFieldRecord.sort((a, b) => {
-                                                    if (guild.sort === 'name') {
-                                                        if (guild.sort_order === -1) {
-                                                            if (a.name.toLowerCase() < b.name.toLowerCase()) {
-                                                                return 1;
-                                                            } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
-                                                                return -1;
-                                                            } else {
-                                                                return 0;
-                                                            }
-                                                        } else if (guild.sort_order === 1) {
-                                                            if (a.name.toLowerCase() < b.name.toLowerCase()) {
-                                                                return -1;
-                                                            } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
-                                                                return 1;
-                                                            } else {
-                                                                return 0;
-                                                            }
-                                                        } else {
-                                                            return 0;
-                                                        }
-                                                    } else if (guild.sort === 'influence') {
-                                                        if (guild.sort_order === -1) {
-                                                            return b.influence - a.influence;
-                                                        } else if (guild.sort_order === 1) {
-                                                            return a.influence - b.influence;
-                                                        } else {
-                                                            return 0;
-                                                        }
-                                                    } else {
-                                                        return 0;
-                                                    }
-                                                });
-                                                secondaryFieldRecord.sort((a, b) => {
-                                                    if (guild.sort === 'name') {
-                                                        if (guild.sort_order === -1) {
-                                                            if (a.name.toLowerCase() < b.name.toLowerCase()) {
-                                                                return 1;
-                                                            } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
-                                                                return -1;
-                                                            } else {
-                                                                return 0;
-                                                            }
-                                                        } else if (guild.sort_order === 1) {
-                                                            if (a.name.toLowerCase() < b.name.toLowerCase()) {
-                                                                return -1;
-                                                            } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
-                                                                return 1;
-                                                            } else {
-                                                                return 0;
-                                                            }
-                                                        } else {
-                                                            return 0;
-                                                        }
-                                                    } else if (guild.sort === 'influence') {
-                                                        if (guild.sort_order === -1) {
-                                                            return b.influence - a.influence;
-                                                        } else if (guild.sort_order === 1) {
-                                                            return a.influence - b.influence;
-                                                        } else {
-                                                            return 0;
-                                                        }
-                                                    } else {
-                                                        return 0;
-                                                    }
-                                                });
+                                    secondaryFieldRecord.sort((a, b) => {
+                                        if (guild.sort === 'name') {
+                                            if (guild.sort_order === -1) {
+                                                if (a.name.toLowerCase() < b.name.toLowerCase()) {
+                                                    return 1;
+                                                } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
+                                                    return -1;
+                                                } else {
+                                                    return 0;
+                                                }
+                                            } else if (guild.sort_order === 1) {
+                                                if (a.name.toLowerCase() < b.name.toLowerCase()) {
+                                                    return -1;
+                                                } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
+                                                    return 1;
+                                                } else {
+                                                    return 0;
+                                                }
+                                            } else {
+                                                return 0;
                                             }
-                                            let joined = "";
-                                            joined += `Last Updated : ${moment(systemResponse.updated_at).fromNow()} \n`;
-                                            primaryFieldRecord.concat(secondaryFieldRecord).forEach(record => {
-                                                joined += record.fieldDescription;
-                                            });
-                                            resolve([system, joined, system]);
-                                        })
-                                        .catch(err => {
-                                            reject(err);
-                                        });
+                                        } else if (guild.sort === 'influence') {
+                                            if (guild.sort_order === -1) {
+                                                return b.influence - a.influence;
+                                            } else if (guild.sort_order === 1) {
+                                                return a.influence - b.influence;
+                                            } else {
+                                                return 0;
+                                            }
+                                        } else {
+                                            return 0;
+                                        }
+                                    });
                                 }
-                            } else {
-                                if (error) {
-                                    reject(error);
-                                } else {
-                                    reject(response.statusMessage);
-                                }
+                                let joined = "";
+                                joined += `Last Updated : ${moment(systemResponse.updated_at).fromNow()} \n`;
+                                primaryFieldRecord.concat(secondaryFieldRecord).forEach(record => {
+                                    joined += record.fieldDescription;
+                                });
+                                return [system, joined, system] as [string, string, string];
                             }
-                        });
-                    }));
+                        } else {
+                            throw new Error(response.statusMessage);
+                        }
+                    })());
                 });
                 secondarySystems.forEach(system => {
-                    secondarySystemPromises.push(new Promise((resolve, reject) => {
+                    secondarySystemPromises.push((async () => {
                         let requestOptions: OptionsWithUrl = {
                             url: "http://elitebgs.kodeblox.com/api/ebgs/v4/systems",
-                            method: "GET",
                             qs: { name: system.toLowerCase() },
-                            json: true
+                            json: true,
+                            resolveWithFullResponse: true
                         }
-                        request(requestOptions, (error, response, body: EBGSSystemsV4WOHistory) => {
-                            if (!error && response.statusCode == 200) {
-                                if (body.total === 0) {
-                                    resolve([system, `${this.acronym(system)} System not found\n`, system]);
-                                } else {
-                                    let systemResponse = body.docs[0];
-                                    let primaryFactionPromises: Promise<[string, string, number]>[] = [];
-                                    let secondaryFactionPromises: Promise<[string, string, number]>[] = [];
-                                    let noFactionMonitoredInSystem = true;
-                                    for (let faction of systemResponse.factions) {
-                                        if (primaryFactions.indexOf(faction.name) !== -1 || secondaryFactions.indexOf(faction.name) !== -1) {
-                                            noFactionMonitoredInSystem = false;
-                                            break;
-                                        }
+                        let response: FullResponse = await request.get(requestOptions);
+                        if (response.statusCode == 200) {
+                            let body: EBGSSystemsV4WOHistory = response.body;
+                            if (body.total === 0) {
+                                return [system, `${this.acronym(system)} System not found\n`, system] as [string, string, string];
+                            } else {
+                                let systemResponse = body.docs[0];
+                                let primaryFactionPromises: Promise<[string, string, number]>[] = [];
+                                let secondaryFactionPromises: Promise<[string, string, number]>[] = [];
+                                let noFactionMonitoredInSystem = true;
+                                for (let faction of systemResponse.factions) {
+                                    if (primaryFactions.indexOf(faction.name) !== -1 || secondaryFactions.indexOf(faction.name) !== -1) {
+                                        noFactionMonitoredInSystem = false;
+                                        break;
                                     }
-                                    systemResponse.factions.forEach(faction => {
-                                        if (primaryFactions.indexOf(faction.name) !== -1) {
-                                            primaryFactionPromises.push(new Promise((resolve, reject) => {
-                                                let requestOptions: OptionsWithUrl = {
-                                                    url: "http://elitebgs.kodeblox.com/api/ebgs/v4/factions",
-                                                    method: "GET",
-                                                    qs: { name: faction.name_lower },
-                                                    json: true
-                                                }
-                                                request(requestOptions, (error, response, body: EBGSFactionsV4WOHistory) => {
-                                                    if (!error && response.statusCode == 200) {
-                                                        if (body.total === 0) {
-                                                            resolve([`${this.acronym(faction.name)} Faction not found\n`, faction.name, 0]);
-                                                        } else {
-                                                            let factionResponse = body.docs[0];
-                                                            let systemIndex = factionResponse.faction_presence.findIndex(element => {
-                                                                return element.system_name === system;
-                                                            });
-                                                            if (systemIndex !== -1) {
-                                                                let factionName = factionResponse.name;
-                                                                let state = "";
-                                                                let influence = 0;
-                                                                let pendingStatesArray = [];
-                                                                factionResponse.faction_presence.forEach(systemElement => {
-                                                                    if (systemElement.system_name_lower === system.toLowerCase()) {
-                                                                        state = systemElement.state;
-                                                                        influence = systemElement.influence;
-                                                                        pendingStatesArray = systemElement.pending_states;
-                                                                    }
-                                                                });
-                                                                let updatedAt = moment(systemResponse.updated_at);
+                                }
+                                systemResponse.factions.forEach(faction => {
+                                    if (primaryFactions.indexOf(faction.name) !== -1) {
+                                        primaryFactionPromises.push((async () => {
+                                            let requestOptions: OptionsWithUrl = {
+                                                url: "http://elitebgs.kodeblox.com/api/ebgs/v4/factions",
+                                                qs: { name: faction.name_lower },
+                                                json: true,
+                                                resolveWithFullResponse: true
+                                            }
+                                            let response: FullResponse = await request.get(requestOptions);
+                                            if (response.statusCode == 200) {
+                                                let body: EBGSFactionsV4WOHistory = response.body;
+                                                if (body.total === 0) {
+                                                    return [`${this.acronym(faction.name)} Faction not found\n`, faction.name, 0] as [string, string, number];
+                                                } else {
+                                                    let factionResponse = body.docs[0];
+                                                    let systemIndex = factionResponse.faction_presence.findIndex(element => {
+                                                        return element.system_name === system;
+                                                    });
+                                                    if (systemIndex !== -1) {
+                                                        let factionName = factionResponse.name;
+                                                        let state = "";
+                                                        let influence = 0;
+                                                        let pendingStatesArray = [];
+                                                        factionResponse.faction_presence.forEach(systemElement => {
+                                                            if (systemElement.system_name_lower === system.toLowerCase()) {
+                                                                state = systemElement.state;
+                                                                influence = systemElement.influence;
+                                                                pendingStatesArray = systemElement.pending_states;
+                                                            }
+                                                        });
+                                                        let updatedAt = moment(systemResponse.updated_at);
 
-                                                                let pendingStates: string = "";
-                                                                if (pendingStatesArray.length === 0) {
-                                                                    pendingStates = "None";
-                                                                } else {
-                                                                    pendingStatesArray.forEach((pendingState, index, factionPendingStates) => {
-                                                                        let trend = this.getTrendIcon(pendingState.trend);
-                                                                        pendingStates = `${pendingStates}${pendingState.state}${trend}`;
-                                                                        if (index !== factionPendingStates.length - 1) {
-                                                                            pendingStates = `${pendingStates}, `
-                                                                        }
-                                                                    });
+                                                        let pendingStates: string = "";
+                                                        if (pendingStatesArray.length === 0) {
+                                                            pendingStates = "None";
+                                                        } else {
+                                                            pendingStatesArray.forEach((pendingState, index, factionPendingStates) => {
+                                                                let trend = this.getTrendIcon(pendingState.trend);
+                                                                pendingStates = `${pendingStates}${pendingState.state}${trend}`;
+                                                                if (index !== factionPendingStates.length - 1) {
+                                                                    pendingStates = `${pendingStates}, `
                                                                 }
-                                                                let factionDetail = `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}% (Currently in ${state}. Pending ${pendingStates})\n`;
-                                                                resolve([factionDetail, factionName, influence]);
-                                                            } else {
-                                                                resolve([`${this.acronym(faction.name)} Faction not found\n`, "", 0]);
-                                                            }
-                                                        }
-                                                    } else {
-                                                        if (error) {
-                                                            reject(error);
-                                                        } else {
-                                                            reject(response.statusMessage);
-                                                        }
-                                                    }
-                                                });
-                                            }));
-                                        } else if (secondaryFactions.indexOf(faction.name) !== -1 || noFactionMonitoredInSystem) {
-                                            secondaryFactionPromises.push(new Promise((resolve, reject) => {
-                                                let requestOptions: OptionsWithUrl = {
-                                                    url: "http://elitebgs.kodeblox.com/api/ebgs/v4/factions",
-                                                    method: "GET",
-                                                    qs: { name: faction.name_lower },
-                                                    json: true
-                                                }
-                                                request(requestOptions, (error, response, body: EBGSFactionsV4WOHistory) => {
-                                                    if (!error && response.statusCode == 200) {
-                                                        if (body.total === 0) {
-                                                            resolve([`${this.acronym(faction.name)} Faction not found\n`, faction.name, 0]);
-                                                        } else {
-                                                            let factionResponse = body.docs[0];
-                                                            let systemIndex = factionResponse.faction_presence.findIndex(element => {
-                                                                return element.system_name === system;
                                                             });
-                                                            if (systemIndex !== -1) {
-                                                                let factionName = factionResponse.name;
-                                                                let state = "";
-                                                                let influence = 0;
-                                                                let pendingStatesArray = [];
-                                                                factionResponse.faction_presence.forEach(systemElement => {
-                                                                    if (systemElement.system_name_lower === system.toLowerCase()) {
-                                                                        state = systemElement.state;
-                                                                        influence = systemElement.influence;
-                                                                        pendingStatesArray = systemElement.pending_states;
-                                                                    }
-                                                                });
-                                                                let pendingStates: string = "";
-                                                                if (pendingStatesArray.length === 0) {
-                                                                    pendingStates = "None";
-                                                                } else {
-                                                                    pendingStatesArray.forEach((pendingState, index, factionPendingStates) => {
-                                                                        let trend = this.getTrendIcon(pendingState.trend);
-                                                                        pendingStates = `${pendingStates}${pendingState.state}${trend}`;
-                                                                        if (index !== factionPendingStates.length - 1) {
-                                                                            pendingStates = `${pendingStates}, `
-                                                                        }
-                                                                    });
-                                                                }
-                                                                let factionDetail = `${this.acronym(factionName)} : ${(influence * 100).toFixed(1)}% (${state}. Pending ${pendingStates})\n`;
-                                                                resolve([factionDetail, factionName, influence]);
-                                                            } else {
-                                                                resolve([`${this.acronym(faction.name)} Faction not found\n`, "", 0]);
-                                                            }
                                                         }
+                                                        let factionDetail = `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}% (Currently in ${state}. Pending ${pendingStates})\n`;
+                                                        return [factionDetail, factionName, influence] as [string, string, number];
                                                     } else {
-                                                        if (error) {
-                                                            reject(error);
-                                                        } else {
-                                                            reject(response.statusMessage);
-                                                        }
+                                                        return [`${this.acronym(faction.name)} Faction not found\n`, "", 0] as [string, string, number];
                                                     }
-                                                });
-                                            }));
+                                                }
+                                            } else {
+                                                throw new Error(response.statusMessage);
+                                            }
+                                        })());
+                                    } else if (secondaryFactions.indexOf(faction.name) !== -1 || noFactionMonitoredInSystem) {
+                                        secondaryFactionPromises.push((async () => {
+                                            let requestOptions: OptionsWithUrl = {
+                                                url: "http://elitebgs.kodeblox.com/api/ebgs/v4/factions",
+                                                qs: { name: faction.name_lower },
+                                                json: true,
+                                                resolveWithFullResponse: true
+                                            }
+                                            let response: FullResponse = await request.get(requestOptions);
+                                            if (response.statusCode == 200) {
+                                                let body: EBGSFactionsV4WOHistory = response.body;
+                                                if (body.total === 0) {
+                                                    return [`${this.acronym(faction.name)} Faction not found\n`, faction.name, 0] as [string, string, number];
+                                                } else {
+                                                    let factionResponse = body.docs[0];
+                                                    let systemIndex = factionResponse.faction_presence.findIndex(element => {
+                                                        return element.system_name === system;
+                                                    });
+                                                    if (systemIndex !== -1) {
+                                                        let factionName = factionResponse.name;
+                                                        let state = "";
+                                                        let influence = 0;
+                                                        let pendingStatesArray = [];
+                                                        factionResponse.faction_presence.forEach(systemElement => {
+                                                            if (systemElement.system_name_lower === system.toLowerCase()) {
+                                                                state = systemElement.state;
+                                                                influence = systemElement.influence;
+                                                                pendingStatesArray = systemElement.pending_states;
+                                                            }
+                                                        });
+                                                        let pendingStates: string = "";
+                                                        if (pendingStatesArray.length === 0) {
+                                                            pendingStates = "None";
+                                                        } else {
+                                                            pendingStatesArray.forEach((pendingState, index, factionPendingStates) => {
+                                                                let trend = this.getTrendIcon(pendingState.trend);
+                                                                pendingStates = `${pendingStates}${pendingState.state}${trend}`;
+                                                                if (index !== factionPendingStates.length - 1) {
+                                                                    pendingStates = `${pendingStates}, `
+                                                                }
+                                                            });
+                                                        }
+                                                        let factionDetail = `${this.acronym(factionName)} : ${(influence * 100).toFixed(1)}% (${state}. Pending ${pendingStates})\n`;
+                                                        return [factionDetail, factionName, influence] as [string, string, number];
+                                                    } else {
+                                                        return [`${this.acronym(faction.name)} Faction not found\n`, "", 0] as [string, string, number];
+                                                    }
+                                                }
+                                            } else {
+                                                throw new Error(response.statusMessage);
+                                            }
+                                        })());
+                                    }
+                                });
+                                let promises = await Promise.all([Promise.all(primaryFactionPromises), Promise.all(secondaryFactionPromises)]);
+                                let primaryFieldRecord: FieldRecordSchema[] = [];
+                                let secondaryFieldRecord: FieldRecordSchema[] = [];
+                                promises[0].forEach(promise => {
+                                    primaryFieldRecord.push({
+                                        fieldTitle: "",
+                                        fieldDescription: promise[0],
+                                        influence: promise[2],
+                                        name: promise[1]
+                                    });
+                                });
+                                promises[1].forEach(promise => {
+                                    secondaryFieldRecord.push({
+                                        fieldTitle: "",
+                                        fieldDescription: promise[0],
+                                        influence: promise[2],
+                                        name: promise[1]
+                                    });
+                                });
+                                if (guild.sort && guild.sort_order && guild.sort_order !== 0) {
+                                    primaryFieldRecord.sort((a, b) => {
+                                        if (guild.sort === 'name') {
+                                            if (guild.sort_order === -1) {
+                                                if (a.name.toLowerCase() < b.name.toLowerCase()) {
+                                                    return 1;
+                                                } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
+                                                    return -1;
+                                                } else {
+                                                    return 0;
+                                                }
+                                            } else if (guild.sort_order === 1) {
+                                                if (a.name.toLowerCase() < b.name.toLowerCase()) {
+                                                    return -1;
+                                                } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
+                                                    return 1;
+                                                } else {
+                                                    return 0;
+                                                }
+                                            } else {
+                                                return 0;
+                                            }
+                                        } else if (guild.sort === 'influence') {
+                                            if (guild.sort_order === -1) {
+                                                return b.influence - a.influence;
+                                            } else if (guild.sort_order === 1) {
+                                                return a.influence - b.influence;
+                                            } else {
+                                                return 0;
+                                            }
+                                        } else {
+                                            return 0;
                                         }
                                     });
-                                    Promise.all([Promise.all(primaryFactionPromises), Promise.all(secondaryFactionPromises)])
-                                        .then(promises => {
-                                            let primaryFieldRecord: FieldRecordSchema[] = [];
-                                            let secondaryFieldRecord: FieldRecordSchema[] = [];
-                                            promises[0].forEach(promise => {
-                                                primaryFieldRecord.push({
-                                                    fieldTitle: "",
-                                                    fieldDescription: promise[0],
-                                                    influence: promise[2],
-                                                    name: promise[1]
-                                                });
-                                            });
-                                            promises[1].forEach(promise => {
-                                                secondaryFieldRecord.push({
-                                                    fieldTitle: "",
-                                                    fieldDescription: promise[0],
-                                                    influence: promise[2],
-                                                    name: promise[1]
-                                                });
-                                            });
-                                            if (guild.sort && guild.sort_order && guild.sort_order !== 0) {
-                                                primaryFieldRecord.sort((a, b) => {
-                                                    if (guild.sort === 'name') {
-                                                        if (guild.sort_order === -1) {
-                                                            if (a.name.toLowerCase() < b.name.toLowerCase()) {
-                                                                return 1;
-                                                            } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
-                                                                return -1;
-                                                            } else {
-                                                                return 0;
-                                                            }
-                                                        } else if (guild.sort_order === 1) {
-                                                            if (a.name.toLowerCase() < b.name.toLowerCase()) {
-                                                                return -1;
-                                                            } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
-                                                                return 1;
-                                                            } else {
-                                                                return 0;
-                                                            }
-                                                        } else {
-                                                            return 0;
-                                                        }
-                                                    } else if (guild.sort === 'influence') {
-                                                        if (guild.sort_order === -1) {
-                                                            return b.influence - a.influence;
-                                                        } else if (guild.sort_order === 1) {
-                                                            return a.influence - b.influence;
-                                                        } else {
-                                                            return 0;
-                                                        }
-                                                    } else {
-                                                        return 0;
-                                                    }
-                                                });
-                                                secondaryFieldRecord.sort((a, b) => {
-                                                    if (guild.sort === 'name') {
-                                                        if (guild.sort_order === -1) {
-                                                            if (a.name.toLowerCase() < b.name.toLowerCase()) {
-                                                                return 1;
-                                                            } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
-                                                                return -1;
-                                                            } else {
-                                                                return 0;
-                                                            }
-                                                        } else if (guild.sort_order === 1) {
-                                                            if (a.name.toLowerCase() < b.name.toLowerCase()) {
-                                                                return -1;
-                                                            } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
-                                                                return 1;
-                                                            } else {
-                                                                return 0;
-                                                            }
-                                                        } else {
-                                                            return 0;
-                                                        }
-                                                    } else if (guild.sort === 'influence') {
-                                                        if (guild.sort_order === -1) {
-                                                            return b.influence - a.influence;
-                                                        } else if (guild.sort_order === 1) {
-                                                            return a.influence - b.influence;
-                                                        } else {
-                                                            return 0;
-                                                        }
-                                                    } else {
-                                                        return 0;
-                                                    }
-                                                });
+                                    secondaryFieldRecord.sort((a, b) => {
+                                        if (guild.sort === 'name') {
+                                            if (guild.sort_order === -1) {
+                                                if (a.name.toLowerCase() < b.name.toLowerCase()) {
+                                                    return 1;
+                                                } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
+                                                    return -1;
+                                                } else {
+                                                    return 0;
+                                                }
+                                            } else if (guild.sort_order === 1) {
+                                                if (a.name.toLowerCase() < b.name.toLowerCase()) {
+                                                    return -1;
+                                                } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
+                                                    return 1;
+                                                } else {
+                                                    return 0;
+                                                }
+                                            } else {
+                                                return 0;
                                             }
-                                            let joined = "";
-                                            joined += `Last Updated : ${moment(systemResponse.updated_at).fromNow()} \n`;
-                                            primaryFieldRecord.concat(secondaryFieldRecord).forEach(record => {
-                                                joined += record.fieldDescription;
-                                            });
-                                            resolve([system, joined, system]);
-                                        })
-                                        .catch(err => {
-                                            reject(err);
-                                        });
+                                        } else if (guild.sort === 'influence') {
+                                            if (guild.sort_order === -1) {
+                                                return b.influence - a.influence;
+                                            } else if (guild.sort_order === 1) {
+                                                return a.influence - b.influence;
+                                            } else {
+                                                return 0;
+                                            }
+                                        } else {
+                                            return 0;
+                                        }
+                                    });
                                 }
-                            } else {
-                                if (error) {
-                                    reject(error);
-                                } else {
-                                    reject(response.statusMessage);
-                                }
+                                let joined = "";
+                                joined += `Last Updated : ${moment(systemResponse.updated_at).fromNow()} \n`;
+                                primaryFieldRecord.concat(secondaryFieldRecord).forEach(record => {
+                                    joined += record.fieldDescription;
+                                });
+                                return [system, joined, system] as [string, string, string];
                             }
-                        });
-                    }));
+                        } else {
+                            throw new Error(response.statusMessage);
+                        }
+                    })());
                 });
                 let promises = await Promise.all([Promise.all(primarySystemPromises), Promise.all(secondarySystemPromises)]);
 

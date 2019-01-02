@@ -15,14 +15,14 @@
  */
 
 import * as discord from 'discord.js';
-import * as request from 'request';
+import * as request from 'request-promise-native';
 import * as moment from 'moment';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
 import { Access } from './../access';
 import { EBGSFactionsV4WOHistory, EBGSSystemsV4WOHistory, FieldRecordSchema } from "../../../interfaces/typings";
-import { OptionsWithUrl } from 'request';
+import { OptionsWithUrl, FullResponse } from 'request-promise-native';
 
 export class SystemStatus {
     db: DB;
@@ -54,205 +54,187 @@ export class SystemStatus {
 
                 let requestOptions: OptionsWithUrl = {
                     url: "http://elitebgs.kodeblox.com/api/ebgs/v4/systems",
-                    method: "GET",
                     qs: { name: systemName },
-                    json: true
+                    json: true,
+                    resolveWithFullResponse: true
                 }
 
-                request(requestOptions, (error, response, body: EBGSSystemsV4WOHistory) => {
-                    if (!error && response.statusCode == 200) {
-                        if (body.total === 0) {
-                            message.channel.send(Responses.getResponse(Responses.FAIL))
-                                .then(() => {
-                                    message.channel.send("System not found");
-                                })
-                                .catch(err => {
-                                    console.log(err);
-                                });
-                        } else {
-                            let responseSystem = body.docs[0];
-                            let systemName = responseSystem.name;
-                            let systemState = responseSystem.state;
-                            let controlling = responseSystem.controlling_minor_faction;
-                            let minorFactions = responseSystem.factions;
-                            if (systemState === null) {
-                                systemState = "None";
-                            }
-                            let factionPromises: Promise<[string, string, string, number]>[] = [];
-                            minorFactions.forEach((faction) => {
-                                let requestOptions: OptionsWithUrl = {
-                                    url: "http://elitebgs.kodeblox.com/api/ebgs/v4/factions",
-                                    method: "GET",
-                                    qs: { name: faction.name_lower },
-                                    json: true
-                                }
-                                factionPromises.push(new Promise((resolve, reject) => {
-                                    request(requestOptions, (error, response, body: EBGSFactionsV4WOHistory) => {
-                                        if (!error && response.statusCode == 200) {
-                                            if (body.total === 0) {
-                                                message.channel.send(Responses.getResponse(Responses.FAIL))
-                                                    .then(() => {
-                                                        resolve([faction.name, "Faction status not found", faction.name, 0]);
-                                                    })
-                                                    .catch(err => {
-                                                        console.log(err);
-                                                    });
-                                            } else {
-                                                let responseFaction = body.docs[0];
-                                                let factionName = responseFaction.name;
-                                                let factionNameLower = responseFaction.name_lower;
-                                                let systemIndex = responseFaction.faction_presence.findIndex(element => {
-                                                    return element.system_name_lower === systemName.toLowerCase();
-                                                });
-                                                let state = responseFaction.faction_presence[systemIndex].state;
-                                                let influence = responseFaction.faction_presence[systemIndex].influence;
-                                                let pendingStatesArray = responseFaction.faction_presence[systemIndex].pending_states;
-                                                let recoveringStatesArray = responseFaction.faction_presence[systemIndex].recovering_states;
-                                                let updatedAt = moment(responseSystem.updated_at);
-                                                let factionDetail = "";
-                                                factionDetail += `Last Updated : ${updatedAt.fromNow()} \n`;
-                                                factionDetail += `State : ${state}\n`;
-                                                factionDetail += `Influence : ${(influence * 100).toFixed(1)}%\n`;
-                                                let pendingStates: string = "";
-                                                if (pendingStatesArray.length === 0) {
-                                                    pendingStates = "None";
-                                                } else {
-                                                    pendingStatesArray.forEach((pendingState, index, factionPendingStates) => {
-                                                        let trend = this.getTrendIcon(pendingState.trend);
-                                                        pendingStates = `${pendingStates}${pendingState.state}${trend}`;
-                                                        if (index !== factionPendingStates.length - 1) {
-                                                            pendingStates = `${pendingStates}, `
-                                                        }
-                                                    });
-                                                }
-                                                factionDetail += `Pending States : ${pendingStates}\n`;
-                                                let recoveringStates: string = "";
-                                                if (recoveringStatesArray.length === 0) {
-                                                    recoveringStates = "None";
-                                                } else {
-                                                    recoveringStatesArray.forEach((recoveringState, index, factionRecoveringState) => {
-                                                        let trend = this.getTrendIcon(recoveringState.trend);
-                                                        recoveringStates = `${recoveringStates}${recoveringState.state}${trend}`;
-                                                        if (index !== factionRecoveringState.length - 1) {
-                                                            recoveringStates = `${recoveringStates}, `
-                                                        }
-                                                    })
-                                                }
-                                                factionDetail += `Recovering States : ${recoveringStates}`;
-                                                if (controlling === factionNameLower) {
-                                                    resolve([factionName + '* CONTROLLING FACTION', factionDetail, factionName, influence]);
-                                                } else {
-                                                    resolve([factionName, factionDetail, factionName, influence]);
-                                                }
-                                            }
-                                        } else {
-                                            if (error) {
-                                                reject(error);
-                                            } else {
-                                                reject(response.statusMessage);
-                                            }
-                                        }
-                                    });
-                                }));
-                            });
-                            Promise.all(factionPromises)
-                                .then(factions => {
-                                    let fieldRecord: FieldRecordSchema[] = [];
-                                    factions.forEach(field => {
-                                        fieldRecord.push({
-                                            fieldTitle: field[0],
-                                            fieldDescription: field[1],
-                                            influence: field[3],
-                                            name: field[2]
-                                        });
-                                    });
-                                    this.db.model.guild.findOne({ guild_id: message.guild.id })
-                                        .then(guild => {
-                                            if (guild) {
-                                                if (guild.sort && guild.sort_order && guild.sort_order !== 0) {
-                                                    fieldRecord.sort((a, b) => {
-                                                        if (guild.sort === 'name') {
-                                                            if (guild.sort_order === -1) {
-                                                                if (a.name.toLowerCase() < b.name.toLowerCase()) {
-                                                                    return 1;
-                                                                } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
-                                                                    return -1;
-                                                                } else {
-                                                                    return 0;
-                                                                }
-                                                            } else if (guild.sort_order === 1) {
-                                                                if (a.name.toLowerCase() < b.name.toLowerCase()) {
-                                                                    return -1;
-                                                                } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
-                                                                    return 1;
-                                                                } else {
-                                                                    return 0;
-                                                                }
-                                                            } else {
-                                                                return 0;
-                                                            }
-                                                        } else if (guild.sort === 'influence') {
-                                                            if (guild.sort_order === -1) {
-                                                                return b.influence - a.influence;
-                                                            } else if (guild.sort_order === 1) {
-                                                                return a.influence - b.influence;
-                                                            } else {
-                                                                return 0;
-                                                            }
-                                                        } else {
-                                                            return 0;
-                                                        }
-                                                    });
-                                                }
-                                                // Multipage is not needed for systems due to number of faction restriction but still keeping it
-                                                (async (message, fieldRecord) => {
-                                                    let numberOfMessages = Math.ceil(fieldRecord.length / 24);
-                                                    for (let index = 0; index < numberOfMessages; index++) {
-                                                        let embed = new discord.RichEmbed();
-                                                        if (index === 0) {
-                                                            embed.setTitle("SYSTEM STATUS");
-                                                        } else {
-                                                            embed.setTitle(`SYSTEM STATUS - continued - Pg ${index + 1}`);
-                                                        }
-                                                        embed.setColor([255, 0, 255]);
-                                                        embed.addField(systemName, systemState, false);
-                                                        embed.setTimestamp(new Date());
-                                                        let limit = 0;
-                                                        if (fieldRecord.length > index * 24 + 24) {
-                                                            limit = index * 24 + 24;
-                                                        } else {
-                                                            limit = fieldRecord.length;
-                                                        }
-                                                        for (let recordIndex = index * 24; recordIndex < limit; recordIndex++) {
-                                                            embed.addField(fieldRecord[recordIndex].fieldTitle, fieldRecord[recordIndex].fieldDescription);
-                                                        }
-                                                        try {
-                                                            await message.channel.send(embed);
-                                                        } catch (err) {
-                                                            console.log(err);
-                                                        }
-                                                    }
-                                                })(message, fieldRecord);
-                                            }
-                                        })
-                                        .catch(err => {
-                                            message.channel.send(Responses.getResponse(Responses.FAIL));
-                                            console.log(err);
-                                        });
-                                })
-                                .catch(err => {
-                                    message.channel.send(Responses.getResponse(Responses.FAIL));
-                                    console.log(err);
-                                });
+                let response: FullResponse = await request.get(requestOptions);
+                if (response.statusCode == 200) {
+                    let body: EBGSSystemsV4WOHistory = response.body;
+                    if (body.total === 0) {
+                        try {
+                            await message.channel.send(Responses.getResponse(Responses.FAIL));
+                            message.channel.send("System not found");
+                        } catch (err) {
+                            console.log(err);
                         }
                     } else {
-                        if (error) {
-                            console.log(error);
-                        } else {
-                            console.log(response.statusMessage);
+                        let responseSystem = body.docs[0];
+                        let systemName = responseSystem.name;
+                        let systemState = responseSystem.state;
+                        let controlling = responseSystem.controlling_minor_faction;
+                        let minorFactions = responseSystem.factions;
+                        if (systemState === null) {
+                            systemState = "None";
+                        }
+                        let factionPromises: Promise<[string, string, string, number]>[] = [];
+                        minorFactions.forEach((faction) => {
+                            let requestOptions: OptionsWithUrl = {
+                                url: "http://elitebgs.kodeblox.com/api/ebgs/v4/factions",
+                                qs: { name: faction.name_lower },
+                                json: true,
+                                resolveWithFullResponse: true
+                            }
+                            factionPromises.push((async () => {
+                                let response: FullResponse = await request.get(requestOptions);
+                                if (response.statusCode == 200) {
+                                    let body: EBGSFactionsV4WOHistory = response.body;
+                                    if (body.total === 0) {
+                                        try {
+                                            await message.channel.send(Responses.getResponse(Responses.FAIL));
+                                            return [faction.name, "Faction status not found", faction.name, 0] as [string, string, string, number];
+                                        } catch (err) {
+                                            console.log(err);
+                                        }
+                                    } else {
+                                        let responseFaction = body.docs[0];
+                                        let factionName = responseFaction.name;
+                                        let factionNameLower = responseFaction.name_lower;
+                                        let systemIndex = responseFaction.faction_presence.findIndex(element => {
+                                            return element.system_name_lower === systemName.toLowerCase();
+                                        });
+                                        let state = responseFaction.faction_presence[systemIndex].state;
+                                        let influence = responseFaction.faction_presence[systemIndex].influence;
+                                        let pendingStatesArray = responseFaction.faction_presence[systemIndex].pending_states;
+                                        let recoveringStatesArray = responseFaction.faction_presence[systemIndex].recovering_states;
+                                        let updatedAt = moment(responseSystem.updated_at);
+                                        let factionDetail = "";
+                                        factionDetail += `Last Updated : ${updatedAt.fromNow()} \n`;
+                                        factionDetail += `State : ${state}\n`;
+                                        factionDetail += `Influence : ${(influence * 100).toFixed(1)}%\n`;
+                                        let pendingStates: string = "";
+                                        if (pendingStatesArray.length === 0) {
+                                            pendingStates = "None";
+                                        } else {
+                                            pendingStatesArray.forEach((pendingState, index, factionPendingStates) => {
+                                                let trend = this.getTrendIcon(pendingState.trend);
+                                                pendingStates = `${pendingStates}${pendingState.state}${trend}`;
+                                                if (index !== factionPendingStates.length - 1) {
+                                                    pendingStates = `${pendingStates}, `
+                                                }
+                                            });
+                                        }
+                                        factionDetail += `Pending States : ${pendingStates}\n`;
+                                        let recoveringStates: string = "";
+                                        if (recoveringStatesArray.length === 0) {
+                                            recoveringStates = "None";
+                                        } else {
+                                            recoveringStatesArray.forEach((recoveringState, index, factionRecoveringState) => {
+                                                let trend = this.getTrendIcon(recoveringState.trend);
+                                                recoveringStates = `${recoveringStates}${recoveringState.state}${trend}`;
+                                                if (index !== factionRecoveringState.length - 1) {
+                                                    recoveringStates = `${recoveringStates}, `
+                                                }
+                                            })
+                                        }
+                                        factionDetail += `Recovering States : ${recoveringStates}`;
+                                        if (controlling === factionNameLower) {
+                                            return [factionName + '* CONTROLLING FACTION', factionDetail, factionName, influence] as [string, string, string, number];
+                                        } else {
+                                            return [factionName, factionDetail, factionName, influence] as [string, string, string, number];
+                                        }
+                                    }
+                                } else {
+                                    throw new Error(response.statusMessage);
+                                }
+                            })());
+                        });
+                        try {
+                            let factions = await Promise.all(factionPromises);
+                            let fieldRecord: FieldRecordSchema[] = [];
+                            factions.forEach(field => {
+                                fieldRecord.push({
+                                    fieldTitle: field[0],
+                                    fieldDescription: field[1],
+                                    influence: field[3],
+                                    name: field[2]
+                                });
+                            });
+                            let guild = await this.db.model.guild.findOne({ guild_id: message.guild.id });
+                            if (guild) {
+                                if (guild.sort && guild.sort_order && guild.sort_order !== 0) {
+                                    fieldRecord.sort((a, b) => {
+                                        if (guild.sort === 'name') {
+                                            if (guild.sort_order === -1) {
+                                                if (a.name.toLowerCase() < b.name.toLowerCase()) {
+                                                    return 1;
+                                                } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
+                                                    return -1;
+                                                } else {
+                                                    return 0;
+                                                }
+                                            } else if (guild.sort_order === 1) {
+                                                if (a.name.toLowerCase() < b.name.toLowerCase()) {
+                                                    return -1;
+                                                } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
+                                                    return 1;
+                                                } else {
+                                                    return 0;
+                                                }
+                                            } else {
+                                                return 0;
+                                            }
+                                        } else if (guild.sort === 'influence') {
+                                            if (guild.sort_order === -1) {
+                                                return b.influence - a.influence;
+                                            } else if (guild.sort_order === 1) {
+                                                return a.influence - b.influence;
+                                            } else {
+                                                return 0;
+                                            }
+                                        } else {
+                                            return 0;
+                                        }
+                                    });
+                                }
+                                // Multipage is not needed for systems due to number of faction restriction but still keeping it
+                                let numberOfMessages = Math.ceil(fieldRecord.length / 24);
+                                for (let index = 0; index < numberOfMessages; index++) {
+                                    let embed = new discord.RichEmbed();
+                                    if (index === 0) {
+                                        embed.setTitle("SYSTEM STATUS");
+                                    } else {
+                                        embed.setTitle(`SYSTEM STATUS - continued - Pg ${index + 1}`);
+                                    }
+                                    embed.setColor([255, 0, 255]);
+                                    embed.addField(systemName, systemState, false);
+                                    embed.setTimestamp(new Date());
+                                    let limit = 0;
+                                    if (fieldRecord.length > index * 24 + 24) {
+                                        limit = index * 24 + 24;
+                                    } else {
+                                        limit = fieldRecord.length;
+                                    }
+                                    for (let recordIndex = index * 24; recordIndex < limit; recordIndex++) {
+                                        embed.addField(fieldRecord[recordIndex].fieldTitle, fieldRecord[recordIndex].fieldDescription);
+                                    }
+                                    try {
+                                        await message.channel.send(embed);
+                                    } catch (err) {
+                                        console.log(err);
+                                    }
+                                }
+                            }
+
+                        } catch (err) {
+                            message.channel.send(Responses.getResponse(Responses.FAIL));
+                            console.log(err);
                         }
                     }
-                })
+                } else {
+                    console.log(response.statusMessage);
+                }
             }
         } catch (err) {
             message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));

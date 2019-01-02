@@ -15,13 +15,13 @@
  */
 
 import * as discord from 'discord.js';
-import * as request from 'request';
+import * as request from 'request-promise-native';
 import * as contentDisposition from 'content-disposition';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
 import { Access } from './../access';
-import { OptionsWithUrl } from 'request';
+import { OptionsWithUrl, FullResponse } from 'request-promise-native';
 
 export class Chart {
     db: DB;
@@ -69,28 +69,23 @@ export class Chart {
                         }
                         let requestOptions: OptionsWithUrl = {
                             url: url,
-                            method: "GET",
                             qs: {
                                 name: name,
                                 timemin: timenow - 10 * 24 * 60 * 60 * 1000,
                                 timemax: timenow,
                                 theme: theme
                             },
-                            encoding: null
+                            encoding: null,
+                            resolveWithFullResponse: true
                         }
 
-                        request(requestOptions, (error, response, body: Buffer) => {
-                            if (!error && response.statusCode == 200) {
-                                let attachment = new discord.Attachment(body, contentDisposition.parse(response.headers['content-disposition']).parameters.filename);
-                                message.channel.send(attachment);
-                            } else {
-                                if (error) {
-                                    console.log(error);
-                                } else {
-                                    console.log(response.statusMessage);
-                                }
-                            }
-                        });
+                        let response: FullResponse = await request.get(requestOptions);
+                        if (response.statusCode == 200) {
+                            let attachment = new discord.Attachment(response.body as Buffer, contentDisposition.parse(response.headers['content-disposition']).parameters.filename);
+                            message.channel.send(attachment);
+                        } else {
+                            console.log(response.statusMessage);
+                        }
                     }
                 } catch (err) {
                     message.channel.send(Responses.getResponse(Responses.FAIL));
