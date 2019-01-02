@@ -33,15 +33,15 @@ class App {
 
     constructor() {
         this.express = express();
+        this.bugsnagClient = new BugsnagClient();
+        this.bugsnagClientMiddleware = this.bugsnagClient.client.getPlugin('express');
+        this.express.use(this.bugsnagClientMiddleware.requestHandler);
+        this.middleware();
         this.routes();
         this.discordClient = new DiscordClient();
         this.db = new DB();
         this.cron();
         this.listener();
-        this.bugsnagClient = new BugsnagClient();
-        this.bugsnagClientMiddleware = this.bugsnagClient.client.getPlugin('express');
-        this.express.use(this.bugsnagClientMiddleware.requestHandler);
-        this.middleware();
     }
 
     private middleware(): void {

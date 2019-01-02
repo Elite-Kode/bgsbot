@@ -22,7 +22,6 @@ import { guildSchema } from './schemas';
 import { IModel, IGuildModel } from './models';
 
 import App from '../server';
-import { BugsnagClient } from '../bugsnag';
 
 export class DB {
     private options: mongoose.ConnectionOptions;
@@ -51,6 +50,7 @@ export class DB {
     connectToDB(): void {
         mongoose.connect(this.url, this.options, (err) => {
             if (err) {
+                App.bugsnagClient.client.notify(err);
                 return console.log(err);
             }
         });

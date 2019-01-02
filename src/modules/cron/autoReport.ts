@@ -19,6 +19,7 @@ import { IGuildModel } from '../../db/models/index';
 import { Client, GuildChannel, TextChannel } from 'discord.js';
 import { CronJobStore } from '../../interfaces/typings';
 import { BGSReport } from '../discord/commands/bgsReport';
+import App from '../../server';
 
 export class AutoReport {
     private static jobs: CronJobStore[] = [];
@@ -40,12 +41,22 @@ export class AutoReport {
                                         await (bgsChannel as TextChannel).send(embedArray[index]);
                                     }
                                 } catch (err) {
+                                    App.bugsnagClient.client.notify(err, {
+                                        metaData: {
+                                            guild: guild.guild_id
+                                        }
+                                    });
                                     console.log(err);
                                 }
                             } else {
                                 console.log(`Guild ${guild.guild_id} has not been set up`)
                             }
                         } catch (err) {
+                            App.bugsnagClient.client.notify(err, {
+                                metaData: {
+                                    guild: guild.guild_id
+                                }
+                            });
                             console.log(err);
                             console.log('Guild id: ' + guild.guild_id);
                             console.log('Client Guild size: ' + client.guilds.size);
@@ -59,6 +70,11 @@ export class AutoReport {
                     cronJob.start();
                 }
                 catch (err) {
+                    App.bugsnagClient.client.notify(err, {
+                        metaData: {
+                            time: guild.bgs_time
+                        }
+                    });
                     console.log(err);
                     console.log(`Time ${guild.bgs_time} is not a suitable cron time`);
                 }
