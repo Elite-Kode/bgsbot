@@ -67,6 +67,7 @@ export class SystemStatus {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
                             message.channel.send("System not found");
                         } catch (err) {
+                            App.bugsnagClient.client.notify(err);
                             console.log(err);
                         }
                     } else {
@@ -220,21 +221,41 @@ export class SystemStatus {
                                         embed.addField(fieldRecord[recordIndex].fieldTitle, fieldRecord[recordIndex].fieldDescription);
                                     }
                                     try {
-                                        await message.channel.send(embed);
+                                        message.channel.send(embed);
                                     } catch (err) {
+                                        App.bugsnagClient.client.notify(err, {
+                                            metaData: {
+                                                guild: guild._id
+                                            }
+                                        });
                                         console.log(err);
                                     }
                                 }
+                            } else {
+                                try {
+                                    await message.channel.send(Responses.getResponse(Responses.FAIL));
+                                    message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
+                                } catch (err) {
+                                    App.bugsnagClient.client.notify(err, {
+                                        metaData: {
+                                            guild: guild._id
+                                        }
+                                    });
+                                    console.log(err);
+                                }
                             }
-
                         } catch (err) {
                             message.channel.send(Responses.getResponse(Responses.FAIL));
+                            App.bugsnagClient.client.notify(err);
                             console.log(err);
                         }
                     }
                 } else {
+                    App.bugsnagClient.client.notify(response.statusMessage);
                     console.log(response.statusMessage);
                 }
+            } else {
+                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
             }
         } catch (err) {
             message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));

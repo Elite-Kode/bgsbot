@@ -42,6 +42,7 @@ export class HouseKeeping {
                     console.log("Channel deleted");
                 }
             } catch (err) {
+                App.bugsnagClient.client.notify(err);
                 console.log(err);
             }
         }
@@ -64,6 +65,7 @@ export class HouseKeeping {
                     console.log("Role deleted");
                 }
             } catch (err) {
+                App.bugsnagClient.client.notify(err);
                 console.log(err);
             }
         }
@@ -82,6 +84,7 @@ export class HouseKeeping {
                     console.log("Role deleted");
                 }
             } catch (err) {
+                App.bugsnagClient.client.notify(err);
                 console.log(err);
             }
         }
@@ -100,6 +103,7 @@ export class HouseKeeping {
                     console.log("Role deleted");
                 }
             } catch (err) {
+                App.bugsnagClient.client.notify(err);
                 console.log(err);
             }
         }

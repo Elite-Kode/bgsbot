@@ -66,6 +66,7 @@ export class MonitorFactions {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
                             message.channel.send("Faction not found");
                         } catch (err) {
+                            App.bugsnagClient.client.notify(err);
                             console.log(err);
                         }
                     } else {
@@ -89,17 +90,24 @@ export class MonitorFactions {
                             } else {
                                 try {
                                     await message.channel.send(Responses.getResponse(Responses.FAIL));
-                                    message.channel.send("Your guild is not set yet");
+                                    message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
                                 } catch (err) {
+                                    App.bugsnagClient.client.notify(err, {
+                                        metaData: {
+                                            guild: guild._id
+                                        }
+                                    });
                                     console.log(err);
                                 }
                             }
                         } catch (err) {
                             message.channel.send(Responses.getResponse(Responses.FAIL));
+                            App.bugsnagClient.client.notify(err);
                             console.log(err);
                         }
                     }
                 } else {
+                    App.bugsnagClient.client.notify(response.statusMessage);
                     console.log(response.statusMessage);
                 }
             } else {
@@ -133,13 +141,19 @@ export class MonitorFactions {
                     } else {
                         try {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
-                            message.channel.send("Your guild is not set yet");
+                            message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
                         } catch (err) {
+                            App.bugsnagClient.client.notify(err, {
+                                metaData: {
+                                    guild: guild._id
+                                }
+                            });
                             console.log(err);
                         }
                     }
                 } catch (err) {
                     message.channel.send(Responses.getResponse(Responses.FAIL));
+                    App.bugsnagClient.client.notify(err);
                     console.log(err);
                 }
             } else {
@@ -176,6 +190,11 @@ export class MonitorFactions {
                             try {
                                 message.channel.send(embed);
                             } catch (err) {
+                                App.bugsnagClient.client.notify(err, {
+                                    metaData: {
+                                        guild: guild._id
+                                    }
+                                });
                                 console.log(err);
                             }
                         } else {
@@ -183,25 +202,34 @@ export class MonitorFactions {
                                 await message.channel.send(Responses.getResponse(Responses.FAIL));
                                 message.channel.send("You don't have any monitored faction set up");
                             } catch (err) {
+                                App.bugsnagClient.client.notify(err, {
+                                    metaData: {
+                                        guild: guild._id
+                                    }
+                                });
                                 console.log(err);
                             }
                         }
                     } else {
                         try {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
-                            message.channel.send("Your guild is not set yet");
+                            message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
                         } catch (err) {
+                            App.bugsnagClient.client.notify(err, {
+                                metaData: {
+                                    guild: guild._id
+                                }
+                            });
                             console.log(err);
                         }
                     }
                 } catch (err) {
                     message.channel.send(Responses.getResponse(Responses.FAIL));
+                    App.bugsnagClient.client.notify(err);
                     console.log(err);
                 }
-            } else if (argsArray.length > 1) {
-                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
             } else {
-                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
             }
         } catch (err) {
             message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));

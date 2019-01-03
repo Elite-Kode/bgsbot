@@ -75,13 +75,19 @@ export class Sort {
                         } else {
                             try {
                                 await message.channel.send(Responses.getResponse(Responses.FAIL));
-                                message.channel.send("Your guild is not set yet");
+                                message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
                             } catch (err) {
+                                App.bugsnagClient.client.notify(err, {
+                                    metaData: {
+                                        guild: guild._id
+                                    }
+                                });
                                 console.log(err);
                             }
                         }
                     } catch (err) {
                         message.channel.send(Responses.getResponse(Responses.FAIL));
+                        App.bugsnagClient.client.notify(err);
                         console.log(err);
                     }
                 } else {
@@ -89,6 +95,7 @@ export class Sort {
                         await message.channel.send(Responses.getResponse(Responses.FAIL));
                         message.channel.send("Sort Order and/or Type is incorrect.");
                     } catch (err) {
+                        App.bugsnagClient.client.notify(err);
                         console.log(err);
                     }
                 }
@@ -123,13 +130,19 @@ export class Sort {
                     } else {
                         try {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
-                            message.channel.send("Your guild is not set yet");
+                            message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
                         } catch (err) {
+                            App.bugsnagClient.client.notify(err, {
+                                metaData: {
+                                    guild: guild._id
+                                }
+                            });
                             console.log(err);
                         }
                     }
                 } catch (err) {
                     message.channel.send(Responses.getResponse(Responses.FAIL));
+                    App.bugsnagClient.client.notify(err);
                     console.log(err);
                 }
             } else {
@@ -163,34 +176,49 @@ export class Sort {
                             embed.addField("Sort Type: ", guild.sort);
                             embed.addField("Sort Order: ", sortOrder);
                             embed.setTimestamp(new Date());
-                            message.channel.send(embed)
-                                .catch(err => {
-                                    console.log(err);
+                            try {
+                                message.channel.send(embed)
+                            } catch (err) {
+                                App.bugsnagClient.client.notify(err, {
+                                    metaData: {
+                                        guild: guild._id
+                                    }
                                 });
+                                console.log(err);
+                            }
                         } else {
                             try {
                                 await message.channel.send(Responses.getResponse(Responses.FAIL));
                                 message.channel.send("You don't have sorting set up");
                             } catch (err) {
+                                App.bugsnagClient.client.notify(err, {
+                                    metaData: {
+                                        guild: guild._id
+                                    }
+                                });
                                 console.log(err);
                             }
                         }
                     } else {
                         try {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
-                            message.channel.send("Your guild is not set yet");
+                            message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
                         } catch (err) {
+                            App.bugsnagClient.client.notify(err, {
+                                metaData: {
+                                    guild: guild._id
+                                }
+                            });
                             console.log(err);
                         }
                     }
                 } catch (err) {
                     message.channel.send(Responses.getResponse(Responses.FAIL));
+                    App.bugsnagClient.client.notify(err);
                     console.log(err);
                 }
-            } else if (argsArray.length > 1) {
-                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
             } else {
-                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
             }
         } catch (err) {
             message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));

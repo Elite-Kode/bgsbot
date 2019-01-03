@@ -16,6 +16,7 @@
 
 import * as io from 'socket.io-client';
 import * as moment from 'moment';
+import App from '../../server';
 import { IGuildModel } from '../../db/models/index';
 import { Client, GuildChannel, TextChannel, RichEmbed } from 'discord.js';
 import { Socket } from 'socket.io';
@@ -32,7 +33,7 @@ export class TickDetector {
 
         this.socket.on('tick', (data) => {
             let tickTime = new Date(data);
-            guilds.forEach(guild => {
+            for (let guild of guilds) {
                 if (guild.announce_tick && guild.bgs_channel_id && guild.bgs_channel_id.length > 0) {
                     let bgsChannel: GuildChannel = client.guilds.get(guild.guild_id).channels.get(guild.bgs_channel_id);
                     if (bgsChannel && bgsChannel.type === 'text') {
@@ -42,13 +43,19 @@ export class TickDetector {
                         let lastTickFormatted = moment(tickTime).utc().format('HH:mm');
                         embed.addField("Latest Tick At", lastTickFormatted + ' UTC');
                         embed.setTimestamp(new Date());
-                        (bgsChannel as TextChannel).send(embed)
-                            .catch(err => {
-                                console.log(err);
+                        try {
+                            (bgsChannel as TextChannel).send(embed);
+                        } catch (err) {
+                            App.bugsnagClient.client.notify(err, {
+                                metaData: {
+                                    guild: guild._id
+                                }
                             });
+                            console.log(err);
+                        };
                     }
                 }
-            })
+            }
         });
     }
 }

@@ -70,18 +70,18 @@ export class Tick {
                         embed.addField("Last Tick", lastTickFormatted + ' UTC');
                         embed.setTimestamp(new Date());
                         try {
-                            await message.channel.send(embed);
+                            message.channel.send(embed);
                         } catch (err) {
+                            App.bugsnagClient.client.notify(err);
                             console.log(err);
                         }
                     }
                 } else {
+                    App.bugsnagClient.client.notify(response.statusMessage);
                     console.log(response.statusMessage);
                 }
-            } else if (argsArray.length > 1) {
-                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
             } else {
-                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
             }
         } catch (err) {
             message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
@@ -106,20 +106,23 @@ export class Tick {
                     } else {
                         try {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
-                            message.channel.send("Your guild is not set yet");
+                            message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
                         } catch (err) {
+                            App.bugsnagClient.client.notify(err, {
+                                metaData: {
+                                    guild: guild._id
+                                }
+                            });
                             console.log(err);
                         }
                     }
                 } catch (err) {
                     message.channel.send(Responses.getResponse(Responses.FAIL));
+                    App.bugsnagClient.client.notify(err);
                     console.log(err);
                 }
-
-            } else if (argsArray.length > 1) {
-                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
             } else {
-                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
             }
         } catch (err) {
             message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
@@ -144,13 +147,19 @@ export class Tick {
                     } else {
                         try {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
-                            message.channel.send("Your guild is not set yet");
+                            message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
                         } catch (err) {
+                            App.bugsnagClient.client.notify(err, {
+                                metaData: {
+                                    guild: guild._id
+                                }
+                            });
                             console.log(err);
                         }
                     }
                 } catch (err) {
                     message.channel.send(Responses.getResponse(Responses.FAIL));
+                    App.bugsnagClient.client.notify(err);
                     console.log(err);
                 }
             } else {

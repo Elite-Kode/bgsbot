@@ -58,6 +58,7 @@ class App {
             let guilds = await this.db.model.guild.find();
             AutoReport.initiateJob(guilds, this.discordClient.client);
         } catch (err) {
+            this.bugsnagClient.client.notify(err);
             console.log(err);
         }
     }
@@ -67,6 +68,7 @@ class App {
             let guilds = await this.db.model.guild.find();
             TickDetector.initiateSocket(guilds, this.discordClient.client);
         } catch (err) {
+            this.bugsnagClient.client.notify(err);
             console.log(err);
         }
     }
