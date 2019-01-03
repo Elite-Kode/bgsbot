@@ -60,13 +60,14 @@ export class FactionStatus {
                 }
 
                 let response: FullResponse = await request.get(requestOptions);
-                if (response.statusCode == 200) {
+                if (response.statusCode === 200) {
                     let body: EBGSFactionsV4WOHistory = response.body;
                     if (body.total === 0) {
                         try {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
                             message.channel.send("Faction not found");
                         } catch (err) {
+                            App.bugsnagClient.client.notify(err);
                             console.log(err);
                         }
                     } else {
@@ -84,13 +85,14 @@ export class FactionStatus {
                             }
                             systemPromises.push((async () => {
                                 let response: FullResponse = await request.get(requestOptions);
-                                if (response.statusCode == 200) {
+                                if (response.statusCode === 200) {
                                     let body: EBGSSystemsV4WOHistory = response.body;
                                     if (body.total === 0) {
                                         try {
                                             await message.channel.send(Responses.getResponse(Responses.FAIL));
                                             return [system.system_name, "System status not found", system.system_name, 0] as [string, string, string, number];
                                         } catch (err) {
+                                            App.bugsnagClient.client.notify(err);
                                             console.log(err);
                                         }
                                     } else {
@@ -149,83 +151,99 @@ export class FactionStatus {
                                     name: system[2]
                                 });
                             });
-                            try {
-                                let guild = await this.db.model.guild.findOne({ guild_id: message.guild.id });
-                                if (guild) {
-                                    if (guild.sort && guild.sort_order && guild.sort_order !== 0) {
-                                        fieldRecord.sort((a, b) => {
-                                            if (guild.sort === 'name') {
-                                                if (guild.sort_order === -1) {
-                                                    if (a.name.toLowerCase() < b.name.toLowerCase()) {
-                                                        return 1;
-                                                    } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
-                                                        return -1;
-                                                    } else {
-                                                        return 0;
-                                                    }
-                                                } else if (guild.sort_order === 1) {
-                                                    if (a.name.toLowerCase() < b.name.toLowerCase()) {
-                                                        return -1;
-                                                    } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
-                                                        return 1;
-                                                    } else {
-                                                        return 0;
-                                                    }
+                            let guild = await this.db.model.guild.findOne({ guild_id: message.guild.id });
+                            if (guild) {
+                                if (guild.sort && guild.sort_order && guild.sort_order !== 0) {
+                                    fieldRecord.sort((a, b) => {
+                                        if (guild.sort === 'name') {
+                                            if (guild.sort_order === -1) {
+                                                if (a.name.toLowerCase() < b.name.toLowerCase()) {
+                                                    return 1;
+                                                } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
+                                                    return -1;
                                                 } else {
                                                     return 0;
                                                 }
-                                            } else if (guild.sort === 'influence') {
-                                                if (guild.sort_order === -1) {
-                                                    return b.influence - a.influence;
-                                                } else if (guild.sort_order === 1) {
-                                                    return a.influence - b.influence;
+                                            } else if (guild.sort_order === 1) {
+                                                if (a.name.toLowerCase() < b.name.toLowerCase()) {
+                                                    return -1;
+                                                } else if (a.name.toLowerCase() > b.name.toLowerCase()) {
+                                                    return 1;
                                                 } else {
                                                     return 0;
                                                 }
                                             } else {
                                                 return 0;
                                             }
-                                        });
+                                        } else if (guild.sort === 'influence') {
+                                            if (guild.sort_order === -1) {
+                                                return b.influence - a.influence;
+                                            } else if (guild.sort_order === 1) {
+                                                return a.influence - b.influence;
+                                            } else {
+                                                return 0;
+                                            }
+                                        } else {
+                                            return 0;
+                                        }
+                                    });
+                                }
+                                let numberOfMessages = Math.ceil(fieldRecord.length / 24);
+                                for (let index = 0; index < numberOfMessages; index++) {
+                                    let embed = new discord.RichEmbed();
+                                    if (index === 0) {
+                                        embed.setTitle("FACTION STATUS");
+                                    } else {
+                                        embed.setTitle(`FACTION STATUS - continued - Pg ${index + 1}`);
                                     }
-                                    let numberOfMessages = Math.ceil(fieldRecord.length / 24);
-                                    for (let index = 0; index < numberOfMessages; index++) {
-                                        let embed = new discord.RichEmbed();
-                                        if (index === 0) {
-                                            embed.setTitle("FACTION STATUS");
-                                        } else {
-                                            embed.setTitle(`FACTION STATUS - continued - Pg ${index + 1}`);
-                                        }
-                                        embed.setColor([255, 0, 255]);
-                                        embed.addField(factionName, government, false);
-                                        embed.setTimestamp(new Date());
-                                        let limit = 0;
-                                        if (fieldRecord.length > index * 24 + 24) {
-                                            limit = index * 24 + 24;
-                                        } else {
-                                            limit = fieldRecord.length;
-                                        }
-                                        for (let recordIndex = index * 24; recordIndex < limit; recordIndex++) {
-                                            embed.addField(fieldRecord[recordIndex].fieldTitle, fieldRecord[recordIndex].fieldDescription);
-                                        }
-                                        try {
-                                            await message.channel.send(embed);
-                                        } catch (err) {
-                                            console.log(err);
-                                        }
+                                    embed.setColor([255, 0, 255]);
+                                    embed.addField(factionName, government, false);
+                                    embed.setTimestamp(new Date());
+                                    let limit = 0;
+                                    if (fieldRecord.length > index * 24 + 24) {
+                                        limit = index * 24 + 24;
+                                    } else {
+                                        limit = fieldRecord.length;
+                                    }
+                                    for (let recordIndex = index * 24; recordIndex < limit; recordIndex++) {
+                                        embed.addField(fieldRecord[recordIndex].fieldTitle, fieldRecord[recordIndex].fieldDescription);
+                                    }
+                                    try {
+                                        message.channel.send(embed);
+                                    } catch (err) {
+                                        App.bugsnagClient.client.notify(err, {
+                                            metaData: {
+                                                guild: guild._id
+                                            }
+                                        });
+                                        console.log(err);
                                     }
                                 }
-                            } catch (err) {
-                                message.channel.send(Responses.getResponse(Responses.FAIL));
-                                console.log(err);
+                            } else {
+                                try {
+                                    await message.channel.send(Responses.getResponse(Responses.FAIL));
+                                    message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
+                                } catch (err) {
+                                    App.bugsnagClient.client.notify(err, {
+                                        metaData: {
+                                            guild: guild._id
+                                        }
+                                    });
+                                    console.log(err);
+                                }
                             }
                         } catch (err) {
                             message.channel.send(Responses.getResponse(Responses.FAIL));
+                            App.bugsnagClient.client.notify(err);
                             console.log(err);
                         }
                     }
                 } else {
+                    App.bugsnagClient.client.notify(response.statusMessage);
                     console.log(response.statusMessage);
                 }
+            } else {
+                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
             }
         } catch (err) {
             message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));

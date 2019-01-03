@@ -62,13 +62,19 @@ export class BGSRole {
                         } else {
                             try {
                                 await message.channel.send(Responses.getResponse(Responses.FAIL));
-                                message.channel.send("Your guild is not set yet");
+                                message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
                             } catch (err) {
+                                App.bugsnagClient.client.notify(err, {
+                                    metaData: {
+                                        guild: guild._id
+                                    }
+                                });
                                 console.log(err);
                             }
                         }
                     } catch (err) {
                         message.channel.send(Responses.getResponse(Responses.FAIL));
+                        App.bugsnagClient.client.notify(err);
                         console.log(err);
                     }
                 } else {
@@ -91,7 +97,7 @@ export class BGSRole {
                 let guildId = message.guild.id;
 
                 try {
-                    let guild = this.db.model.guild.findOneAndUpdate(
+                    let guild = await this.db.model.guild.findOneAndUpdate(
                         { guild_id: guildId },
                         {
                             updated_at: new Date(),
@@ -102,13 +108,19 @@ export class BGSRole {
                     } else {
                         try {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
-                            message.channel.send("Your guild is not set yet");
+                            message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
                         } catch (err) {
+                            App.bugsnagClient.client.notify(err, {
+                                metaData: {
+                                    guild: guild._id
+                                }
+                            });
                             console.log(err);
                         }
                     }
                 } catch (err) {
                     message.channel.send(Responses.getResponse(Responses.FAIL));
+                    App.bugsnagClient.client.notify(err);
                     console.log(err);
                 }
             } else {
@@ -143,6 +155,11 @@ export class BGSRole {
                             try {
                                 message.channel.send(embed);
                             } catch (err) {
+                                App.bugsnagClient.client.notify(err, {
+                                    metaData: {
+                                        guild: guild._id
+                                    }
+                                });
                                 console.log(err);
                             }
                         } else {
@@ -150,25 +167,34 @@ export class BGSRole {
                                 await message.channel.send(Responses.getResponse(Responses.FAIL));
                                 message.channel.send("You don't have a bgs role set up");
                             } catch (err) {
+                                App.bugsnagClient.client.notify(err, {
+                                    metaData: {
+                                        guild: guild._id
+                                    }
+                                });
                                 console.log(err);
                             }
                         }
                     } else {
                         try {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
-                            message.channel.send("Your guild is not set yet");
+                            message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
                         } catch (err) {
+                            App.bugsnagClient.client.notify(err, {
+                                metaData: {
+                                    guild: guild._id
+                                }
+                            });
                             console.log(err);
                         }
                     }
                 } catch (err) {
                     message.channel.send(Responses.getResponse(Responses.FAIL));
+                    App.bugsnagClient.client.notify(err);
                     console.log(err);
                 }
-            } else if (argsArray.length > 1) {
-                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
             } else {
-                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
             }
         } catch (err) {
             message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));

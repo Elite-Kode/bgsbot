@@ -43,6 +43,9 @@ export class Responses {
     ];
     public static readonly IDNOTFOUND = [
         "The ID you entered does not exist"
+    ];
+    public static readonly GUILDNOTSETUP = [
+        "Your guild has not been setup yet."
     ]
 
     public static getResponse(action: string[]): string {

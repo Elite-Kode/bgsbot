@@ -15,6 +15,7 @@
  */
 
 import * as discord from 'discord.js';
+import App from '../../../server';
 import { Responses } from '../responseDict';
 import { Message, RichEmbed, MessageReaction, User } from 'discord.js';
 import { HelpSchema } from '../../../interfaces/typings';
@@ -100,6 +101,7 @@ export class Help {
                 this.helpMessageID = (returnMessage as Message).id
                 this.helpEmoji(displayCommands, this.displayState, maxDisplayState, returnMessage as Message);
             } catch (err) {
+                App.bugsnagClient.client.notify(err);
                 console.log(err);
             }
         } else if (this.helpDepth === 1) {
@@ -109,6 +111,7 @@ export class Help {
                 this.helpMessageID = (returnMessage as Message).id;
                 (returnMessage as Message).react("⬅");
             } catch (err) {
+                App.bugsnagClient.client.notify(err);
                 console.log(err);
             }
         }
@@ -127,18 +130,14 @@ export class Help {
     }
 
     async helpEmoji(displayCommands: HelpSchema[], displayState: number, maxDisplayState: number, message: Message) {
-        try {
-            if (displayState !== 0) {
-                await message.react("◀");
-            }
-            for (let index = 0; index < displayCommands.length; index++) {
-                await message.react(this.emojiArray[index]);
-            }
-            if (displayState < maxDisplayState) {
-                await message.react("▶");
-            }
-        } catch (err) {
-            console.log(err);
+        if (displayState !== 0) {
+            await message.react("◀");
+        }
+        for (let index = 0; index < displayCommands.length; index++) {
+            await message.react(this.emojiArray[index]);
+        }
+        if (displayState < maxDisplayState) {
+            await message.react("▶");
         }
     }
 

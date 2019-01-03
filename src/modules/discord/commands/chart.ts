@@ -80,15 +80,33 @@ export class Chart {
                         }
 
                         let response: FullResponse = await request.get(requestOptions);
-                        if (response.statusCode == 200) {
+                        if (response.statusCode === 200) {
                             let attachment = new discord.Attachment(response.body as Buffer, contentDisposition.parse(response.headers['content-disposition']).parameters.filename);
                             message.channel.send(attachment);
                         } else {
+                            App.bugsnagClient.client.notify(response.statusMessage, {
+                                metaData: {
+                                    guild: guild._id
+                                }
+                            });
                             console.log(response.statusMessage);
+                        }
+                    } else {
+                        try {
+                            await message.channel.send(Responses.getResponse(Responses.FAIL));
+                            message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
+                        } catch (err) {
+                            App.bugsnagClient.client.notify(err, {
+                                metaData: {
+                                    guild: guild._id
+                                }
+                            });
+                            console.log(err);
                         }
                     }
                 } catch (err) {
                     message.channel.send(Responses.getResponse(Responses.FAIL));
+                    App.bugsnagClient.client.notify(err);
                     console.log(err);
                 }
             } else {

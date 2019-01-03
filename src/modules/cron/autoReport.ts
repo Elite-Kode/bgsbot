@@ -31,35 +31,15 @@ export class AutoReport {
                     let cronPattern = `${guild.bgs_time.split(':')[2]} ${guild.bgs_time.split(':')[1]} ${guild.bgs_time.split(':')[0]} * * *`;
                     let cronJob = new CronJob(cronPattern, async () => {
                         console.log('CRONjob execute');
-                        try {
-                            let bgsChannel: GuildChannel = client.guilds.get(guild.guild_id).channels.get(guild.bgs_channel_id);
-                            if (bgsChannel && bgsChannel.type === 'text') {
-                                let bgsReport = new BGSReport();
-                                try {
-                                    let embedArray = await bgsReport.getBGSReportEmbed(guild.guild_id);
-                                    for (let index = 0; index < embedArray.length; index++) {
-                                        await (bgsChannel as TextChannel).send(embedArray[index]);
-                                    }
-                                } catch (err) {
-                                    App.bugsnagClient.client.notify(err, {
-                                        metaData: {
-                                            guild: guild.guild_id
-                                        }
-                                    });
-                                    console.log(err);
-                                }
-                            } else {
-                                console.log(`Guild ${guild.guild_id} has not been set up`)
+                        let bgsChannel: GuildChannel = client.guilds.get(guild.guild_id).channels.get(guild.bgs_channel_id);
+                        if (bgsChannel && bgsChannel.type === 'text') {
+                            let bgsReport = new BGSReport();
+                            let embedArray = await bgsReport.getBGSReportEmbed(guild.guild_id, bgsChannel as TextChannel);
+                            for (let index = 0; index < embedArray.length; index++) {
+                                await (bgsChannel as TextChannel).send(embedArray[index]);
                             }
-                        } catch (err) {
-                            App.bugsnagClient.client.notify(err, {
-                                metaData: {
-                                    guild: guild.guild_id
-                                }
-                            });
-                            console.log(err);
-                            console.log('Guild id: ' + guild.guild_id);
-                            console.log('Client Guild size: ' + client.guilds.size);
+                        } else {
+                            console.log(`BGS Channel for Guild ${guild.guild_id} has not been set up`)
                         }
                     });
                     this.jobs.push({
@@ -72,11 +52,11 @@ export class AutoReport {
                 catch (err) {
                     App.bugsnagClient.client.notify(err, {
                         metaData: {
-                            time: guild.bgs_time
+                            time: guild.bgs_time,
+                            guild: guild._id
                         }
                     });
                     console.log(err);
-                    console.log(`Time ${guild.bgs_time} is not a suitable cron time`);
                 }
             }
         });
@@ -95,16 +75,12 @@ export class AutoReport {
                         let bgsChannel: GuildChannel = client.guilds.get(guild.guild_id).channels.get(guild.bgs_channel_id);
                         if (bgsChannel && bgsChannel.type === 'text') {
                             let bgsReport = new BGSReport();
-                            try {
-                                let embedArray = await bgsReport.getBGSReportEmbed(guild.guild_id);
-                                for (let index = 0; index < embedArray.length; index++) {
-                                    await (bgsChannel as TextChannel).send(embedArray[index]);
-                                }
-                            } catch (err) {
-                                console.log(err);
+                            let embedArray = await bgsReport.getBGSReportEmbed(guild.guild_id, bgsChannel as TextChannel);
+                            for (let index = 0; index < embedArray.length; index++) {
+                                await (bgsChannel as TextChannel).send(embedArray[index]);
                             }
                         } else {
-                            console.log(`Guild ${guild.guild_id} has not been set up`)
+                            console.log(`BGS Channel for Guild ${guild.guild_id} has not been set up`)
                         }
                     });
                     this.jobs.push({
@@ -115,8 +91,13 @@ export class AutoReport {
                     cronJob.start();
                 }
                 catch (err) {
+                    App.bugsnagClient.client.notify(err, {
+                        metaData: {
+                            time: guild.bgs_time,
+                            guild: guild._id
+                        }
+                    });
                     console.log(err);
-                    console.log(`Time ${guild.bgs_time} is not a suitable cron time`);
                 }
             }
         }
@@ -127,9 +108,7 @@ export class AutoReport {
             let indexOfJob = this.jobs.findIndex(element => {
                 return element.guildid === guild.guild_id;
             });
-            if (indexOfJob === -1) {
-                this.createJob(guild, client);
-            } else {
+            if (indexOfJob !== -1) {
                 let existingCronJob = this.jobs[indexOfJob].cronJob;
                 existingCronJob.stop();
                 try {
@@ -138,16 +117,12 @@ export class AutoReport {
                         let bgsChannel: GuildChannel = client.guilds.get(guild.guild_id).channels.get(guild.bgs_channel_id);
                         if (bgsChannel && bgsChannel.type === 'text') {
                             let bgsReport = new BGSReport();
-                            try {
-                                let embedArray = await bgsReport.getBGSReportEmbed(guild.guild_id);
-                                for (let index = 0; index < embedArray.length; index++) {
-                                    await (bgsChannel as TextChannel).send(embedArray[index]);
-                                }
-                            } catch (err) {
-                                console.log(err);
+                            let embedArray = await bgsReport.getBGSReportEmbed(guild.guild_id, bgsChannel as TextChannel);
+                            for (let index = 0; index < embedArray.length; index++) {
+                                await (bgsChannel as TextChannel).send(embedArray[index]);
                             }
                         } else {
-                            console.log(`Guild ${guild.guild_id} has not been set up`)
+                            console.log(`BGS Channel for Guild ${guild.guild_id} has not been set up`)
                         }
                     });
                     this.jobs[indexOfJob].cronJob = cronJob;
@@ -155,6 +130,12 @@ export class AutoReport {
                     cronJob.start();
                 }
                 catch (err) {
+                    App.bugsnagClient.client.notify(err, {
+                        metaData: {
+                            time: guild.bgs_time,
+                            guild: guild._id
+                        }
+                    });
                     console.log(err);
                     console.log(`Time ${guild.bgs_time} is not a suitable cron time`);
                 }

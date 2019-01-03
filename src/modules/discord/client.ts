@@ -71,6 +71,7 @@ export class DiscordClient {
                         this.processNormal(message)
                     }
                 } catch (err) {
+                    App.bugsnagClient.client.notify(err);
                     message.channel.send(Responses.getResponse(Responses.FAIL));
                     console.log(err);
                 }
