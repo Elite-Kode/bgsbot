@@ -22,7 +22,7 @@ gulp.task('scripts', () => {
     return tsProject.src()
         .pipe(sourcemaps.init())
         .pipe(tsProject())
-        .js.pipe(sourcemaps.write("."))
+        .js.pipe(sourcemaps.write())
         .pipe(gulp.dest('dist'));
 });
 
