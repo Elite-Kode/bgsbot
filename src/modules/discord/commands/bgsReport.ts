@@ -271,7 +271,7 @@ export class BGSReport {
             primarySystems.forEach(system => {
                 primarySystemPromises.push((async () => {
                     let requestOptions: OptionsWithUrl = {
-                        url: "http://elitebgs.kodeblox.com/api/ebgs/v4/systems",
+                        url: "https://elitebgs.app/api/ebgs/v4/systems",
                         qs: { name: system.toLowerCase() },
                         json: true,
                         resolveWithFullResponse: true
@@ -296,7 +296,7 @@ export class BGSReport {
                                 if (primaryFactions.indexOf(faction.name) !== -1) {
                                     primaryFactionPromises.push((async () => {
                                         let requestOptions: OptionsWithUrl = {
-                                            url: "http://elitebgs.kodeblox.com/api/ebgs/v4/factions",
+                                            url: "https://elitebgs.app/api/ebgs/v4/factions",
                                             qs: { name: faction.name_lower },
                                             json: true,
                                             resolveWithFullResponse: true
@@ -353,7 +353,7 @@ export class BGSReport {
                                 } else if (secondaryFactions.indexOf(faction.name) !== -1 || noFactionMonitoredInSystem) {
                                     secondaryFactionPromises.push((async () => {
                                         let requestOptions: OptionsWithUrl = {
-                                            url: "http://elitebgs.kodeblox.com/api/ebgs/v4/factions",
+                                            url: "https://elitebgs.app/api/ebgs/v4/factions",
                                             qs: { name: faction.name_lower },
                                             json: true,
                                             resolveWithFullResponse: true
@@ -506,7 +506,7 @@ export class BGSReport {
             secondarySystems.forEach(system => {
                 secondarySystemPromises.push((async () => {
                     let requestOptions: OptionsWithUrl = {
-                        url: "http://elitebgs.kodeblox.com/api/ebgs/v4/systems",
+                        url: "https://elitebgs.app/api/ebgs/v4/systems",
                         qs: { name: system.toLowerCase() },
                         json: true,
                         resolveWithFullResponse: true
@@ -531,7 +531,7 @@ export class BGSReport {
                                 if (primaryFactions.indexOf(faction.name) !== -1) {
                                     primaryFactionPromises.push((async () => {
                                         let requestOptions: OptionsWithUrl = {
-                                            url: "http://elitebgs.kodeblox.com/api/ebgs/v4/factions",
+                                            url: "https://elitebgs.app/api/ebgs/v4/factions",
                                             qs: { name: faction.name_lower },
                                             json: true,
                                             resolveWithFullResponse: true
@@ -585,7 +585,7 @@ export class BGSReport {
                                 } else if (secondaryFactions.indexOf(faction.name) !== -1 || noFactionMonitoredInSystem) {
                                     secondaryFactionPromises.push((async () => {
                                         let requestOptions: OptionsWithUrl = {
-                                            url: "http://elitebgs.kodeblox.com/api/ebgs/v4/factions",
+                                            url: "https://elitebgs.app/api/ebgs/v4/factions",
                                             qs: { name: faction.name_lower },
                                             json: true,
                                             resolveWithFullResponse: true

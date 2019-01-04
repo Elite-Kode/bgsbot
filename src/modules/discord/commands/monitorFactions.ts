@@ -52,7 +52,7 @@ export class MonitorFactions {
                 let guildId = message.guild.id;
                 let factionName = argsArray.slice(1).join(" ");
                 let requestOptions: OptionsWithUrl = {
-                    url: "http://elitebgs.kodeblox.com/api/ebgs/v4/factions",
+                    url: "https://elitebgs.app/api/ebgs/v4/factions",
                     qs: { name: factionName },
                     json: true,
                     resolveWithFullResponse: true

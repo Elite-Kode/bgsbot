@@ -52,10 +52,10 @@ export class Chart {
                 let url: string;
                 let name: string;
                 if (argsArray[1] === 'tick') {
-                    url = `http://elitebgs.kodeblox.com/chartgenerator/${argsArray[1]}`;
+                    url = `https://elitebgs.app/chartgenerator/${argsArray[1]}`;
                     name = null;
                 } else {
-                    url = `http://elitebgs.kodeblox.com/chartgenerator/${argsArray[1]}/${argsArray[2]}`;
+                    url = `https://elitebgs.app/chartgenerator/${argsArray[1]}/${argsArray[2]}`;
                     name = argsArray.slice(3).join(" ").toLowerCase();
                 }
                 let timenow = Date.now();

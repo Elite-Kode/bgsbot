@@ -52,7 +52,7 @@ export class MonitorSystems {
                 let guildId = message.guild.id;
                 let systemName = argsArray.slice(1).join(" ");
                 let requestOptions: OptionsWithUrl = {
-                    url: "http://elitebgs.kodeblox.com/api/ebgs/v4/systems",
+                    url: "https://elitebgs.app/api/ebgs/v4/systems",
                     qs: { name: systemName },
                     json: true,
                     resolveWithFullResponse: true

@@ -51,7 +51,7 @@ export class Tick {
             await Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
             if (argsArray.length === 1) {
                 let requestOptions: OptionsWithUrl = {
-                    url: "https://elitebgs.kodeblox.com/api/ebgs/v4/ticks",
+                    url: "https://elitebgs.app/api/ebgs/v4/ticks",
                     json: true,
                     resolveWithFullResponse: true
                 }

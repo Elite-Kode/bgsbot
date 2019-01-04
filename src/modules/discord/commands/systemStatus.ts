@@ -53,7 +53,7 @@ export class SystemStatus {
                 let systemName: string = argsArray.slice(1).join(" ").toLowerCase();
 
                 let requestOptions: OptionsWithUrl = {
-                    url: "http://elitebgs.kodeblox.com/api/ebgs/v4/systems",
+                    url: "https://elitebgs.app/api/ebgs/v4/systems",
                     qs: { name: systemName },
                     json: true,
                     resolveWithFullResponse: true
@@ -82,7 +82,7 @@ export class SystemStatus {
                         let factionPromises: Promise<[string, string, string, number]>[] = [];
                         minorFactions.forEach((faction) => {
                             let requestOptions: OptionsWithUrl = {
-                                url: "http://elitebgs.kodeblox.com/api/ebgs/v4/factions",
+                                url: "https://elitebgs.app/api/ebgs/v4/factions",
                                 qs: { name: faction.name_lower },
                                 json: true,
                                 resolveWithFullResponse: true

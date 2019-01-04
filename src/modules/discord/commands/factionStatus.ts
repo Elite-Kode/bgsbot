@@ -53,7 +53,7 @@ export class FactionStatus {
                 let factionName: string = argsArray.slice(1).join(" ").toLowerCase();
 
                 let requestOptions: OptionsWithUrl = {
-                    url: "http://elitebgs.kodeblox.com/api/ebgs/v4/factions",
+                    url: "https://elitebgs.app/api/ebgs/v4/factions",
                     qs: { name: factionName },
                     json: true,
                     resolveWithFullResponse: true
@@ -78,7 +78,7 @@ export class FactionStatus {
                         let systemPromises: Promise<[string, string, string, number]>[] = [];
                         presence.forEach(system => {
                             let requestOptions: OptionsWithUrl = {
-                                url: "http://elitebgs.kodeblox.com/api/ebgs/v4/systems",
+                                url: "https://elitebgs.app/api/ebgs/v4/systems",
                                 qs: { name: system.system_name_lower },
                                 json: true,
                                 resolveWithFullResponse: true
