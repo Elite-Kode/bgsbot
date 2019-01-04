@@ -76,6 +76,10 @@ export interface EBGSFactionV4Schema {
         system_name_lower: string;
         state: string;
         influence: number;
+        happiness: string;
+        active_states: {
+            state: string
+        }[];
         pending_states: {
             state: string;
             trend: number;
@@ -92,6 +96,10 @@ export interface EBGSFactionV4Schema {
         system_lower: string;
         state: string;
         influence: number;
+        happiness: string;
+        active_states: {
+            state: string
+        }[];
         pending_states: {
             state: string;
             trend: number;
@@ -162,6 +170,10 @@ interface EBGSFactionV4SchemaWOHistory {
         system_name_lower: string;
         state: string;
         influence: number;
+        happiness: string;
+        active_states: {
+            state: string
+        }[];
         pending_states: {
             state: string;
             trend: number;

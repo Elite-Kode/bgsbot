@@ -100,13 +100,28 @@ export class FactionStatus {
                                         let systemName = system.system_name;
                                         let state = system.state;
                                         let influence = system.influence;
+                                        let happiness = system.happiness;
+                                        let activeStatesArray = system.active_states;
                                         let pendingStatesArray = system.pending_states;
                                         let recoveringStatesArray = system.recovering_states;
                                         let updatedAt = moment(responseSystem.updated_at);
                                         let factionDetail = "";
                                         factionDetail += `Last Updated : ${updatedAt.fromNow()} \n`;
                                         factionDetail += `State : ${state}\n`;
+                                        factionDetail += `Happiness: ${happiness}\n`;
                                         factionDetail += `Influence : ${(influence * 100).toFixed(1)}%\n`;
+                                        let activeStates: string = "";
+                                        if (activeStatesArray.length === 0) {
+                                            activeStates = "None";
+                                        } else {
+                                            activeStatesArray.forEach((activeState, index, factionActiveStates) => {
+                                                activeStates = `${activeStates}${activeState.state}`;
+                                                if (index !== factionActiveStates.length - 1) {
+                                                    activeStates = `${activeStates}, `
+                                                }
+                                            });
+                                        }
+                                        factionDetail += `Active States : ${activeStates}\n`;
                                         let pendingStates: string = "";
                                         if (pendingStatesArray.length === 0) {
                                             pendingStates = "None";

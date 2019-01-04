@@ -107,13 +107,28 @@ export class SystemStatus {
                                         });
                                         let state = responseFaction.faction_presence[systemIndex].state;
                                         let influence = responseFaction.faction_presence[systemIndex].influence;
+                                        let happiness = responseFaction.faction_presence[systemIndex].happiness;
+                                        let activeStatesArray = responseFaction.faction_presence[systemIndex].active_states;
                                         let pendingStatesArray = responseFaction.faction_presence[systemIndex].pending_states;
                                         let recoveringStatesArray = responseFaction.faction_presence[systemIndex].recovering_states;
                                         let updatedAt = moment(responseSystem.updated_at);
                                         let factionDetail = "";
                                         factionDetail += `Last Updated : ${updatedAt.fromNow()} \n`;
                                         factionDetail += `State : ${state}\n`;
+                                        factionDetail += `Happiness: ${happiness}\n`;
                                         factionDetail += `Influence : ${(influence * 100).toFixed(1)}%\n`;
+                                        let activeStates: string = "";
+                                        if (activeStatesArray.length === 0) {
+                                            activeStates = "None";
+                                        } else {
+                                            activeStatesArray.forEach((activeState, index, factionActiveStates) => {
+                                                activeStates = `${activeStates}${activeState.state}`;
+                                                if (index !== factionActiveStates.length - 1) {
+                                                    activeStates = `${activeStates}, `
+                                                }
+                                            });
+                                        }
+                                        factionDetail += `Active States : ${activeStates}\n`;
                                         let pendingStates: string = "";
                                         if (pendingStatesArray.length === 0) {
                                             pendingStates = "None";

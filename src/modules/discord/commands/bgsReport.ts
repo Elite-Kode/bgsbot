@@ -315,17 +315,34 @@ export class BGSReport {
                                                     let factionName = factionResponse.name;
                                                     let state = "";
                                                     let influence = 0;
+                                                    let happiness = "";
+                                                    let activeStatesArray = [];
                                                     let pendingStatesArray = [];
                                                     factionResponse.faction_presence.forEach(systemElement => {
                                                         if (systemElement.system_name_lower === system.toLowerCase()) {
                                                             state = systemElement.state;
                                                             influence = systemElement.influence;
+                                                            happiness = systemElement.happiness;
+                                                            activeStatesArray = systemElement.active_states;
                                                             pendingStatesArray = systemElement.pending_states;
                                                         }
                                                     });
                                                     let factionDetail = "";
                                                     factionDetail += `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}%\n`;
                                                     factionDetail += `Current ${this.acronym(factionName)} State : ${state}\n`;
+                                                    factionDetail += `Current ${this.acronym(factionName)} Happiness : ${happiness}\n`;
+
+                                                    let activeStates: string = "";
+                                                    if (activeStatesArray.length === 0) {
+                                                        activeStates = "None";
+                                                    } else {
+                                                        activeStatesArray.forEach((activeState, index, factionActiveStates) => {
+                                                            activeStates = `${activeStates}${activeState.state}`;
+                                                            if (index !== factionActiveStates.length - 1) {
+                                                                activeStates = `${activeStates}, `
+                                                            }
+                                                        });
+                                                    }
 
                                                     let pendingStates: string = "";
                                                     if (pendingStatesArray.length === 0) {
@@ -370,16 +387,31 @@ export class BGSReport {
                                                 });
                                                 if (systemIndex !== -1) {
                                                     let factionName = factionResponse.name;
-                                                    let state = "";
                                                     let influence = 0;
+                                                    let happiness = "";
+                                                    let activeStatesArray = [];
                                                     let pendingStatesArray = [];
                                                     factionResponse.faction_presence.forEach(systemElement => {
                                                         if (systemElement.system_name_lower === system.toLowerCase()) {
-                                                            state = systemElement.state;
                                                             influence = systemElement.influence;
+                                                            happiness = systemElement.happiness;
+                                                            activeStatesArray = systemElement.active_states;
                                                             pendingStatesArray = systemElement.pending_states;
                                                         }
                                                     });
+
+                                                    let activeStates: string = "";
+                                                    if (activeStatesArray.length === 0) {
+                                                        activeStates = "None";
+                                                    } else {
+                                                        activeStatesArray.forEach((activeState, index, factionActiveStates) => {
+                                                            activeStates = `${activeStates}${activeState.state}`;
+                                                            if (index !== factionActiveStates.length - 1) {
+                                                                activeStates = `${activeStates}, `
+                                                            }
+                                                        });
+                                                    }
+
                                                     let pendingStates: string = "";
                                                     if (pendingStatesArray.length === 0) {
                                                         pendingStates = "None";
@@ -392,7 +424,7 @@ export class BGSReport {
                                                             }
                                                         });
                                                     }
-                                                    let factionDetail = `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}% (Currently in ${state}. Pending ${pendingStates})\n`;
+                                                    let factionDetail = `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}% (Currently in ${activeStates}. Pending ${pendingStates}) and ${happiness}\n`;
                                                     return [factionDetail, factionName, influence] as [string, string, number];
                                                 } else {
                                                     return [`${this.acronym(faction.name)} Faction not found\n`, "", 0] as [string, string, number];
@@ -548,17 +580,31 @@ export class BGSReport {
                                                 });
                                                 if (systemIndex !== -1) {
                                                     let factionName = factionResponse.name;
-                                                    let state = "";
                                                     let influence = 0;
+                                                    let happiness = "";
+                                                    let activeStatesArray = [];
                                                     let pendingStatesArray = [];
                                                     factionResponse.faction_presence.forEach(systemElement => {
                                                         if (systemElement.system_name_lower === system.toLowerCase()) {
-                                                            state = systemElement.state;
                                                             influence = systemElement.influence;
+                                                            happiness = systemElement.happiness;
+                                                            activeStatesArray = systemElement.active_states;
                                                             pendingStatesArray = systemElement.pending_states;
                                                         }
                                                     });
                                                     let updatedAt = moment(systemResponse.updated_at);
+
+                                                    let activeStates: string = "";
+                                                    if (activeStatesArray.length === 0) {
+                                                        activeStates = "None";
+                                                    } else {
+                                                        activeStatesArray.forEach((activeState, index, factionActiveStates) => {
+                                                            activeStates = `${activeStates}${activeState.state}`;
+                                                            if (index !== factionActiveStates.length - 1) {
+                                                                activeStates = `${activeStates}, `
+                                                            }
+                                                        });
+                                                    }
 
                                                     let pendingStates: string = "";
                                                     if (pendingStatesArray.length === 0) {
@@ -572,7 +618,7 @@ export class BGSReport {
                                                             }
                                                         });
                                                     }
-                                                    let factionDetail = `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}% (Currently in ${state}. Pending ${pendingStates})\n`;
+                                                    let factionDetail = `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}% (Currently in ${activeStates}. Pending ${pendingStates}) and ${happiness}\n`;
                                                     return [factionDetail, factionName, influence] as [string, string, number];
                                                 } else {
                                                     return [`${this.acronym(faction.name)} Faction not found\n`, "", 0] as [string, string, number];
@@ -602,16 +648,31 @@ export class BGSReport {
                                                 });
                                                 if (systemIndex !== -1) {
                                                     let factionName = factionResponse.name;
-                                                    let state = "";
                                                     let influence = 0;
+                                                    let happiness = "";
+                                                    let activeStatesArray = [];
                                                     let pendingStatesArray = [];
                                                     factionResponse.faction_presence.forEach(systemElement => {
                                                         if (systemElement.system_name_lower === system.toLowerCase()) {
-                                                            state = systemElement.state;
                                                             influence = systemElement.influence;
+                                                            happiness = systemElement.happiness;
+                                                            activeStatesArray = systemElement.active_states;
                                                             pendingStatesArray = systemElement.pending_states;
                                                         }
                                                     });
+
+                                                    let activeStates: string = "";
+                                                    if (activeStatesArray.length === 0) {
+                                                        activeStates = "None";
+                                                    } else {
+                                                        activeStatesArray.forEach((activeState, index, factionActiveStates) => {
+                                                            activeStates = `${activeStates}${activeState.state}`;
+                                                            if (index !== factionActiveStates.length - 1) {
+                                                                activeStates = `${activeStates}, `
+                                                            }
+                                                        });
+                                                    }
+
                                                     let pendingStates: string = "";
                                                     if (pendingStatesArray.length === 0) {
                                                         pendingStates = "None";
@@ -624,7 +685,7 @@ export class BGSReport {
                                                             }
                                                         });
                                                     }
-                                                    let factionDetail = `${this.acronym(factionName)} : ${(influence * 100).toFixed(1)}% (${state}. Pending ${pendingStates})\n`;
+                                                    let factionDetail = `${this.acronym(factionName)} : ${(influence * 100).toFixed(1)}% (${activeStates}. Pending ${pendingStates}) ${happiness}\n`;
                                                     return [factionDetail, factionName, influence] as [string, string, number];
                                                 } else {
                                                     return [`${this.acronym(faction.name)} Faction not found\n`, "", 0] as [string, string, number];
