@@ -1,9 +1,5 @@
-import { Version } from './version'
+import { Version } from './version';
 
 export class ProcessVars {
-    public static version: string;
-
-    constructor() {
-        ProcessVars.version = Version;
-    }
+    public static version: string = Version;
 }
