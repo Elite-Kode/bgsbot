@@ -313,14 +313,12 @@ export class BGSReport {
                                                 });
                                                 if (systemIndex !== -1) {
                                                     let factionName = factionResponse.name;
-                                                    let state = "";
                                                     let influence = 0;
                                                     let happiness = "";
                                                     let activeStatesArray = [];
                                                     let pendingStatesArray = [];
                                                     factionResponse.faction_presence.forEach(systemElement => {
                                                         if (systemElement.system_name_lower === system.toLowerCase()) {
-                                                            state = systemElement.state;
                                                             influence = systemElement.influence;
                                                             happiness = systemElement.happiness;
                                                             activeStatesArray = systemElement.active_states;
@@ -329,7 +327,6 @@ export class BGSReport {
                                                     });
                                                     let factionDetail = "";
                                                     factionDetail += `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}%\n`;
-                                                    factionDetail += `Current ${this.acronym(factionName)} State : ${state}\n`;
                                                     factionDetail += `Current ${this.acronym(factionName)} Happiness : ${happiness}\n`;
 
                                                     let activeStates: string = "";
@@ -357,6 +354,7 @@ export class BGSReport {
                                                         });
                                                     }
 
+                                                    factionDetail += `Active ${this.acronym(factionName)} State : ${activeStates}\n`;
                                                     factionDetail += `Pending ${this.acronym(factionName)} State : ${pendingStates}\n`;
                                                     return [factionDetail, factionName, influence] as [string, string, number];
                                                 } else {
