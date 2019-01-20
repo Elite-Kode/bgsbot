@@ -23,6 +23,7 @@ import { DB } from './db';
 import { AutoReport } from './modules/cron/index';
 import { TickDetector } from './modules/listener/index';
 import { BugsnagClient } from './bugsnag';
+import { FdevIds } from './fdevids';
 
 class App {
     public express: express.Application;
@@ -41,6 +42,7 @@ class App {
         this.discordClient = new DiscordClient();
         this.db = new DB();
         this.cron();
+        this.generateFdevIds();
         this.listener();
     }
 
@@ -67,6 +69,15 @@ class App {
         try {
             let guilds = await this.db.model.guild.find();
             TickDetector.initiateSocket(guilds, this.discordClient.client);
+        } catch (err) {
+            this.bugsnagClient.client.notify(err);
+            console.log(err);
+        }
+    }
+
+    private generateFdevIds() {
+        try {
+            FdevIds.initialiseIds();
         } catch (err) {
             this.bugsnagClient.client.notify(err);
             console.log(err);

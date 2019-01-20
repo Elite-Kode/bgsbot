@@ -237,6 +237,16 @@ export interface TickSchema {
     updated_at: string;
 }
 
+export interface IngameIdsSchema {
+    state: any;
+    superpower: any;
+    economy: any;
+    government: any;
+    security: any;
+    station: any;
+    happiness: any;
+}
+
 export type FactionsV4 = PaginateResult<FactionSchema>;
 export type PopulatedSystemsV4 = PaginateResult<PopulatedSystemSchema>;
 export type EBGSFactionsV4 = PaginateResult<EBGSFactionV4Schema>;

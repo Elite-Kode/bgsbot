@@ -23,6 +23,7 @@ import { DB } from '../../../db/index';
 import { Access } from './../access';
 import { EBGSFactionsV4WOHistory, EBGSSystemsV4WOHistory, FieldRecordSchema } from "../../../interfaces/typings";
 import { OptionsWithUrl, FullResponse } from 'request-promise-native';
+import { FdevIds } from '../../../fdevids';
 
 export class SystemStatus {
     db: DB;
@@ -71,9 +72,10 @@ export class SystemStatus {
                             console.log(err);
                         }
                     } else {
+                        let fdevIds = await FdevIds.getIds();
                         let responseSystem = body.docs[0];
                         let systemName = responseSystem.name;
-                        let systemState = responseSystem.state;
+                        let systemState = fdevIds.state[responseSystem.state].name;
                         let controlling = responseSystem.controlling_minor_faction;
                         let minorFactions = responseSystem.factions;
                         if (systemState === null) {
@@ -105,9 +107,9 @@ export class SystemStatus {
                                         let systemIndex = responseFaction.faction_presence.findIndex(element => {
                                             return element.system_name_lower === systemName.toLowerCase();
                                         });
-                                        let state = responseFaction.faction_presence[systemIndex].state;
+                                        let state = fdevIds.state[responseFaction.faction_presence[systemIndex].state].name;
                                         let influence = responseFaction.faction_presence[systemIndex].influence;
-                                        let happiness = responseFaction.faction_presence[systemIndex].happiness;
+                                        let happiness = fdevIds.happiness[responseFaction.faction_presence[systemIndex].happiness].name;
                                         let activeStatesArray = responseFaction.faction_presence[systemIndex].active_states;
                                         let pendingStatesArray = responseFaction.faction_presence[systemIndex].pending_states;
                                         let recoveringStatesArray = responseFaction.faction_presence[systemIndex].recovering_states;
@@ -122,7 +124,7 @@ export class SystemStatus {
                                             activeStates = "None";
                                         } else {
                                             activeStatesArray.forEach((activeState, index, factionActiveStates) => {
-                                                activeStates = `${activeStates}${activeState.state}`;
+                                                activeStates = `${activeStates}${fdevIds.state[activeState.state].name}`;
                                                 if (index !== factionActiveStates.length - 1) {
                                                     activeStates = `${activeStates}, `
                                                 }
@@ -135,7 +137,7 @@ export class SystemStatus {
                                         } else {
                                             pendingStatesArray.forEach((pendingState, index, factionPendingStates) => {
                                                 let trend = this.getTrendIcon(pendingState.trend);
-                                                pendingStates = `${pendingStates}${pendingState.state}${trend}`;
+                                                pendingStates = `${pendingStates}${fdevIds.state[pendingState.state].name}${trend}`;
                                                 if (index !== factionPendingStates.length - 1) {
                                                     pendingStates = `${pendingStates}, `
                                                 }
@@ -148,7 +150,7 @@ export class SystemStatus {
                                         } else {
                                             recoveringStatesArray.forEach((recoveringState, index, factionRecoveringState) => {
                                                 let trend = this.getTrendIcon(recoveringState.trend);
-                                                recoveringStates = `${recoveringStates}${recoveringState.state}${trend}`;
+                                                recoveringStates = `${recoveringStates}${fdevIds.state[recoveringState.state].name}${trend}`;
                                                 if (index !== factionRecoveringState.length - 1) {
                                                     recoveringStates = `${recoveringStates}, `
                                                 }

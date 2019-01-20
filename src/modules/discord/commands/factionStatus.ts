@@ -23,6 +23,8 @@ import { DB } from '../../../db/index';
 import { Access } from './../access';
 import { EBGSFactionsV4WOHistory, FieldRecordSchema, EBGSSystemsV4WOHistory } from "../../../interfaces/typings";
 import { OptionsWithUrl, FullResponse } from 'request-promise-native';
+import { StringHandlers } from '../../../stringHandlers';
+import { FdevIds } from '../../../fdevids';
 
 export class FactionStatus {
     db: DB;
@@ -71,9 +73,10 @@ export class FactionStatus {
                             console.log(err);
                         }
                     } else {
+                        let fdevIds = await FdevIds.getIds();
                         let responseFaction = body.docs[0];
                         let factionName = responseFaction.name;
-                        let government = responseFaction.government;
+                        let government = StringHandlers.titlify(responseFaction.government);
                         let presence = responseFaction.faction_presence;
                         let systemPromises: Promise<[string, string, string, number]>[] = [];
                         presence.forEach(system => {
@@ -98,9 +101,9 @@ export class FactionStatus {
                                     } else {
                                         let responseSystem = body.docs[0];
                                         let systemName = system.system_name;
-                                        let state = system.state;
+                                        let state = fdevIds.state[system.state].name;
                                         let influence = system.influence;
-                                        let happiness = system.happiness;
+                                        let happiness = fdevIds.happiness[system.happiness].name;
                                         let activeStatesArray = system.active_states;
                                         let pendingStatesArray = system.pending_states;
                                         let recoveringStatesArray = system.recovering_states;
@@ -115,7 +118,7 @@ export class FactionStatus {
                                             activeStates = "None";
                                         } else {
                                             activeStatesArray.forEach((activeState, index, factionActiveStates) => {
-                                                activeStates = `${activeStates}${activeState.state}`;
+                                                activeStates = `${activeStates}${fdevIds.state[activeState.state].name}`;
                                                 if (index !== factionActiveStates.length - 1) {
                                                     activeStates = `${activeStates}, `
                                                 }
@@ -128,7 +131,7 @@ export class FactionStatus {
                                         } else {
                                             pendingStatesArray.forEach((pendingState, index, factionPendingStates) => {
                                                 let trend = this.getTrendIcon(pendingState.trend);
-                                                pendingStates = `${pendingStates}${pendingState.state}${trend}`;
+                                                pendingStates = `${pendingStates}${fdevIds.state[pendingState.state].name}${trend}`;
                                                 if (index !== factionPendingStates.length - 1) {
                                                     pendingStates = `${pendingStates}, `
                                                 }
@@ -141,7 +144,7 @@ export class FactionStatus {
                                         } else {
                                             recoveringStatesArray.forEach((recoveringState, index, factionRecoveringState) => {
                                                 let trend = this.getTrendIcon(recoveringState.trend);
-                                                recoveringStates = `${recoveringStates}${recoveringState.state}${trend}`;
+                                                recoveringStates = `${recoveringStates}${fdevIds.state[recoveringState.state].name}${trend}`;
                                                 if (index !== factionRecoveringState.length - 1) {
                                                     recoveringStates = `${recoveringStates}, `
                                                 }

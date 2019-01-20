@@ -25,6 +25,7 @@ import { EBGSFactionsV4WOHistory, EBGSSystemsV4WOHistory, FieldRecordSchema } fr
 import { OptionsWithUrl, FullResponse } from 'request-promise-native';
 import { RichEmbed } from 'discord.js';
 import { AutoReport } from '../../cron/autoReport';
+import { FdevIds } from '../../../fdevids';
 
 export class BGSReport {
     db: DB;
@@ -246,6 +247,7 @@ export class BGSReport {
     public async getBGSReportEmbed(guildId: string, channel: discord.TextChannel): Promise<RichEmbed[]> {
         let guild = await this.db.model.guild.findOne({ guild_id: guildId });
         if (guild) {
+            let fdevIds = await FdevIds.getIds();
             let primaryFactions: string[] = [];
             let secondaryFactions: string[] = [];
             guild.monitor_factions.forEach(faction => {
@@ -320,7 +322,7 @@ export class BGSReport {
                                                     factionResponse.faction_presence.forEach(systemElement => {
                                                         if (systemElement.system_name_lower === system.toLowerCase()) {
                                                             influence = systemElement.influence;
-                                                            happiness = systemElement.happiness;
+                                                            happiness = fdevIds.happiness[systemElement.happiness].name;
                                                             activeStatesArray = systemElement.active_states;
                                                             pendingStatesArray = systemElement.pending_states;
                                                         }
@@ -334,7 +336,7 @@ export class BGSReport {
                                                         activeStates = "None";
                                                     } else {
                                                         activeStatesArray.forEach((activeState, index, factionActiveStates) => {
-                                                            activeStates = `${activeStates}${activeState.state}`;
+                                                            activeStates = `${activeStates}${fdevIds.state[activeState.state].name}`;
                                                             if (index !== factionActiveStates.length - 1) {
                                                                 activeStates = `${activeStates}, `
                                                             }
@@ -347,7 +349,7 @@ export class BGSReport {
                                                     } else {
                                                         pendingStatesArray.forEach((pendingState, index, factionPendingStates) => {
                                                             let trend = this.getTrendIcon(pendingState.trend);
-                                                            pendingStates = `${pendingStates}${pendingState.state}${trend}`;
+                                                            pendingStates = `${pendingStates}${fdevIds.state[pendingState.state].name}${trend}`;
                                                             if (index !== factionPendingStates.length - 1) {
                                                                 pendingStates = `${pendingStates}, `
                                                             }
@@ -392,7 +394,7 @@ export class BGSReport {
                                                     factionResponse.faction_presence.forEach(systemElement => {
                                                         if (systemElement.system_name_lower === system.toLowerCase()) {
                                                             influence = systemElement.influence;
-                                                            happiness = systemElement.happiness;
+                                                            happiness = fdevIds.happiness[systemElement.happiness].name;
                                                             activeStatesArray = systemElement.active_states;
                                                             pendingStatesArray = systemElement.pending_states;
                                                         }
@@ -403,7 +405,7 @@ export class BGSReport {
                                                         activeStates = "None";
                                                     } else {
                                                         activeStatesArray.forEach((activeState, index, factionActiveStates) => {
-                                                            activeStates = `${activeStates}${activeState.state}`;
+                                                            activeStates = `${activeStates}${fdevIds.state[activeState.state].name}`;
                                                             if (index !== factionActiveStates.length - 1) {
                                                                 activeStates = `${activeStates}, `
                                                             }
@@ -416,7 +418,7 @@ export class BGSReport {
                                                     } else {
                                                         pendingStatesArray.forEach((pendingState, index, factionPendingStates) => {
                                                             let trend = this.getTrendIcon(pendingState.trend);
-                                                            pendingStates = `${pendingStates}${pendingState.state}${trend}`;
+                                                            pendingStates = `${pendingStates}${fdevIds.state[pendingState.state].name}${trend}`;
                                                             if (index !== factionPendingStates.length - 1) {
                                                                 pendingStates = `${pendingStates}, `
                                                             }
@@ -585,7 +587,7 @@ export class BGSReport {
                                                     factionResponse.faction_presence.forEach(systemElement => {
                                                         if (systemElement.system_name_lower === system.toLowerCase()) {
                                                             influence = systemElement.influence;
-                                                            happiness = systemElement.happiness;
+                                                            happiness = fdevIds.state[systemElement.happiness].name;
                                                             activeStatesArray = systemElement.active_states;
                                                             pendingStatesArray = systemElement.pending_states;
                                                         }
@@ -597,7 +599,7 @@ export class BGSReport {
                                                         activeStates = "None";
                                                     } else {
                                                         activeStatesArray.forEach((activeState, index, factionActiveStates) => {
-                                                            activeStates = `${activeStates}${activeState.state}`;
+                                                            activeStates = `${activeStates}${fdevIds.state[activeState.state].name}`;
                                                             if (index !== factionActiveStates.length - 1) {
                                                                 activeStates = `${activeStates}, `
                                                             }
@@ -610,7 +612,7 @@ export class BGSReport {
                                                     } else {
                                                         pendingStatesArray.forEach((pendingState, index, factionPendingStates) => {
                                                             let trend = this.getTrendIcon(pendingState.trend);
-                                                            pendingStates = `${pendingStates}${pendingState.state}${trend}`;
+                                                            pendingStates = `${pendingStates}${fdevIds.state[pendingState.state].name}${trend}`;
                                                             if (index !== factionPendingStates.length - 1) {
                                                                 pendingStates = `${pendingStates}, `
                                                             }
@@ -653,7 +655,7 @@ export class BGSReport {
                                                     factionResponse.faction_presence.forEach(systemElement => {
                                                         if (systemElement.system_name_lower === system.toLowerCase()) {
                                                             influence = systemElement.influence;
-                                                            happiness = systemElement.happiness;
+                                                            happiness = fdevIds.state[systemElement.happiness].name;
                                                             activeStatesArray = systemElement.active_states;
                                                             pendingStatesArray = systemElement.pending_states;
                                                         }
@@ -664,7 +666,7 @@ export class BGSReport {
                                                         activeStates = "None";
                                                     } else {
                                                         activeStatesArray.forEach((activeState, index, factionActiveStates) => {
-                                                            activeStates = `${activeStates}${activeState.state}`;
+                                                            activeStates = `${activeStates}${fdevIds.state[activeState.state].name}`;
                                                             if (index !== factionActiveStates.length - 1) {
                                                                 activeStates = `${activeStates}, `
                                                             }
@@ -677,7 +679,7 @@ export class BGSReport {
                                                     } else {
                                                         pendingStatesArray.forEach((pendingState, index, factionPendingStates) => {
                                                             let trend = this.getTrendIcon(pendingState.trend);
-                                                            pendingStates = `${pendingStates}${pendingState.state}${trend}`;
+                                                            pendingStates = `${pendingStates}${fdevIds.state[pendingState.state].name}${trend}`;
                                                             if (index !== factionPendingStates.length - 1) {
                                                                 pendingStates = `${pendingStates}, `
                                                             }
