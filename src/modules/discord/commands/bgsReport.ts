@@ -587,7 +587,7 @@ export class BGSReport {
                                                     factionResponse.faction_presence.forEach(systemElement => {
                                                         if (systemElement.system_name_lower === system.toLowerCase()) {
                                                             influence = systemElement.influence;
-                                                            happiness = fdevIds.state[systemElement.happiness].name;
+                                                            happiness = fdevIds.happiness[systemElement.happiness].name;
                                                             activeStatesArray = systemElement.active_states;
                                                             pendingStatesArray = systemElement.pending_states;
                                                         }
@@ -655,7 +655,7 @@ export class BGSReport {
                                                     factionResponse.faction_presence.forEach(systemElement => {
                                                         if (systemElement.system_name_lower === system.toLowerCase()) {
                                                             influence = systemElement.influence;
-                                                            happiness = fdevIds.state[systemElement.happiness].name;
+                                                            happiness = fdevIds.happiness[systemElement.happiness].name;
                                                             activeStatesArray = systemElement.active_states;
                                                             pendingStatesArray = systemElement.pending_states;
                                                         }
