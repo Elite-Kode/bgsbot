@@ -68,7 +68,7 @@ export class Tick {
                         embed.setColor([255, 0, 255]);
                         let lastTickFormatted = moment(lastTick.time).utc().format('HH:mm');
                         embed.addField("Last Tick", lastTickFormatted + ' UTC');
-                        embed.setTimestamp(new Date());
+                        embed.setTimestamp(new Date(lastTick.time));
                         try {
                             message.channel.send(embed);
                         } catch (err) {
