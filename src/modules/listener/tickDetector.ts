@@ -40,8 +40,9 @@ export class TickDetector {
                         let embed = new RichEmbed();
                         embed.setTitle("Tick Detected");
                         embed.setColor([255, 0, 255]);
-                        let lastTickFormatted = moment(tickTime).utc().format('HH:mm');
-                        embed.addField("Latest Tick At", lastTickFormatted + ' UTC');
+                        let lastTickFormattedTime = moment(tickTime).utc().format('HH:mm');
+                        let lastTickFormattedDate = moment(tickTime).utc().format('Do MMM');
+                        embed.addField("Latest Tick At", lastTickFormattedTime + ' UTC - ' + lastTickFormattedDate);
                         embed.setTimestamp(new Date(tickTime));
                         try {
                             (bgsChannel as TextChannel).send(embed);
