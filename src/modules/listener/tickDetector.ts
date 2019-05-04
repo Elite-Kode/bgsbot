@@ -34,28 +34,28 @@ export class TickDetector {
         this.socket.on('tick', (data) => {
             let tickTime = new Date(data);
             for (let guild of guilds) {
-                if (guild.announce_tick && guild.bgs_channel_id && guild.bgs_channel_id.length > 0) {
-                    let bgsChannel: GuildChannel = client.guilds.get(guild.guild_id).channels.get(guild.bgs_channel_id);
-                    if (bgsChannel && bgsChannel.type === 'text') {
-                        let embed = new RichEmbed();
-                        embed.setTitle("Tick Detected");
-                        embed.setColor([255, 0, 255]);
-                        let lastTickFormattedTime = moment(tickTime).utc().format('HH:mm');
-                        let lastTickFormattedDate = moment(tickTime).utc().format('Do MMM');
-                        embed.addField("Latest Tick At", lastTickFormattedTime + ' UTC - ' + lastTickFormattedDate);
-                        embed.setTimestamp(new Date(tickTime));
-                        try {
+                try {
+                    if (guild.announce_tick && guild.bgs_channel_id && guild.bgs_channel_id.length > 0) {
+                        let bgsChannel: GuildChannel = client.guilds.get(guild.guild_id).channels.get(guild.bgs_channel_id);
+                        if (bgsChannel && bgsChannel.type === 'text') {
+                            let embed = new RichEmbed();
+                            embed.setTitle("Tick Detected");
+                            embed.setColor([255, 0, 255]);
+                            let lastTickFormattedTime = moment(tickTime).utc().format('HH:mm');
+                            let lastTickFormattedDate = moment(tickTime).utc().format('Do MMM');
+                            embed.addField("Latest Tick At", lastTickFormattedTime + ' UTC - ' + lastTickFormattedDate);
+                            embed.setTimestamp(new Date(tickTime));
                             (bgsChannel as TextChannel).send(embed);
-                        } catch (err) {
-                            App.bugsnagClient.client.notify(err, {
-                                metaData: {
-                                    guild: guild._id
-                                }
-                            });
-                            console.log(err);
-                        };
+                        }
                     }
-                }
+                } catch (err) {
+                    App.bugsnagClient.client.notify(err, {
+                        metaData: {
+                            guild: guild._id
+                        }
+                    });
+                    console.log(err);
+                };
             }
         });
     }

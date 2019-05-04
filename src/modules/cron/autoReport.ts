@@ -30,16 +30,26 @@ export class AutoReport {
                 try {
                     let cronPattern = `${guild.bgs_time.split(':')[2]} ${guild.bgs_time.split(':')[1]} ${guild.bgs_time.split(':')[0]} * * *`;
                     let cronJob = new CronJob(cronPattern, async () => {
-                        console.log('CRONjob execute');
-                        let bgsChannel: GuildChannel = client.guilds.get(guild.guild_id).channels.get(guild.bgs_channel_id);
-                        if (bgsChannel && bgsChannel.type === 'text') {
-                            let bgsReport = new BGSReport();
-                            let embedArray = await bgsReport.getBGSReportEmbed(guild.guild_id, bgsChannel as TextChannel);
-                            for (let index = 0; index < embedArray.length; index++) {
-                                await (bgsChannel as TextChannel).send(embedArray[index]);
+                        try {
+                            console.log('CRONjob execute');
+                            let bgsChannel: GuildChannel = client.guilds.get(guild.guild_id).channels.get(guild.bgs_channel_id);
+                            if (bgsChannel && bgsChannel.type === 'text') {
+                                let bgsReport = new BGSReport();
+                                let embedArray = await bgsReport.getBGSReportEmbed(guild.guild_id, bgsChannel as TextChannel);
+                                for (let index = 0; index < embedArray.length; index++) {
+                                    await (bgsChannel as TextChannel).send(embedArray[index]);
+                                }
+                            } else {
+                                console.log(`BGS Channel for Guild ${guild.guild_id} has not been set up`)
                             }
-                        } else {
-                            console.log(`BGS Channel for Guild ${guild.guild_id} has not been set up`)
+                        } catch (err) {
+                            App.bugsnagClient.client.notify(err, {
+                                metaData: {
+                                    time: guild.bgs_time,
+                                    guild: guild._id
+                                }
+                            });
+                            console.log(err);
                         }
                     });
                     this.jobs.push({
