@@ -94,7 +94,13 @@ export class DiscordClient {
 
         this.client.on("roleDelete", role => {
             this.houseKeeping.deletedRole(role);
-        })
+        });
+
+        this.client.on("rateLimit", rateLimitInfo => {
+            App.bugsnagClient.client.notify(new Error("Discord Rate Limit Hit"), {
+                metaData: rateLimitInfo
+            });
+        });
     }
 
     private initiateCommands(): void {
