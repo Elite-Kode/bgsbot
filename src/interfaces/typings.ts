@@ -88,6 +88,7 @@ export interface EBGSFactionV4Schema {
             state: string;
             trend: number;
         }[];
+        updated_at: string;
     }[];
     history: {
         updated_at: string;
@@ -182,6 +183,7 @@ interface EBGSFactionV4SchemaWOHistory {
             state: string;
             trend: number;
         }[];
+        updated_at: string;
     }[];
 }
 

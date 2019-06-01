@@ -250,6 +250,7 @@ export class BGSReport {
             let fdevIds = await FdevIds.getIds();
             let primaryFactions: string[] = [];
             let secondaryFactions: string[] = [];
+            let allMonitoredFactionsUsed: string[] = [];
             guild.monitor_factions.forEach(faction => {
                 if (faction.primary) {
                     primaryFactions.push(faction.faction_name);
@@ -257,6 +258,7 @@ export class BGSReport {
                     secondaryFactions.push(faction.faction_name);
                 }
             });
+            let allMonitoredFactions = primaryFactions.concat(secondaryFactions);
             let primarySystems: string[] = [];
             let secondarySystems: string[] = []
             guild.monitor_systems.forEach(system => {
@@ -296,6 +298,7 @@ export class BGSReport {
                             }
                             systemResponse.factions.forEach(faction => {
                                 if (primaryFactions.indexOf(faction.name) !== -1) {
+                                    allMonitoredFactionsUsed.push(faction.name);
                                     primaryFactionPromises.push((async () => {
                                         let requestOptions: OptionsWithUrl = {
                                             url: "https://elitebgs.app/api/ebgs/v4/factions",
@@ -368,6 +371,9 @@ export class BGSReport {
                                         }
                                     })());
                                 } else if (secondaryFactions.indexOf(faction.name) !== -1 || noFactionMonitoredInSystem) {
+                                    if (secondaryFactions.indexOf(faction.name) !== -1) {
+                                        allMonitoredFactionsUsed.push(faction.name);
+                                    }
                                     secondaryFactionPromises.push((async () => {
                                         let requestOptions: OptionsWithUrl = {
                                             url: "https://elitebgs.app/api/ebgs/v4/factions",
@@ -561,6 +567,7 @@ export class BGSReport {
                             }
                             systemResponse.factions.forEach(faction => {
                                 if (primaryFactions.indexOf(faction.name) !== -1) {
+                                    allMonitoredFactionsUsed.push(faction.name);
                                     primaryFactionPromises.push((async () => {
                                         let requestOptions: OptionsWithUrl = {
                                             url: "https://elitebgs.app/api/ebgs/v4/factions",
@@ -629,6 +636,9 @@ export class BGSReport {
                                         }
                                     })());
                                 } else if (secondaryFactions.indexOf(faction.name) !== -1 || noFactionMonitoredInSystem) {
+                                    if (secondaryFactions.indexOf(faction.name) !== -1) {
+                                        allMonitoredFactionsUsed.push(faction.name);
+                                    }
                                     secondaryFactionPromises.push((async () => {
                                         let requestOptions: OptionsWithUrl = {
                                             url: "https://elitebgs.app/api/ebgs/v4/factions",
@@ -816,6 +826,100 @@ export class BGSReport {
                     name: promise[2]
                 });
             });
+
+            let unusedFactionFetchPromises: Promise<boolean>[] = [];
+            let unusedFactionsDetails: [string, string, string, string, number][] = [];
+            allMonitoredFactions.forEach(faction => {
+                if (allMonitoredFactionsUsed.indexOf(faction) === -1) {
+                    unusedFactionFetchPromises.push((async () => {
+                        let requestOptions: OptionsWithUrl = {
+                            url: "https://elitebgs.app/api/ebgs/v4/factions",
+                            qs: { name: faction.toLowerCase() },
+                            json: true,
+                            resolveWithFullResponse: true
+                        }
+                        let response: FullResponse = await request.get(requestOptions);
+                        if (response.statusCode == 200) {
+                            let body: EBGSFactionsV4WOHistory = response.body;
+                            if (body.total === 0) {
+                                return false;
+                            } else {
+                                let factionResponse = body.docs[0];
+                                let factionName = factionResponse.name;
+                                let influence = 0;
+                                let happiness = "";
+                                let activeStatesArray = [];
+                                let pendingStatesArray = [];
+                                factionResponse.faction_presence.forEach(systemElement => {
+                                    influence = systemElement.influence;
+                                    happiness = fdevIds.happiness[systemElement.happiness].name;
+                                    activeStatesArray = systemElement.active_states;
+                                    pendingStatesArray = systemElement.pending_states;
+                                    let activeStates: string = "";
+                                    if (activeStatesArray.length === 0) {
+                                        activeStates = "None";
+                                    } else {
+                                        activeStatesArray.forEach((activeState, index, factionActiveStates) => {
+                                            activeStates = `${activeStates}${fdevIds.state[activeState.state].name}`;
+                                            if (index !== factionActiveStates.length - 1) {
+                                                activeStates = `${activeStates}, `
+                                            }
+                                        });
+                                    }
+
+                                    let pendingStates: string = "";
+                                    if (pendingStatesArray.length === 0) {
+                                        pendingStates = "None";
+                                    } else {
+                                        pendingStatesArray.forEach((pendingState, index, factionPendingStates) => {
+                                            let trend = this.getTrendIcon(pendingState.trend);
+                                            pendingStates = `${pendingStates}${fdevIds.state[pendingState.state].name}${trend}`;
+                                            if (index !== factionPendingStates.length - 1) {
+                                                pendingStates = `${pendingStates}, `
+                                            }
+                                        });
+                                    }
+                                    let factionDetail = `${this.acronym(factionName)} : ${(influence * 100).toFixed(1)}% (${activeStates}. Pending ${pendingStates}) ${happiness}\n`;
+                                    unusedFactionsDetails.push([systemElement.system_name, factionDetail, factionName, systemElement.updated_at, influence])
+                                });
+                                return true;
+                            }
+                        } else {
+                            throw new Error(response.statusMessage);
+                        }
+                    })());
+                }
+            });
+            await Promise.all(unusedFactionFetchPromises);
+            if (unusedFactionsDetails.length > 0) {
+                unusedFactionsDetails.sort((a, b) => {
+                    return a[0].toLowerCase().localeCompare(b[0].toLowerCase())
+                });
+                console.log(unusedFactionsDetails)
+                let previousSystem = unusedFactionsDetails[0][0];
+                let joined = `Last Updated : ${moment(unusedFactionsDetails[0][3]).fromNow()} \n`;
+                unusedFactionsDetails.forEach(factionDetails => {
+                    if (factionDetails[0].toLowerCase() === previousSystem.toLowerCase()) {
+                        joined += factionDetails[1];
+                    } else {
+                        secondaryFieldRecord.push({
+                            fieldTitle: previousSystem,
+                            fieldDescription: joined,
+                            influence: 0,
+                            name: previousSystem
+                        });
+                        previousSystem = factionDetails[0];
+                        joined = `Last Updated : ${moment(factionDetails[3]).fromNow()} \n` + factionDetails[1];
+                    }
+                });
+                secondaryFieldRecord.push({
+                    fieldTitle: previousSystem,
+                    fieldDescription: joined,
+                    influence: 0,
+                    name: previousSystem
+                });
+            }
+
             if (guild.sort && guild.sort_order && guild.sort_order !== 0) {
                 primaryFieldRecord.sort((a, b) => {
                     if (guild.sort === 'name') {
