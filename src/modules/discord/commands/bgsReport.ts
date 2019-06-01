@@ -21,7 +21,7 @@ import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
 import { Access } from './../access';
-import { EBGSFactionsV4WOHistory, EBGSSystemsV4WOHistory, FieldRecordSchema, TickV4 } from "../../../interfaces/typings";
+import { EBGSFactionsV4WOHistory, EBGSSystemsV4WOHistory, FieldRecordSchema, TickV4, EBGSFactionsV4 } from "../../../interfaces/typings";
 import { OptionsWithUrl, FullResponse } from 'request-promise-native';
 import { RichEmbed } from 'discord.js';
 import { AutoReport } from '../../cron/autoReport';
@@ -313,13 +313,13 @@ export class BGSReport {
                                     primaryFactionPromises.push((async () => {
                                         let requestOptions: OptionsWithUrl = {
                                             url: "https://elitebgs.app/api/ebgs/v4/factions",
-                                            qs: { name: faction.name_lower },
+                                            qs: { name: faction.name_lower, count: 2 },
                                             json: true,
                                             resolveWithFullResponse: true
                                         }
                                         let response: FullResponse = await request.get(requestOptions);
                                         if (response.statusCode == 200) {
-                                            let body: EBGSFactionsV4WOHistory = response.body;
+                                            let body: EBGSFactionsV4 = response.body;
                                             if (body.total === 0) {
                                                 return [`${this.acronym(faction.name)} Faction not found\n`, faction.name, 0] as [string, string, number];
                                             } else {
@@ -330,6 +330,7 @@ export class BGSReport {
                                                 if (systemIndex !== -1) {
                                                     let factionName = factionResponse.name;
                                                     let influence = 0;
+                                                    let influenceDifference = 0;
                                                     let happiness = "";
                                                     let activeStatesArray = [];
                                                     let pendingStatesArray = [];
@@ -339,10 +340,21 @@ export class BGSReport {
                                                             happiness = fdevIds.happiness[systemElement.happiness].name;
                                                             activeStatesArray = systemElement.active_states;
                                                             pendingStatesArray = systemElement.pending_states;
+                                                            influenceDifference = influence - factionResponse.history.filter(system => {
+                                                                return system.system_lower === systemElement.system_name_lower;
+                                                            })[1].influence;
                                                         }
                                                     });
                                                     let factionDetail = "";
-                                                    factionDetail += `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}%\n`;
+                                                    let influenceDifferenceText;
+                                                    if (influenceDifference > 0) {
+                                                        influenceDifferenceText = `📈${(influenceDifference * 100).toFixed(1)}%`;
+                                                    } else if (influenceDifference < 0) {
+                                                        influenceDifferenceText = `📉${(-influenceDifference * 100).toFixed(1)}%`;
+                                                    } else {
+                                                        influenceDifferenceText = `🔷${(influenceDifference * 100).toFixed(1)}%`;
+                                                    }
+                                                    factionDetail += `Current ${this.acronym(factionName)} Influence : ${(influence * 100).toFixed(1)}%${influenceDifferenceText}\n`;
                                                     factionDetail += `Current ${this.acronym(factionName)} Happiness : ${happiness}\n`;
 
                                                     let activeStates: string = "";

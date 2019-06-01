@@ -21,7 +21,7 @@ import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
 import { Access } from './../access';
-import { EBGSFactionsV4WOHistory, FieldRecordSchema, EBGSSystemsV4WOHistory } from "../../../interfaces/typings";
+import { EBGSFactionsV4WOHistory, FieldRecordSchema, EBGSSystemsV4WOHistory, EBGSFactionsV4 } from "../../../interfaces/typings";
 import { OptionsWithUrl, FullResponse } from 'request-promise-native';
 import { StringHandlers } from '../../../stringHandlers';
 import { FdevIds } from '../../../fdevids';
@@ -59,7 +59,7 @@ export class FactionStatus {
 
                 let requestOptions: OptionsWithUrl = {
                     url: "https://elitebgs.app/api/ebgs/v4/factions",
-                    qs: { name: factionName },
+                    qs: { name: factionName, count: 2 },
                     json: true,
                     resolveWithFullResponse: true
                 }
@@ -68,7 +68,7 @@ export class FactionStatus {
                 this.tickTime = (await tick.getTickData()).updated_at;
                 let response: FullResponse = await request.get(requestOptions);
                 if (response.statusCode === 200) {
-                    let body: EBGSFactionsV4WOHistory = response.body;
+                    let body: EBGSFactionsV4 = response.body;
                     if (body.total === 0) {
                         try {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
@@ -108,16 +108,27 @@ export class FactionStatus {
                                         let systemName = system.system_name;
                                         let state = fdevIds.state[system.state].name;
                                         let influence = system.influence;
+                                        let influenceDifference = influence - responseFaction.history.filter(systemEach => {
+                                            return systemEach.system_lower === system.system_name_lower;
+                                        })[1].influence;
                                         let happiness = fdevIds.happiness[system.happiness].name;
                                         let activeStatesArray = system.active_states;
                                         let pendingStatesArray = system.pending_states;
                                         let recoveringStatesArray = system.recovering_states;
                                         let updatedAt = moment(responseSystem.updated_at);
                                         let factionDetail = "";
+                                        let influenceDifferenceText;
+                                        if (influenceDifference > 0) {
+                                            influenceDifferenceText = `📈${(influenceDifference * 100).toFixed(1)}%`;
+                                        } else if (influenceDifference < 0) {
+                                            influenceDifferenceText = `📉${(-influenceDifference * 100).toFixed(1)}%`;
+                                        } else {
+                                            influenceDifferenceText = `🔷${(influenceDifference * 100).toFixed(1)}%`;
+                                        }
                                         factionDetail += `Last Updated : ${updatedAt.fromNow()}, ${updatedAt.from(moment(this.tickTime))} from last detected tick \n`;
                                         factionDetail += `State : ${state}\n`;
                                         factionDetail += `Happiness: ${happiness}\n`;
-                                        factionDetail += `Influence : ${(influence * 100).toFixed(1)}%\n`;
+                                        factionDetail += `Influence : ${(influence * 100).toFixed(1)}%${influenceDifferenceText}\n`;
                                         let activeStates: string = "";
                                         if (activeStatesArray.length === 0) {
                                             activeStates = "None";
