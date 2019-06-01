@@ -21,16 +21,19 @@ import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
 import { Access } from './../access';
-import { EBGSFactionsV4WOHistory, EBGSSystemsV4WOHistory, FieldRecordSchema } from "../../../interfaces/typings";
+import { EBGSFactionsV4WOHistory, EBGSSystemsV4WOHistory, FieldRecordSchema, TickV4 } from "../../../interfaces/typings";
 import { OptionsWithUrl, FullResponse } from 'request-promise-native';
 import { RichEmbed } from 'discord.js';
 import { AutoReport } from '../../cron/autoReport';
 import { FdevIds } from '../../../fdevids';
+import { Tick } from './tick';
 
 export class BGSReport {
     db: DB;
+    tickTime: string;
     constructor() {
         this.db = App.db;
+        this.tickTime = "";
     }
     exec(message: discord.Message, commandArguments: string): void {
         let argsArray: string[] = [];
@@ -55,6 +58,14 @@ export class BGSReport {
             if (argsArray.length === 1) {
                 let guildId = message.guild.id;
                 try {
+                    try {
+                        let tick = new Tick();
+                        this.tickTime = (await tick.getTickData()).updated_at;
+                    } catch (err) {
+                        this.tickTime = "";
+                        App.bugsnagClient.client.notify(err);
+                        console.log(err);
+                    }
                     let embedArray = await this.getBGSReportEmbed(guildId, message.channel as discord.TextChannel);
                     for (let index = 0; index < embedArray.length; index++) {
                         await message.channel.send(embedArray[index]);
@@ -530,7 +541,7 @@ export class BGSReport {
                                 });
                             }
                             let joined = "";
-                            joined += `Last Updated : ${moment(systemResponse.updated_at).fromNow()} \n`;
+                            joined += `Last Updated : ${moment(systemResponse.updated_at).fromNow()}, ${moment(systemResponse.updated_at).from(moment(this.tickTime))} from last detected tick \n`;
                             primaryFieldRecord.concat(secondaryFieldRecord).forEach(record => {
                                 joined += record.fieldDescription;
                             });
@@ -795,7 +806,7 @@ export class BGSReport {
                                 });
                             }
                             let joined = "";
-                            joined += `Last Updated : ${moment(systemResponse.updated_at).fromNow()} \n`;
+                            joined += `Last Updated : ${moment(systemResponse.updated_at).fromNow()}, ${moment(systemResponse.updated_at).from(moment(this.tickTime))} from last detected tick \n`;
                             primaryFieldRecord.concat(secondaryFieldRecord).forEach(record => {
                                 joined += record.fieldDescription;
                             });
@@ -895,9 +906,8 @@ export class BGSReport {
                 unusedFactionsDetails.sort((a, b) => {
                     return a[0].toLowerCase().localeCompare(b[0].toLowerCase())
                 });
-                console.log(unusedFactionsDetails)
                 let previousSystem = unusedFactionsDetails[0][0];
-                let joined = `Last Updated : ${moment(unusedFactionsDetails[0][3]).fromNow()} \n`;
+                let joined = `Last Updated : ${moment(unusedFactionsDetails[0][3]).fromNow()}, ${moment(unusedFactionsDetails[0][3]).from(moment(this.tickTime))} from last detected tick \n`;
                 unusedFactionsDetails.forEach(factionDetails => {
                     if (factionDetails[0].toLowerCase() === previousSystem.toLowerCase()) {
                         joined += factionDetails[1];
@@ -909,7 +919,7 @@ export class BGSReport {
                             name: previousSystem
                         });
                         previousSystem = factionDetails[0];
-                        joined = `Last Updated : ${moment(factionDetails[3]).fromNow()} \n` + factionDetails[1];
+                        joined = `Last Updated : ${moment(factionDetails[3]).fromNow()}, ${moment(factionDetails[3]).from(moment(this.tickTime))} from last detected tick\n` + factionDetails[1];
                     }
                 });
                 secondaryFieldRecord.push({

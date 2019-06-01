@@ -21,7 +21,7 @@ import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db/index';
 import { Access } from './../access';
-import { TickV4 } from "../../../interfaces/typings";
+import { TickV4, TickSchema } from "../../../interfaces/typings";
 import { OptionsWithUrl, FullResponse } from 'request-promise-native';
 
 export class Tick {
@@ -50,36 +50,24 @@ export class Tick {
         try {
             await Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
             if (argsArray.length === 1) {
-                let requestOptions: OptionsWithUrl = {
-                    url: "https://elitebgs.app/api/ebgs/v4/ticks",
-                    json: true,
-                    resolveWithFullResponse: true
-                }
-
-                let response: FullResponse = await request.get(requestOptions);
-                if (response.statusCode == 200) {
-                    let body: TickV4 = response.body;
-                    if (body.length === 0) {
-                        message.channel.send(Responses.getResponse(Responses.FAIL));
-                    } else {
-                        let lastTick = body[0];
-                        let embed = new RichEmbed();
-                        embed.setTitle("Tick");
-                        embed.setColor([255, 0, 255]);
-                        let lastTickFormattedTime = moment(lastTick.time).utc().format('HH:mm');
-                        let lastTickFormattedDate = moment(lastTick.time).utc().format('Do MMM');
-                        embed.addField("Last Tick", lastTickFormattedTime + ' UTC - ' + lastTickFormattedDate);
-                        embed.setTimestamp(new Date(lastTick.time));
-                        try {
-                            message.channel.send(embed);
-                        } catch (err) {
-                            App.bugsnagClient.client.notify(err);
-                            console.log(err);
-                        }
+                try {
+                    let lastTick = await this.getTickData();
+                    let embed = new RichEmbed();
+                    embed.setTitle("Tick");
+                    embed.setColor([255, 0, 255]);
+                    let lastTickFormattedTime = moment(lastTick.time).utc().format('HH:mm');
+                    let lastTickFormattedDate = moment(lastTick.time).utc().format('Do MMM');
+                    embed.addField("Last Tick", lastTickFormattedTime + ' UTC - ' + lastTickFormattedDate);
+                    embed.setTimestamp(new Date(lastTick.time));
+                    try {
+                        message.channel.send(embed);
+                    } catch (err) {
+                        App.bugsnagClient.client.notify(err);
+                        console.log(err);
                     }
-                } else {
-                    App.bugsnagClient.client.notify(response.statusMessage);
-                    console.log(response.statusMessage);
+                } catch (err) {
+                    App.bugsnagClient.client.notify(err);
+                    console.log(err);
                 }
             } else {
                 message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
@@ -168,6 +156,26 @@ export class Tick {
             }
         } catch (err) {
             message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
+        }
+    }
+
+    public async getTickData(): Promise<TickSchema> {
+        let requestOptions: OptionsWithUrl = {
+            url: "https://elitebgs.app/api/ebgs/v4/ticks",
+            json: true,
+            resolveWithFullResponse: true
+        }
+
+        let response: FullResponse = await request.get(requestOptions);
+        if (response.statusCode == 200) {
+            let body: TickV4 = response.body;
+            if (body.length === 0) {
+                return Promise.reject();
+            } else {
+                return Promise.resolve(body[0])
+            }
+        } else {
+            return Promise.reject(response.statusMessage);
         }
     }
 

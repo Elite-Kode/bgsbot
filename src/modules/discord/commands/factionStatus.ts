@@ -25,11 +25,14 @@ import { EBGSFactionsV4WOHistory, FieldRecordSchema, EBGSSystemsV4WOHistory } fr
 import { OptionsWithUrl, FullResponse } from 'request-promise-native';
 import { StringHandlers } from '../../../stringHandlers';
 import { FdevIds } from '../../../fdevids';
+import { Tick } from './tick';
 
 export class FactionStatus {
     db: DB;
+    tickTime: string;
     constructor() {
         this.db = App.db;
+        this.tickTime = "";
     }
     exec(message: discord.Message, commandArguments: string): void {
         let argsArray: string[] = [];
@@ -61,6 +64,8 @@ export class FactionStatus {
                     resolveWithFullResponse: true
                 }
 
+                let tick = new Tick();
+                this.tickTime = (await tick.getTickData()).updated_at;
                 let response: FullResponse = await request.get(requestOptions);
                 if (response.statusCode === 200) {
                     let body: EBGSFactionsV4WOHistory = response.body;
@@ -109,7 +114,7 @@ export class FactionStatus {
                                         let recoveringStatesArray = system.recovering_states;
                                         let updatedAt = moment(responseSystem.updated_at);
                                         let factionDetail = "";
-                                        factionDetail += `Last Updated : ${updatedAt.fromNow()} \n`;
+                                        factionDetail += `Last Updated : ${updatedAt.fromNow()}, ${updatedAt.from(moment(this.tickTime))} from last detected tick \n`;
                                         factionDetail += `State : ${state}\n`;
                                         factionDetail += `Happiness: ${happiness}\n`;
                                         factionDetail += `Influence : ${(influence * 100).toFixed(1)}%\n`;
