@@ -158,7 +158,7 @@ export class SystemStatus {
                                         }
                                         factionDetail += `Recovering States : ${recoveringStates}`;
                                         if (controlling === factionNameLower) {
-                                            return [factionName + '* CONTROLLING FACTION', factionDetail, factionName, influence] as [string, string, string, number];
+                                            return [factionName + '👑', factionDetail, factionName, influence] as [string, string, string, number];
                                         } else {
                                             return [factionName, factionDetail, factionName, influence] as [string, string, string, number];
                                         }
