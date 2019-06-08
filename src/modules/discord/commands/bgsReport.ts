@@ -58,14 +58,6 @@ export class BGSReport {
             if (argsArray.length === 1) {
                 let guildId = message.guild.id;
                 try {
-                    try {
-                        let tick = new Tick();
-                        this.tickTime = (await tick.getTickData()).updated_at;
-                    } catch (err) {
-                        this.tickTime = "";
-                        App.bugsnagClient.client.notify(err);
-                        console.log(err);
-                    }
                     let embedArray = await this.getBGSReportEmbed(guildId, message.channel as discord.TextChannel);
                     for (let index = 0; index < embedArray.length; index++) {
                         await message.channel.send(embedArray[index]);
@@ -256,6 +248,14 @@ export class BGSReport {
     }
 
     public async getBGSReportEmbed(guildId: string, channel: discord.TextChannel): Promise<RichEmbed[]> {
+        try {
+            let tick = new Tick();
+            this.tickTime = (await tick.getTickData()).updated_at;
+        } catch (err) {
+            this.tickTime = "";
+            App.bugsnagClient.client.notify(err);
+            console.log(err);
+        }
         let guild = await this.db.model.guild.findOne({ guild_id: guildId });
         if (guild) {
             let fdevIds = await FdevIds.getIds();
@@ -340,9 +340,12 @@ export class BGSReport {
                                                             happiness = fdevIds.happiness[systemElement.happiness].name;
                                                             activeStatesArray = systemElement.active_states;
                                                             pendingStatesArray = systemElement.pending_states;
-                                                            influenceDifference = influence - factionResponse.history.filter(system => {
+                                                            let filtered = factionResponse.history.filter(system => {
                                                                 return system.system_lower === systemElement.system_name_lower;
-                                                            })[1].influence;
+                                                            });
+                                                            if (filtered.length > 2) {
+                                                                influenceDifference = influence - filtered[1].influence;
+                                                            }
                                                         }
                                                     });
                                                     let factionDetail = "";

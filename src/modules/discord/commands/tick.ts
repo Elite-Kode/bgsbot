@@ -170,7 +170,7 @@ export class Tick {
         if (response.statusCode == 200) {
             let body: TickV4 = response.body;
             if (body.length === 0) {
-                return Promise.reject();
+                return Promise.reject("No tick data received");
             } else {
                 return Promise.resolve(body[0])
             }

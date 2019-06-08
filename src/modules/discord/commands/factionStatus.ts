@@ -108,9 +108,13 @@ export class FactionStatus {
                                         let systemName = system.system_name;
                                         let state = fdevIds.state[system.state].name;
                                         let influence = system.influence;
-                                        let influenceDifference = influence - responseFaction.history.filter(systemEach => {
+                                        let filtered = responseFaction.history.filter(systemEach => {
                                             return systemEach.system_lower === system.system_name_lower;
-                                        })[1].influence;
+                                        });
+                                        let influenceDifference = 0;
+                                        if (filtered.length > 2) {
+                                            influenceDifference = influence - filtered[1].influence;
+                                        }
                                         let happiness = fdevIds.happiness[system.happiness].name;
                                         let activeStatesArray = system.active_states;
                                         let pendingStatesArray = system.pending_states;
