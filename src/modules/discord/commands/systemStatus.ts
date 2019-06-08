@@ -118,9 +118,11 @@ export class SystemStatus {
                                         let activeStatesArray = responseFaction.faction_presence[systemIndex].active_states;
                                         let pendingStatesArray = responseFaction.faction_presence[systemIndex].pending_states;
                                         let recoveringStatesArray = responseFaction.faction_presence[systemIndex].recovering_states;
-                                        let updatedAt = moment(responseSystem.updated_at);
+                                        let updateMoment = moment(responseSystem.updated_at);
+                                        let tickMoment = moment(this.tickTime);
+                                        let suffix = updateMoment.isAfter(tickMoment) ? "after" : "before";
                                         let factionDetail = "";
-                                        factionDetail += `Last Updated : ${updatedAt.fromNow()}, ${updatedAt.from(moment(this.tickTime))} from last detected tick \n`;
+                                        factionDetail += `Last Updated : ${updateMoment.fromNow()}, ${updateMoment.from(tickMoment, true)} ${suffix} last detected tick \n`;
                                         factionDetail += `State : ${state}\n`;
                                         factionDetail += `Happiness: ${happiness}\n`;
                                         factionDetail += `Influence : ${(influence * 100).toFixed(1)}%\n`;

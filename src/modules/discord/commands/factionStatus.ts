@@ -119,7 +119,6 @@ export class FactionStatus {
                                         let activeStatesArray = system.active_states;
                                         let pendingStatesArray = system.pending_states;
                                         let recoveringStatesArray = system.recovering_states;
-                                        let updatedAt = moment(responseSystem.updated_at);
                                         let factionDetail = "";
                                         let influenceDifferenceText;
                                         if (influenceDifference > 0) {
@@ -129,7 +128,10 @@ export class FactionStatus {
                                         } else {
                                             influenceDifferenceText = `🔷${(influenceDifference * 100).toFixed(1)}%`;
                                         }
-                                        factionDetail += `Last Updated : ${updatedAt.fromNow()}, ${updatedAt.from(moment(this.tickTime))} from last detected tick \n`;
+                                        let updateMoment = moment(responseSystem.updated_at);
+                                        let tickMoment = moment(this.tickTime);
+                                        let suffix = updateMoment.isAfter(tickMoment) ? "after" : "before";
+                                        factionDetail += `Last Updated : ${updateMoment.fromNow()}, ${updateMoment.from(tickMoment, true)} ${suffix} last detected tick \n`;
                                         factionDetail += `State : ${state}\n`;
                                         factionDetail += `Happiness: ${happiness}\n`;
                                         factionDetail += `Influence : ${(influence * 100).toFixed(1)}%${influenceDifferenceText}\n`;

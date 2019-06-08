@@ -556,7 +556,10 @@ export class BGSReport {
                                 });
                             }
                             let joined = "";
-                            joined += `Last Updated : ${moment(systemResponse.updated_at).fromNow()}, ${moment(systemResponse.updated_at).from(moment(this.tickTime))} from last detected tick \n`;
+                            let updateMoment = moment(systemResponse.updated_at);
+                            let tickMoment = moment(this.tickTime);
+                            let suffix = updateMoment.isAfter(tickMoment) ? "after" : "before";
+                            joined += `Last Updated : ${updateMoment.fromNow()}, ${updateMoment.from(tickMoment, true)} ${suffix} last detected tick \n`;
                             primaryFieldRecord.concat(secondaryFieldRecord).forEach(record => {
                                 joined += record.fieldDescription;
                             });
@@ -820,8 +823,11 @@ export class BGSReport {
                                     }
                                 });
                             }
+                            let updateMoment = moment(systemResponse.updated_at);
+                            let tickMoment = moment(this.tickTime);
+                            let suffix = updateMoment.isAfter(tickMoment) ? "after" : "before";
                             let joined = "";
-                            joined += `Last Updated : ${moment(systemResponse.updated_at).fromNow()}, ${moment(systemResponse.updated_at).from(moment(this.tickTime))} from last detected tick \n`;
+                            joined += `Last Updated : ${updateMoment.fromNow()}, ${updateMoment.from(tickMoment, true)} ${suffix} last detected tick \n`;
                             primaryFieldRecord.concat(secondaryFieldRecord).forEach(record => {
                                 joined += record.fieldDescription;
                             });
@@ -922,7 +928,10 @@ export class BGSReport {
                     return a[0].toLowerCase().localeCompare(b[0].toLowerCase())
                 });
                 let previousSystem = unusedFactionsDetails[0][0];
-                let joined = `Last Updated : ${moment(unusedFactionsDetails[0][3]).fromNow()}, ${moment(unusedFactionsDetails[0][3]).from(moment(this.tickTime))} from last detected tick \n`;
+                let updateMoment = moment(unusedFactionsDetails[0][3]);
+                let tickMoment = moment(this.tickTime);
+                let suffix = updateMoment.isAfter(tickMoment) ? "after" : "before";
+                let joined = `Last Updated : ${updateMoment.fromNow()}, ${updateMoment.from(tickMoment, true)} ${suffix} last detected tick \n`;
                 unusedFactionsDetails.forEach(factionDetails => {
                     if (factionDetails[0].toLowerCase() === previousSystem.toLowerCase()) {
                         joined += factionDetails[1];
@@ -934,7 +943,10 @@ export class BGSReport {
                             name: previousSystem
                         });
                         previousSystem = factionDetails[0];
-                        joined = `Last Updated : ${moment(factionDetails[3]).fromNow()}, ${moment(factionDetails[3]).from(moment(this.tickTime))} from last detected tick\n` + factionDetails[1];
+                        let updateMoment = moment(factionDetails[3]);
+                        let tickMoment = moment(this.tickTime);
+                        let suffix = updateMoment.isAfter(tickMoment) ? "after" : "before";
+                        joined = `Last Updated : ${updateMoment.fromNow()}, ${updateMoment.from(tickMoment, true)} ${suffix} last detected tick\n` + factionDetails[1];
                     }
                 });
                 secondaryFieldRecord.push({
