@@ -15,7 +15,7 @@
         "discord.js": "^11.4.2",
         "express": "^4.16.4",
         "moment": "^2.22.2",
-        "mongoose": "^4.13.9",
+        "mongoose": "^5.7.5",
         "morgan": "^1.9.1",
         "request": "^2.88.0",
         "request-promise-native": "^1.0.5",
