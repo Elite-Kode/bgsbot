@@ -52,13 +52,13 @@ export class DiscordClient {
         });
 
         this.client.on("message", async (message) => {
-            if (message.mentions.users.filterArray(user => {
+            if (message.mentions.users.filter(user => {
                 if (user.id === this.client.user.id) {
                     return true;
                 } else {
                     return false;
                 }
-            }).length > 0) {
+            }).size > 0) {
                 this.db = App.db;
                 try {
                     let guild = await this.db.model.guild.findOne({

@@ -10,15 +10,15 @@ const appVersion = require('./package.json').version;
 // pull in the project TypeScript config
 const tsProject = ts.createProject('tsconfig.json');
 
-gulp.task('version', () => {
+gulp.task('version', function versionFile(done) {
     const versionFilePath = path.join(__dirname + '/src/version.ts');
 
     const src = `export const Version = '${appVersion}';\n`;
-
     fs.writeFileSync(versionFilePath, src);
+    done();
 });
 
-gulp.task('scripts', () => {
+gulp.task('scripts', function compile() {
     return tsProject.src()
         .pipe(sourcemaps.init())
         .pipe(tsProject())
@@ -26,20 +26,20 @@ gulp.task('scripts', () => {
         .pipe(gulp.dest('dist'));
 });
 
-gulp.task('watch', ['scripts'], () => {
-    return gulp.watch('src/**/*.ts', ['scripts']);
-});
+gulp.task('watch', gulp.series('scripts', async function watchTs() {
+    return gulp.watch('src/**/*.ts', gulp.series('scripts'));
+}));
 
-gulp.task('assets', function () {
+gulp.task('assets', function copyAssets() {
     return gulp.src(JSON_FILES)
         .pipe(gulp.dest('dist'));
 });
 
-gulp.task('nodemon', ['scripts', 'assets', 'watch'], () => {
+gulp.task('nodemon', gulp.series(gulp.parallel('assets', 'watch'), async function runNodeMon() {
     nodemon({
         script: './dist/bin/start.js',
         nodeArgs: ['--inspect']
     });
-});
+}));
 
-gulp.task('default', ['version', 'nodemon']);
+gulp.task('default', gulp.parallel('version', 'nodemon'));
