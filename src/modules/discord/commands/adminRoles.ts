@@ -49,7 +49,8 @@ export class AdminRoles {
 
     async add(message: discord.Message, argsArray: string[]) {
         // Only the server admins can set the admin roles
-        if (message.member.hasPermission("ADMINISTRATOR")) {
+        let member = await message.guild.fetchMember(message.author)
+        if (member.hasPermission("ADMINISTRATOR")) {
             if (argsArray.length === 2) {
                 let guildId = message.guild.id;
                 let adminRoleId = argsArray[1];
@@ -97,7 +98,7 @@ export class AdminRoles {
 
     async remove(message: discord.Message, argsArray: string[]) {
         try {
-            await Access.has(message.member, [Access.ADMIN, Access.FORBIDDEN], true);
+            await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN], true);
             if (argsArray.length === 2) {
                 let guildId = message.guild.id;
                 let adminRoleId = argsArray[1];
@@ -141,7 +142,7 @@ export class AdminRoles {
 
     async list(message: discord.Message, argsArray: string[]) {
         try {
-            await Access.has(message.member, [Access.ADMIN, Access.FORBIDDEN], true);
+            await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN], true);
             if (argsArray.length === 1) {
                 let guildId = message.guild.id;
 

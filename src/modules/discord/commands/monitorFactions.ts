@@ -47,7 +47,7 @@ export class MonitorFactions {
 
     async add(message: discord.Message, argsArray: string[], primary: boolean = false) {
         try {
-            await Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
+            await Access.has(message.author, message.guild, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
             if (argsArray.length >= 2) {
                 let guildId = message.guild.id;
                 let factionName = argsArray.slice(1).join(" ");
@@ -124,7 +124,7 @@ export class MonitorFactions {
 
     async remove(message: discord.Message, argsArray: string[]) {
         try {
-            await Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
+            await Access.has(message.author, message.guild, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
             if (argsArray.length >= 2) {
                 let guildId = message.guild.id;
                 let factionName = argsArray.slice(1).join(" ").toLowerCase();
@@ -166,7 +166,7 @@ export class MonitorFactions {
 
     async list(message: discord.Message, argsArray: string[]) {
         try {
-            await Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
+            await Access.has(message.author, message.guild, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
             if (argsArray.length === 1) {
                 let guildId = message.guild.id;
 

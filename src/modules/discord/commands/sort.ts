@@ -44,7 +44,7 @@ export class Sort {
 
     async set(message: discord.Message, argsArray: string[]) {
         try {
-            await Access.has(message.member, [Access.ADMIN, Access.FORBIDDEN]);
+            await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN]);
             if (argsArray.length === 3) {
                 let guildId = message.guild.id;
                 let sortType = argsArray[1].toLowerCase();
@@ -111,7 +111,7 @@ export class Sort {
 
     async remove(message: discord.Message, argsArray: string[]) {
         try {
-            await Access.has(message.member, [Access.ADMIN, Access.FORBIDDEN]);
+            await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN]);
             if (argsArray.length === 1) {
                 let guildId = message.guild.id;
 
@@ -155,7 +155,7 @@ export class Sort {
 
     async show(message: discord.Message, argsArray: string[]) {
         try {
-            await Access.has(message.member, [Access.ADMIN, Access.FORBIDDEN]);
+            await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN]);
             if (argsArray.length === 1) {
                 let guildId = message.guild.id;
 

@@ -47,7 +47,7 @@ export class Chart {
 
     async get(message: discord.Message, argsArray: string[]) {
         try {
-            await Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
+            await Access.has(message.author, message.guild, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
             if (argsArray.length >= 4 || (argsArray.length === 2 && argsArray[1] === 'tick')) {
                 let url: string;
                 let name: string;

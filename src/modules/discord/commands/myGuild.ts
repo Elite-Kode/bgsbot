@@ -44,7 +44,8 @@ export class MyGuild {
 
     async set(message: discord.Message, argsArray: string[]) {
         // Only the server admins can set the guild
-        if (message.member.hasPermission("ADMINISTRATOR")) {
+        let member = await message.guild.fetchMember(message.author)
+        if (member.hasPermission("ADMINISTRATOR")) {
             if (argsArray.length === 1) {
                 let guildId = message.guild.id;
 
@@ -94,7 +95,7 @@ export class MyGuild {
 
     async remove(message: discord.Message, argsArray: string[]) {
         try {
-            await Access.has(message.member, [Access.ADMIN, Access.FORBIDDEN]);
+            await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN]);
             if (argsArray.length === 1) {
                 let guildId = message.guild.id;
 

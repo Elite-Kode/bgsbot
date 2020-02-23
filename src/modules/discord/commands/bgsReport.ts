@@ -54,7 +54,7 @@ export class BGSReport {
 
     async get(message: discord.Message, argsArray: string[]) {
         try {
-            await Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
+            await Access.has(message.author, message.guild, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
             if (argsArray.length === 1) {
                 let guildId = message.guild.id;
                 try {
@@ -77,7 +77,7 @@ export class BGSReport {
 
     async settime(message: discord.Message, argsArray: string[]) {
         try {
-            await Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
+            await Access.has(message.author, message.guild, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
             if (argsArray.length === 2) {
                 let guildId = message.guild.id;
                 let time = argsArray[1].split(':').map(element => {
@@ -143,7 +143,7 @@ export class BGSReport {
 
     async showtime(message: discord.Message, argsArray: string[]) {
         try {
-            await Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
+            await Access.has(message.author, message.guild, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
             if (argsArray.length === 1) {
                 let guildId = message.guild.id;
 
@@ -207,7 +207,7 @@ export class BGSReport {
 
     async unsettime(message: discord.Message, argsArray: string[]) {
         try {
-            await Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
+            await Access.has(message.author, message.guild, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
             if (argsArray.length === 1) {
                 let guildId = message.guild.id;
 

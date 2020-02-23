@@ -117,13 +117,14 @@ export class Help {
         }
     }
 
-    helpList(displayCommands: HelpSchema[], embed: RichEmbed, message: Message) {
+    async helpList(displayCommands: HelpSchema[], embed: RichEmbed, message: Message) {
         displayCommands.forEach((help, index) => {
             embed.addField(`${index + 1}. ${help.command}`, help.helpMessage);
         });
 
-        if (message.member) {
-            return message.member.send(embed);
+        let member = await message.guild.fetchMember(message.author)
+        if (member) {
+            return member.send(embed);
         } else {
             return message.channel.send(embed);
         }
@@ -141,7 +142,7 @@ export class Help {
         }
     }
 
-    helpDescription(command: HelpSchema, embed: RichEmbed, message: Message) {
+    async helpDescription(command: HelpSchema, embed: RichEmbed, message: Message) {
         embed.addField("Command:", `@BGSBot ${command.command}`);
         embed.addField("Description", command.helpMessage);
         embed.addField("Template", command.template);
@@ -151,8 +152,9 @@ export class Help {
         });
         embed.addField("Examples", exampleString);
 
-        if (message.member) {
-            return message.member.send(embed);
+        let member = await message.guild.fetchMember(message.author)
+        if (member) {
+            return member.send(embed);
         } else {
             return message.channel.send(embed);
         }

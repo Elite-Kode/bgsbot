@@ -53,7 +53,7 @@ export class FactionStatus {
 
     async get(message: discord.Message, argsArray: string[]) {
         try {
-            await Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
+            await Access.has(message.author, message.guild, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
             if (argsArray.length >= 2) {
                 let factionName: string = argsArray.slice(1).join(" ").toLowerCase();
 

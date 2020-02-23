@@ -48,7 +48,7 @@ export class Tick {
 
     async get(message: Message, argsArray: string[]) {
         try {
-            await Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
+            await Access.has(message.author, message.guild, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
             if (argsArray.length === 1) {
                 try {
                     let lastTick = await this.getTickData();
@@ -79,7 +79,7 @@ export class Tick {
 
     async detect(message: Message, argsArray: string[]) {
         try {
-            await Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
+            await Access.has(message.author, message.guild, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
             if (argsArray.length === 1) {
                 let guildId = message.guild.id;
 
@@ -120,7 +120,7 @@ export class Tick {
 
     async stopdetect(message: Message, argsArray: string[]) {
         try {
-            await Access.has(message.member, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
+            await Access.has(message.author, message.guild, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
             if (argsArray.length === 1) {
                 let guildId = message.guild.id;
 

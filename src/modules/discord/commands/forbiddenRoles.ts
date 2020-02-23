@@ -44,7 +44,7 @@ export class ForbiddenRoles {
 
     async add(message: discord.Message, argsArray: string[]) {
         try {
-            await Access.has(message.member, [Access.ADMIN, Access.FORBIDDEN]);
+            await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN]);
             if (argsArray.length === 2) {
                 let guildId = message.guild.id;
                 let forbiddenRoleId = argsArray[1];
@@ -92,7 +92,7 @@ export class ForbiddenRoles {
 
     async remove(message: discord.Message, argsArray: string[]) {
         try {
-            await Access.has(message.member, [Access.ADMIN, Access.FORBIDDEN]);
+            await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN]);
             if (argsArray.length === 2) {
                 let guildId = message.guild.id;
                 let forbiddenRoleId = argsArray[1];
@@ -136,7 +136,7 @@ export class ForbiddenRoles {
 
     async list(message: discord.Message, argsArray: string[]) {
         try {
-            await Access.has(message.member, [Access.ADMIN, Access.FORBIDDEN]);
+            await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN]);
             if (argsArray.length === 1) {
                 let guildId = message.guild.id;
 

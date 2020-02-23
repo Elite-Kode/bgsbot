@@ -23,7 +23,8 @@ export class Access {
     public static readonly BGS: string = "bgs";
     public static readonly FORBIDDEN: string = "forbidden";
 
-    public static async has(member: discord.GuildMember, perms: string[], allowAdmin = false): Promise<boolean> {
+    public static async has(author: discord.User, guild: discord.Guild, perms: string[], allowAdmin = false): Promise<boolean> {
+        let member = await guild.fetchMember(author)
         if (allowAdmin && member.hasPermission("ADMINISTRATOR")) {
             return true;
         } else {
