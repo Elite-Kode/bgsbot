@@ -17,15 +17,17 @@
 import * as io from 'socket.io-client';
 import * as moment from 'moment';
 import App from '../../server';
-import { IGuildModel } from '../../db/models/index';
-import { Client, GuildChannel, TextChannel, RichEmbed } from 'discord.js';
+import { IGuildModel } from '../../db/models';
+import { Client, GuildChannel, RichEmbed, TextChannel } from 'discord.js';
 import { Socket } from 'socket.io';
 
 export class TickDetector {
     private static socket: Socket;
+    private static guilds: IGuildModel[];
 
     public static initiateSocket(guilds: IGuildModel[], client: Client) {
         this.socket = io('http://tick.phelbore.com:31173');
+        this.guilds = guilds;
 
         this.socket.on('connect', () => {
             console.log('Connected to Tick Detector');
@@ -33,7 +35,7 @@ export class TickDetector {
 
         this.socket.on('tick', (data) => {
             let tickTime = new Date(data);
-            for (let guild of guilds) {
+            for (let guild of this.guilds) {
                 try {
                     if (guild.announce_tick && guild.bgs_channel_id && guild.bgs_channel_id.length > 0) {
                         let bgsChannel: GuildChannel = client.guilds.get(guild.guild_id).channels.get(guild.bgs_channel_id);
@@ -55,8 +57,26 @@ export class TickDetector {
                         }
                     });
                     console.log(err);
-                };
+                }
+                ;
             }
         });
+    }
+
+    public static addGuildToSocket(guild: IGuildModel) {
+        if (this.guilds.findIndex(element => {
+            return element.guild_id === guild.guild_id;
+        }) === -1) {
+            this.guilds.push(guild)
+        }
+    }
+
+    public static removeGuildFromSocket(guild: IGuildModel) {
+        let index = this.guilds.findIndex(element => {
+            return element.guild_id === guild.guild_id;
+        });
+        if (index !== -1) {
+            this.guilds.splice(index)
+        }
     }
 }

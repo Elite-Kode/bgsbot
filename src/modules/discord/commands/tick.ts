@@ -23,6 +23,7 @@ import { DB } from '../../../db/index';
 import { Access } from './../access';
 import { TickV4, TickSchema } from "../../../interfaces/typings";
 import { OptionsWithUrl, FullResponse } from 'request-promise-native';
+import { TickDetector } from "../../listener";
 
 export class Tick {
     db: DB;
@@ -92,6 +93,7 @@ export class Tick {
                         });
                     if (guild) {
                         message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                        TickDetector.addGuildToSocket(guild)
                     } else {
                         try {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
@@ -133,6 +135,7 @@ export class Tick {
                         });
                     if (guild) {
                         message.channel.send(Responses.getResponse(Responses.SUCCESS));
+                        TickDetector.removeGuildFromSocket(guild)
                     } else {
                         try {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
