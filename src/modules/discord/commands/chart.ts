@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import * as discord from 'discord.js';
+import { Message, MessageAttachment } from 'discord.js';
 import * as request from 'request-promise-native';
 import { FullResponse, OptionsWithUrl } from 'request-promise-native';
 import * as contentDisposition from 'content-disposition';
@@ -30,7 +30,7 @@ export class Chart {
         this.db = App.db;
     }
 
-    exec(message: discord.Message, commandArguments: string): void {
+    exec(message: Message, commandArguments: string): void {
         let argsArray: string[] = [];
         if (commandArguments.length !== 0) {
             argsArray = commandArguments.split(" ");
@@ -47,7 +47,7 @@ export class Chart {
         }
     }
 
-    async get(message: discord.Message, argsArray: string[]) {
+    async get(message: Message, argsArray: string[]) {
         try {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
             if (argsArray.length >= 4 || (argsArray.length === 2 && argsArray[1] === 'tick')) {
@@ -83,7 +83,7 @@ export class Chart {
 
                         let response: FullResponse = await request.get(requestOptions);
                         if (response.statusCode === 200) {
-                            let attachment = new discord.Attachment(response.body as Buffer, contentDisposition.parse(response.headers['content-disposition']).parameters.filename);
+                            let attachment = new MessageAttachment(response.body as Buffer, contentDisposition.parse(response.headers['content-disposition']).parameters.filename);
                             message.channel.send(attachment);
                         } else {
                             App.bugsnagClient.call(response.statusMessage, {

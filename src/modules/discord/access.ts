@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import * as discord from 'discord.js';
+import { Guild, User } from 'discord.js';
 import App from '../../server';
 
 export class Access {
@@ -23,15 +23,15 @@ export class Access {
     public static readonly BGS: string = "bgs";
     public static readonly FORBIDDEN: string = "forbidden";
 
-    public static async has(author: discord.User, guild: discord.Guild, perms: string[], allowAdmin = false): Promise<boolean> {
-        let member = await guild.fetchMember(author)
+    public static async has(author: User, guild: Guild, perms: string[], allowAdmin = false): Promise<boolean> {
+        let member = guild.member(author)
         if (allowAdmin && member.hasPermission("ADMINISTRATOR")) {
             return true;
         } else {
             let db = App.db;
             let guildId = member.guild.id;
             let roles = member.roles;
-            let guild = await db.model.guild.findOne({ guild_id: guildId });
+            let guild = await db.model.guild.findOne({guild_id: guildId});
             let bool = false;
             if (guild) {
                 perms.forEach((permission, index) => {
@@ -43,7 +43,7 @@ export class Access {
                         case "admin": {
                             let adminRoles = guild.admin_roles_id;
                             adminRoles.forEach((role, index) => {
-                                if (roles.has(role)) {
+                                if (roles.cache.has(role)) {
                                     bool = true;
                                 }
                             });
@@ -51,14 +51,14 @@ export class Access {
                             break;
                         case "bgs": {
                             let bgsRole = guild.bgs_role_id;
-                            if (roles.has(bgsRole)) {
+                            if (roles.cache.has(bgsRole)) {
                                 bool = true;
                             }
                         }
                         case "forbidden": {
                             let forbiddenRoles = guild.forbidden_roles_id;
                             forbiddenRoles.forEach((role, index) => {
-                                if (roles.has(role)) {
+                                if (roles.cache.has(role)) {
                                     bool = false;
                                 }
                             });

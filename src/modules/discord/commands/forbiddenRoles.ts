@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import * as discord from 'discord.js';
+import { Message, MessageEmbed } from 'discord.js';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db';
@@ -27,7 +27,7 @@ export class ForbiddenRoles {
         this.db = App.db;
     }
 
-    exec(message: discord.Message, commandArguments: string): void {
+    exec(message: Message, commandArguments: string): void {
         let argsArray: string[] = [];
         if (commandArguments.length !== 0) {
             argsArray = commandArguments.split(" ");
@@ -44,14 +44,14 @@ export class ForbiddenRoles {
         }
     }
 
-    async add(message: discord.Message, argsArray: string[]) {
+    async add(message: Message, argsArray: string[]) {
         try {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN], true);
             if (argsArray.length === 2) {
                 let guildId = message.guild.id;
                 let forbiddenRoleId = argsArray[1];
 
-                if (message.guild.roles.has(forbiddenRoleId)) {
+                if (message.guild.roles.cache.has(forbiddenRoleId)) {
                     try {
                         let guild = await this.db.model.guild.findOneAndUpdate(
                             {guild_id: guildId},
@@ -90,7 +90,7 @@ export class ForbiddenRoles {
         }
     }
 
-    async remove(message: discord.Message, argsArray: string[]) {
+    async remove(message: Message, argsArray: string[]) {
         try {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN], true);
             if (argsArray.length === 2) {
@@ -132,7 +132,7 @@ export class ForbiddenRoles {
         }
     }
 
-    async list(message: discord.Message, argsArray: string[]) {
+    async list(message: Message, argsArray: string[]) {
         try {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN], true);
             if (argsArray.length === 1) {
@@ -142,13 +142,13 @@ export class ForbiddenRoles {
                     let guild = await this.db.model.guild.findOne({guild_id: guildId});
                     if (guild) {
                         if (guild.forbidden_roles_id && guild.forbidden_roles_id.length !== 0) {
-                            let embed = new discord.RichEmbed();
+                            let embed = new MessageEmbed();
                             embed.setTitle("Forbidden Roles");
                             embed.setColor([255, 0, 255]);
                             let idList = "";
                             guild.forbidden_roles_id.forEach(id => {
-                                if (message.guild.roles.has(id)) {
-                                    idList += `${id} - @${message.guild.roles.get(id).name}\n`;
+                                if (message.guild.roles.cache.has(id)) {
+                                    idList += `${id} - @${message.guild.roles.cache.get(id).name}\n`;
                                 } else {
                                     idList += `${id} - Does not exist in Discord. Please delete this from BGSBot`;
                                 }

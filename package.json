@@ -1,6 +1,6 @@
 {
     "name": "bgsbot",
-    "version": "3.0.2",
+    "version": "3.1.0",
     "license": "Apache-2.0",
     "scripts": {
         "start": "gulp scripts && cross-env PORT=4002 pm2 start process.json --env production",
@@ -12,7 +12,7 @@
         "content-disposition": "^0.5.3",
         "cron": "^1.8.2",
         "debug": "^4.2.0",
-        "discord.js": "^11.5.1",
+        "discord.js": "^12.4.1",
         "express": "^4.17.1",
         "moment": "^2.29.1",
         "mongoose": "^5.10.13",
@@ -29,7 +29,7 @@
         "@types/mongoose": "^5.7.37",
         "@types/mongoose-paginate": "^5.0.8",
         "@types/morgan": "^1.9.2",
-        "@types/node": "^13.1.8",
+        "@types/node": "^12.19.3",
         "@types/request-promise-native": "^1.0.17",
         "cross-env": "^7.0.2",
         "gulp": "^4.0.2",

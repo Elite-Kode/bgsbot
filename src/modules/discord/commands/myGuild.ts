@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import * as discord from 'discord.js';
+import { Message } from 'discord.js';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db';
@@ -27,7 +27,7 @@ export class MyGuild {
         this.db = App.db;
     }
 
-    exec(message: discord.Message, commandArguments: string): void {
+    exec(message: Message, commandArguments: string): void {
         let argsArray: string[] = [];
         if (commandArguments.length !== 0) {
             argsArray = commandArguments.split(" ");
@@ -44,9 +44,9 @@ export class MyGuild {
         }
     }
 
-    async set(message: discord.Message, argsArray: string[]) {
+    async set(message: Message, argsArray: string[]) {
         // Only the server admins can set the guild
-        let member = await message.guild.fetchMember(message.author)
+        let member = await message.guild.member(message.author)
         if (member.hasPermission("ADMINISTRATOR")) {
             if (argsArray.length === 1) {
                 let guildId = message.guild.id;
@@ -93,7 +93,7 @@ export class MyGuild {
         }
     }
 
-    async remove(message: discord.Message, argsArray: string[]) {
+    async remove(message: Message, argsArray: string[]) {
         try {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN]);
             if (argsArray.length === 1) {

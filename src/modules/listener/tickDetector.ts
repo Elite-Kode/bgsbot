@@ -18,7 +18,7 @@ import { io } from 'socket.io-client';
 import * as moment from 'moment';
 import App from '../../server';
 import { IGuildModel } from '../../db/models';
-import { Client, GuildChannel, RichEmbed, TextChannel } from 'discord.js';
+import { Client, GuildChannel, MessageEmbed, TextChannel } from 'discord.js';
 import { Socket } from 'socket.io-client/build/socket';
 
 export class TickDetector {
@@ -38,9 +38,9 @@ export class TickDetector {
             for (let guild of this.guilds) {
                 try {
                     if (guild.announce_tick && guild.bgs_channel_id && guild.bgs_channel_id.length > 0) {
-                        let bgsChannel: GuildChannel = client.guilds.get(guild.guild_id).channels.get(guild.bgs_channel_id);
+                        let bgsChannel: GuildChannel = client.guilds.cache.get(guild.guild_id).channels.cache.get(guild.bgs_channel_id);
                         if (bgsChannel && bgsChannel.type === 'text') {
-                            let embed = new RichEmbed();
+                            let embed = new MessageEmbed();
                             embed.setTitle("Tick Detected");
                             embed.setColor([255, 0, 255]);
                             let lastTickFormattedTime = moment(tickTime).utc().format('HH:mm');

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import * as discord from 'discord.js';
 import * as request from 'request-promise-native';
 import { FullResponse, OptionsWithUrl } from 'request-promise-native';
 import App from '../../../server';
@@ -22,6 +21,7 @@ import { Responses } from '../responseDict';
 import { DB } from '../../../db';
 import { Access } from '../access';
 import { EBGSSystemsV4WOHistory } from "../../../interfaces/typings";
+import { Message, MessageEmbed } from "discord.js";
 
 export class MonitorSystems {
     db: DB;
@@ -30,7 +30,7 @@ export class MonitorSystems {
         this.db = App.db;
     }
 
-    exec(message: discord.Message, commandArguments: string): void {
+    exec(message: Message, commandArguments: string): void {
         let argsArray: string[] = [];
         if (commandArguments.length !== 0) {
             argsArray = commandArguments.split(" ");
@@ -47,7 +47,7 @@ export class MonitorSystems {
         }
     }
 
-    async add(message: discord.Message, argsArray: string[], primary: boolean = false) {
+    async add(message: Message, argsArray: string[], primary: boolean = false) {
         try {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
             if (argsArray.length >= 2) {
@@ -121,11 +121,11 @@ export class MonitorSystems {
         }
     }
 
-    addprimary(message: discord.Message, argsArray: string[]) {
+    addprimary(message: Message, argsArray: string[]) {
         this.add(message, argsArray, true);
     }
 
-    async remove(message: discord.Message, argsArray: string[]) {
+    async remove(message: Message, argsArray: string[]) {
         try {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
             if (argsArray.length >= 2) {
@@ -165,7 +165,7 @@ export class MonitorSystems {
         }
     }
 
-    async list(message: discord.Message, argsArray: string[]) {
+    async list(message: Message, argsArray: string[]) {
         try {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
             if (argsArray.length === 1) {
@@ -175,7 +175,7 @@ export class MonitorSystems {
                     let guild = await this.db.model.guild.findOne({guild_id: guildId});
                     if (guild) {
                         if (guild.monitor_systems && guild.monitor_systems.length !== 0) {
-                            let embed = new discord.RichEmbed();
+                            let embed = new MessageEmbed();
                             embed.setTitle("MONITORED SYSTEMS");
                             embed.setColor([255, 0, 255]);
                             let systemList = "";

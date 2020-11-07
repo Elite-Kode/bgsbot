@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import * as discord from 'discord.js';
+import { Message, MessageEmbed } from 'discord.js';
 import * as request from 'request-promise-native';
 import { FullResponse, OptionsWithUrl } from 'request-promise-native';
 import * as moment from 'moment';
@@ -36,7 +36,7 @@ export class FactionStatus {
         this.tickTime = "";
     }
 
-    exec(message: discord.Message, commandArguments: string): void {
+    exec(message: Message, commandArguments: string): void {
         let argsArray: string[] = [];
         if (commandArguments.length !== 0) {
             argsArray = commandArguments.split(" ");
@@ -53,7 +53,7 @@ export class FactionStatus {
         }
     }
 
-    async get(message: discord.Message, argsArray: string[]) {
+    async get(message: Message, argsArray: string[]) {
         try {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
             if (argsArray.length >= 2) {
@@ -230,7 +230,7 @@ export class FactionStatus {
                                 }
                                 let numberOfMessages = Math.ceil(fieldRecord.length / 24);
                                 for (let index = 0; index < numberOfMessages; index++) {
-                                    let embed = new discord.RichEmbed();
+                                    let embed = new MessageEmbed();
                                     if (index === 0) {
                                         embed.setTitle("FACTION STATUS");
                                     } else {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import * as discord from 'discord.js';
+import { Message, MessageEmbed } from 'discord.js';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db';
@@ -27,7 +27,7 @@ export class Sort {
         this.db = App.db;
     }
 
-    exec(message: discord.Message, commandArguments: string): void {
+    exec(message: Message, commandArguments: string): void {
         let argsArray: string[] = [];
         if (commandArguments.length !== 0) {
             argsArray = commandArguments.split(" ");
@@ -44,7 +44,7 @@ export class Sort {
         }
     }
 
-    async set(message: discord.Message, argsArray: string[]) {
+    async set(message: Message, argsArray: string[]) {
         try {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN]);
             if (argsArray.length === 3) {
@@ -108,7 +108,7 @@ export class Sort {
         }
     }
 
-    async remove(message: discord.Message, argsArray: string[]) {
+    async remove(message: Message, argsArray: string[]) {
         try {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN]);
             if (argsArray.length === 1) {
@@ -150,7 +150,7 @@ export class Sort {
         }
     }
 
-    async show(message: discord.Message, argsArray: string[]) {
+    async show(message: Message, argsArray: string[]) {
         try {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN]);
             if (argsArray.length === 1) {
@@ -160,7 +160,7 @@ export class Sort {
                     let guild = await this.db.model.guild.findOne({guild_id: guildId});
                     if (guild) {
                         if (guild.sort && guild.sort.length !== 0 && guild.sort_order) {
-                            let embed = new discord.RichEmbed();
+                            let embed = new MessageEmbed();
                             embed.setTitle("Sorting");
                             embed.setColor([255, 0, 255]);
                             let sortOrder = 'Disabled';

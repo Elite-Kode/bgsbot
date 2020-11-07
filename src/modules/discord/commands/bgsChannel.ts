@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import * as discord from 'discord.js';
+import { Message, MessageEmbed } from 'discord.js';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db';
@@ -27,7 +27,7 @@ export class BGSChannel {
         this.db = App.db;
     }
 
-    exec(message: discord.Message, commandArguments: string): void {
+    exec(message: Message, commandArguments: string): void {
         let argsArray: string[] = [];
         if (commandArguments.length !== 0) {
             argsArray = commandArguments.split(" ");
@@ -48,14 +48,14 @@ export class BGSChannel {
         }
     }
 
-    async set(message: discord.Message, argsArray: string[]) {
+    async set(message: Message, argsArray: string[]) {
         try {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN]);
             if (argsArray.length === 2) {
                 let guildId = message.guild.id;
                 let bgsChannelId = argsArray[1];
 
-                if (message.guild.channels.has(bgsChannelId)) {
+                if (message.guild.channels.cache.has(bgsChannelId)) {
                     try {
                         let guild = await this.db.model.guild.findOneAndUpdate(
                             {guild_id: guildId},
@@ -94,7 +94,7 @@ export class BGSChannel {
         }
     }
 
-    async remove(message: discord.Message, argsArray: string[]) {
+    async remove(message: Message, argsArray: string[]) {
         try {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN]);
             if (argsArray.length === 1) {
@@ -133,7 +133,7 @@ export class BGSChannel {
         }
     }
 
-    async show(message: discord.Message, argsArray: string[]) {
+    async show(message: Message, argsArray: string[]) {
         try {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN]);
             if (argsArray.length === 1) {
@@ -143,12 +143,12 @@ export class BGSChannel {
                     let guild = await this.db.model.guild.findOne({guild_id: guildId});
                     if (guild) {
                         if (guild.bgs_channel_id && guild.bgs_channel_id.length !== 0) {
-                            let embed = new discord.RichEmbed();
+                            let embed = new MessageEmbed();
                             embed.setTitle("BGS Channel");
                             embed.setColor([255, 0, 255]);
                             let id = "";
-                            if (message.guild.channels.has(guild.bgs_channel_id)) {
-                                id = `${guild.bgs_channel_id} - @${message.guild.channels.get(guild.bgs_channel_id).name}\n`;
+                            if (message.guild.channels.cache.has(guild.bgs_channel_id)) {
+                                id = `${guild.bgs_channel_id} - @${message.guild.channels.cache.get(guild.bgs_channel_id).name}\n`;
                             } else {
                                 id = `${guild.bgs_channel_id} - Does not exist in Discord. Please delete this from BGSBot`;
                             }

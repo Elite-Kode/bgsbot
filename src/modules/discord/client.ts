@@ -14,25 +14,42 @@
  * limitations under the License.
  */
 
-import * as discord from 'discord.js';
+import { Client, Message, User } from 'discord.js';
 import { DiscordSecrets } from '../../secrets';
 import { Responses } from './responseDict';
-import { Hi, Help, MyGuild, BGSRole, AdminRoles, ForbiddenRoles, BGSChannel, MonitorSystems, MonitorFactions, SystemStatus, FactionStatus, BGSReport, Sort, Chart, Theme, Tick } from './commands';
+import {
+    AdminRoles,
+    BGSChannel,
+    BGSReport,
+    BGSRole,
+    Chart,
+    FactionStatus,
+    ForbiddenRoles,
+    Help,
+    Hi,
+    MonitorFactions,
+    MonitorSystems,
+    MyGuild,
+    Sort,
+    SystemStatus,
+    Theme,
+    Tick
+} from './commands';
 import { HouseKeeping } from './houseKeeping';
 import { HelpSchema } from '../../interfaces/typings';
 import App from '../../server';
-import { DB } from '../../db/index';
+import { DB } from '../../db';
 import { CustomFunctionality } from './custom'
 
 export class DiscordClient {
-    public client: discord.Client;
+    public client: Client;
     public commandsMap: Map<string, any>;
     private houseKeeping: HouseKeeping;
     private db: DB;
     private custom: CustomFunctionality;
 
     constructor() {
-        this.client = new discord.Client();
+        this.client = new Client();
         this.commandsMap = new Map();
         this.login();
         this.listen();
@@ -77,11 +94,11 @@ export class DiscordClient {
             }
         });
 
-        this.client.on("messageReactionAdd", (messageReaction, user) => {
+        this.client.on("messageReactionAdd", (messageReaction, user: User) => {
             let helpObject = this.commandsMap.get('help') as Help;
             if (!user.bot && messageReaction.message.id === helpObject.helpMessageID) {
-                if (!messageReaction.users.has(this.client.user.id)) {
-                    messageReaction.remove(user);
+                if (!messageReaction.users.cache.has(this.client.user.id)) {
+                    messageReaction.users.remove(user);
                 }
                 helpObject.emojiCaught(messageReaction, user);
             }
@@ -138,7 +155,7 @@ export class DiscordClient {
         });
     }
 
-    public getCommandArguments(message: discord.Message) {
+    public getCommandArguments(message: Message) {
         //removed replace(/\s+/g, ' ') since its causing issues with faction names with multiple spaces
         let messageString = message.content.replace(new RegExp(`<@!?${this.client.user.id}>`), "").trim();
         let messageArray = messageString.split(" ");
@@ -147,10 +164,10 @@ export class DiscordClient {
         if (messageArray.length > 1) {
             commandArguments = messageArray.slice(1, messageArray.length).join(" ");
         }
-        return { command, commandArguments }
+        return {command, commandArguments}
     }
 
-    public processNormal(message: discord.Message): void {
+    public processNormal(message: Message): void {
         let commandArguments = this.getCommandArguments(message);
         if (this.commandsMap.has(commandArguments.command)) {
             console.log(commandArguments.command + " command requested");

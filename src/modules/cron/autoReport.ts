@@ -15,10 +15,10 @@
  */
 
 import { CronJob } from 'cron';
-import { IGuildModel } from '../../db/models/index';
+import { IGuildModel } from '../../db/models';
 import { Client, GuildChannel, TextChannel } from 'discord.js';
 import { CronJobStore } from '../../interfaces/typings';
-import { BGSReport } from '../discord/commands/bgsReport';
+import { BGSReport } from '../discord/commands';
 import App from '../../server';
 
 export class AutoReport {
@@ -32,7 +32,7 @@ export class AutoReport {
                     let cronJob = new CronJob(cronPattern, async () => {
                         try {
                             console.log('CRONjob execute');
-                            let bgsChannel: GuildChannel = client.guilds.get(guild.guild_id).channels.get(guild.bgs_channel_id);
+                            let bgsChannel: GuildChannel = client.guilds.cache.get(guild.guild_id).channels.cache.get(guild.bgs_channel_id);
                             if (bgsChannel && bgsChannel.type === 'text') {
                                 let bgsReport = new BGSReport();
                                 let embedArray = await bgsReport.getBGSReportEmbed(guild.guild_id, bgsChannel as TextChannel);
@@ -57,8 +57,7 @@ export class AutoReport {
                         time: guild.bgs_time
                     });
                     cronJob.start();
-                }
-                catch (err) {
+                } catch (err) {
                     App.bugsnagClient.call(err, {
                         metaData: {
                             time: guild.bgs_time,
@@ -80,7 +79,7 @@ export class AutoReport {
                 try {
                     let cronPattern = `${guild.bgs_time.split(':')[2]} ${guild.bgs_time.split(':')[1]} ${guild.bgs_time.split(':')[0]} * * *`;
                     let cronJob = new CronJob(cronPattern, async () => {
-                        let bgsChannel: GuildChannel = client.guilds.get(guild.guild_id).channels.get(guild.bgs_channel_id);
+                        let bgsChannel: GuildChannel = client.guilds.cache.get(guild.guild_id).channels.cache.get(guild.bgs_channel_id);
                         if (bgsChannel && bgsChannel.type === 'text') {
                             let bgsReport = new BGSReport();
                             let embedArray = await bgsReport.getBGSReportEmbed(guild.guild_id, bgsChannel as TextChannel);
@@ -97,8 +96,7 @@ export class AutoReport {
                         time: guild.bgs_time
                     });
                     cronJob.start();
-                }
-                catch (err) {
+                } catch (err) {
                     App.bugsnagClient.call(err, {
                         metaData: {
                             time: guild.bgs_time,
@@ -121,7 +119,7 @@ export class AutoReport {
                 try {
                     let cronPattern = `${guild.bgs_time.split(':')[2]} ${guild.bgs_time.split(':')[1]} ${guild.bgs_time.split(':')[0]} * * *`;
                     let cronJob = new CronJob(cronPattern, async () => {
-                        let bgsChannel: GuildChannel = client.guilds.get(guild.guild_id).channels.get(guild.bgs_channel_id);
+                        let bgsChannel: GuildChannel = client.guilds.cache.get(guild.guild_id).channels.cache.get(guild.bgs_channel_id);
                         if (bgsChannel && bgsChannel.type === 'text') {
                             let bgsReport = new BGSReport();
                             let embedArray = await bgsReport.getBGSReportEmbed(guild.guild_id, bgsChannel as TextChannel);
@@ -135,8 +133,7 @@ export class AutoReport {
                     this.jobs[indexOfJob].cronJob = cronJob;
                     this.jobs[indexOfJob].time = guild.bgs_time;
                     cronJob.start();
-                }
-                catch (err) {
+                } catch (err) {
                     App.bugsnagClient.call(err, {
                         metaData: {
                             time: guild.bgs_time,

@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import * as discord from 'discord.js';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db';
 import { Access } from '../access';
+import { Message, MessageEmbed, Permissions } from 'discord.js';
 
 export class AdminRoles {
     db: DB;
@@ -27,7 +27,7 @@ export class AdminRoles {
         this.db = App.db;
     }
 
-    exec(message: discord.Message, commandArguments: string): void {
+    exec(message: Message, commandArguments: string): void {
         let argsArray: string[] = [];
         if (commandArguments.length !== 0) {
             argsArray = commandArguments.split(" ");
@@ -48,15 +48,15 @@ export class AdminRoles {
         }
     }
 
-    async add(message: discord.Message, argsArray: string[]) {
+    async add(message: Message, argsArray: string[]) {
         // Only the server admins can set the admin roles
-        let member = await message.guild.fetchMember(message.author)
-        if (member.hasPermission("ADMINISTRATOR")) {
+        let member = message.guild.member(message.author);
+        if (member.hasPermission(Permissions.FLAGS.ADMINISTRATOR)) {
             if (argsArray.length === 2) {
                 let guildId = message.guild.id;
                 let adminRoleId = argsArray[1];
 
-                if (message.guild.roles.has(adminRoleId)) {
+                if (message.guild.roles.cache.has(adminRoleId)) {
                     try {
                         let guild = await this.db.model.guild.findOneAndUpdate(
                             {guild_id: guildId},
@@ -95,7 +95,7 @@ export class AdminRoles {
         }
     }
 
-    async remove(message: discord.Message, argsArray: string[]) {
+    async remove(message: Message, argsArray: string[]) {
         try {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN], true);
             if (argsArray.length === 2) {
@@ -137,7 +137,7 @@ export class AdminRoles {
         }
     }
 
-    async list(message: discord.Message, argsArray: string[]) {
+    async list(message: Message, argsArray: string[]) {
         try {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN], true);
             if (argsArray.length === 1) {
@@ -147,13 +147,13 @@ export class AdminRoles {
                     let guild = await this.db.model.guild.findOne({guild_id: guildId});
                     if (guild) {
                         if (guild.admin_roles_id && guild.admin_roles_id.length !== 0) {
-                            let embed = new discord.RichEmbed();
+                            let embed = new MessageEmbed();
                             embed.setTitle("Admin Roles");
                             embed.setColor([255, 0, 255]);
                             let idList = "";
                             guild.admin_roles_id.forEach(id => {
-                                if (message.guild.roles.has(id)) {
-                                    idList += `${id} - @${message.guild.roles.get(id).name}\n`;
+                                if (message.guild.roles.cache.has(id)) {
+                                    idList += `${id} - @${message.guild.roles.cache.get(id).name}\n`;
                                 } else {
                                     idList += `${id} - Does not exist in Discord. Please delete this from BGSBot`;
                                 }
@@ -210,7 +210,7 @@ export class AdminRoles {
     help() {
         return [
             'adminroles',
-            'Adds, removes or lists the roles that should have administorial capability over BGSBot',
+            'Adds, removes or lists the roles that should have administering capability over BGSBot',
             'adminroles <add|remove|list> <role id>',
             [
                 '`@BGSBot adminroles add 1234564789012345678`',

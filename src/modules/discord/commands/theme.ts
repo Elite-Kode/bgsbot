@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import * as discord from 'discord.js';
+import { Message, MessageEmbed } from 'discord.js';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db';
@@ -27,7 +27,7 @@ export class Theme {
         this.db = App.db;
     }
 
-    exec(message: discord.Message, commandArguments: string): void {
+    exec(message: Message, commandArguments: string): void {
         let argsArray: string[] = [];
         if (commandArguments.length !== 0) {
             argsArray = commandArguments.split(" ");
@@ -44,7 +44,7 @@ export class Theme {
         }
     }
 
-    async set(message: discord.Message, argsArray: string[]) {
+    async set(message: Message, argsArray: string[]) {
         try {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN]);
             if (argsArray.length === 2) {
@@ -95,7 +95,7 @@ export class Theme {
         }
     }
 
-    async remove(message: discord.Message, argsArray: string[]) {
+    async remove(message: Message, argsArray: string[]) {
         try {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN]);
             if (argsArray.length === 1) {
@@ -136,7 +136,7 @@ export class Theme {
         }
     }
 
-    async show(message: discord.Message, argsArray: string[]) {
+    async show(message: Message, argsArray: string[]) {
         try {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN]);
             if (argsArray.length === 1) {
@@ -146,7 +146,7 @@ export class Theme {
                     let guild = await this.db.model.guild.findOne({guild_id: guildId});
                     if (guild) {
                         if (guild.theme) {
-                            let embed = new discord.RichEmbed();
+                            let embed = new MessageEmbed();
                             embed.setTitle("Theme");
                             embed.setColor([255, 0, 255]);
                             embed.addField("Theme: ", guild.theme);

@@ -17,7 +17,7 @@
 import * as request from 'request-promise-native';
 import { FullResponse, OptionsWithUrl } from 'request-promise-native';
 import * as moment from 'moment';
-import { Message, RichEmbed } from 'discord.js';
+import { Message, MessageEmbed } from 'discord.js';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db';
@@ -55,7 +55,7 @@ export class Tick {
             if (argsArray.length === 1) {
                 try {
                     let lastTick = await this.getTickData();
-                    let embed = new RichEmbed();
+                    let embed = new MessageEmbed();
                     embed.setTitle("Tick");
                     embed.setColor([255, 0, 255]);
                     let lastTickFormattedTime = moment(lastTick.time).utc().format('HH:mm');

@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-import * as discord from 'discord.js';
-import { RichEmbed } from 'discord.js';
+import { Message, MessageEmbed, TextChannel } from 'discord.js';
 import * as request from 'request-promise-native';
 import { FullResponse, OptionsWithUrl } from 'request-promise-native';
 import * as moment from 'moment';
@@ -42,7 +41,7 @@ export class BGSReport {
         this.tickTime = "";
     }
 
-    exec(message: discord.Message, commandArguments: string): void {
+    exec(message: Message, commandArguments: string): void {
         let argsArray: string[] = [];
         if (commandArguments.length !== 0) {
             argsArray = commandArguments.split(" ");
@@ -59,13 +58,13 @@ export class BGSReport {
         }
     }
 
-    async get(message: discord.Message, argsArray: string[]) {
+    async get(message: Message, argsArray: string[]) {
         try {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
             if (argsArray.length === 1) {
                 let guildId = message.guild.id;
                 try {
-                    let embedArray = await this.getBGSReportEmbed(guildId, message.channel as discord.TextChannel);
+                    let embedArray = await this.getBGSReportEmbed(guildId, message.channel as TextChannel);
                     for (let index = 0; index < embedArray.length; index++) {
                         await message.channel.send(embedArray[index]);
                     }
@@ -81,7 +80,7 @@ export class BGSReport {
         }
     }
 
-    async settime(message: discord.Message, argsArray: string[]) {
+    async settime(message: Message, argsArray: string[]) {
         try {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
             if (argsArray.length === 2) {
@@ -144,7 +143,7 @@ export class BGSReport {
         }
     }
 
-    async showtime(message: discord.Message, argsArray: string[]) {
+    async showtime(message: Message, argsArray: string[]) {
         try {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
             if (argsArray.length === 1) {
@@ -154,7 +153,7 @@ export class BGSReport {
                     let guild = await this.db.model.guild.findOne({guild_id: guildId});
                     if (guild) {
                         if (guild.bgs_time && guild.bgs_time.length !== 0) {
-                            let embed = new discord.RichEmbed();
+                            let embed = new MessageEmbed();
                             embed.setTitle("BGS Reporting Time");
                             embed.setColor([255, 0, 255]);
                             embed.addField("Ids and Names", `${guild.bgs_time} UTC`);
@@ -204,7 +203,7 @@ export class BGSReport {
         }
     }
 
-    async unsettime(message: discord.Message, argsArray: string[]) {
+    async unsettime(message: Message, argsArray: string[]) {
         try {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
             if (argsArray.length === 1) {
@@ -244,7 +243,7 @@ export class BGSReport {
         }
     }
 
-    public async getBGSReportEmbed(guildId: string, channel: discord.TextChannel): Promise<RichEmbed[]> {
+    public async getBGSReportEmbed(guildId: string, channel: TextChannel): Promise<MessageEmbed[]> {
         try {
             let tick = new Tick();
             this.tickTime = (await tick.getTickData()).updated_at;
@@ -1033,9 +1032,9 @@ export class BGSReport {
                 }
             }
             let numberOfMessages = pagedFields.length;
-            let embedArray: RichEmbed[] = [];
+            let embedArray: MessageEmbed[] = [];
             for (let index = 0; index < numberOfMessages; index++) {
-                let embed = new discord.RichEmbed();
+                let embed = new MessageEmbed();
                 if (index === 0) {
                     embed.setTitle("BGS REPORT");
                 } else {

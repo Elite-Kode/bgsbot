@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import * as discord from 'discord.js';
+import { Message, MessageEmbed } from 'discord.js';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db';
@@ -27,7 +27,7 @@ export class BGSRole {
         this.db = App.db;
     }
 
-    exec(message: discord.Message, commandArguments: string): void {
+    exec(message: Message, commandArguments: string): void {
         let argsArray: string[] = [];
         if (commandArguments.length !== 0) {
             argsArray = commandArguments.split(" ");
@@ -44,13 +44,13 @@ export class BGSRole {
         }
     }
 
-    async set(message: discord.Message, argsArray: string[]) {
+    async set(message: Message, argsArray: string[]) {
         try {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN]);
             if (argsArray.length === 2) {
                 let guildId = message.guild.id;
                 let bgsRoleId = argsArray[1];
-                if (message.guild.roles.has(bgsRoleId)) {
+                if (message.guild.roles.cache.has(bgsRoleId)) {
 
                     try {
                         let guild = await this.db.model.guild.findOneAndUpdate(
@@ -90,7 +90,7 @@ export class BGSRole {
         }
     }
 
-    async remove(message: discord.Message, argsArray: string[]) {
+    async remove(message: Message, argsArray: string[]) {
         try {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN]);
             if (argsArray.length === 1) {
@@ -129,7 +129,7 @@ export class BGSRole {
         }
     }
 
-    async show(message: discord.Message, argsArray: string[]) {
+    async show(message: Message, argsArray: string[]) {
         try {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN]);
             if (argsArray.length === 1) {
@@ -139,12 +139,12 @@ export class BGSRole {
                     let guild = await this.db.model.guild.findOne({guild_id: guildId});
                     if (guild) {
                         if (guild.bgs_role_id && guild.bgs_role_id.length !== 0) {
-                            let embed = new discord.RichEmbed();
+                            let embed = new MessageEmbed();
                             embed.setTitle("BGS Role");
                             embed.setColor([255, 0, 255]);
                             let id = "";
-                            if (message.guild.channels.has(guild.bgs_channel_id)) {
-                                id = `${guild.bgs_role_id} - @${message.guild.roles.get(guild.bgs_role_id).name}\n`;
+                            if (message.guild.channels.cache.has(guild.bgs_channel_id)) {
+                                id = `${guild.bgs_role_id} - @${message.guild.roles.cache.get(guild.bgs_role_id).name}\n`;
                             } else {
                                 id = `${guild.bgs_role_id} - Does not exist in Discord. Please delete this from BGSBot`;
                             }

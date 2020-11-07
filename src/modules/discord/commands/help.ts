@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-import * as discord from 'discord.js';
-import { Message, MessageReaction, RichEmbed, User } from 'discord.js';
+import { Message, MessageEmbed, MessageReaction, User } from 'discord.js';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { HelpSchema } from '../../../interfaces/typings';
@@ -35,7 +34,7 @@ export class Help {
         this.helpMessageID = null;
     }
 
-    exec(message: discord.Message, commandArguments: string): void {
+    exec(message: Message, commandArguments: string): void {
         let argsArray: string[] = [];
         if (commandArguments.length !== 0) {
             argsArray = commandArguments.split(" ");
@@ -82,7 +81,7 @@ export class Help {
     }
 
     async display(message: Message) {
-        let embed = new discord.RichEmbed();
+        let embed = new MessageEmbed();
         embed.setColor(6684774);
         embed.setTitle(`:grey_question: BGSBot Help`);
         embed.setDescription(`Help Associated with BGSBot commands`);
@@ -117,12 +116,12 @@ export class Help {
         }
     }
 
-    async helpList(displayCommands: HelpSchema[], embed: RichEmbed, message: Message) {
+    async helpList(displayCommands: HelpSchema[], embed: MessageEmbed, message: Message) {
         displayCommands.forEach((help, index) => {
             embed.addField(`${index + 1}. ${help.command}`, help.helpMessage);
         });
 
-        let member = await message.guild.fetchMember(message.author)
+        let member = message.guild.member(message.author);
         if (member) {
             return member.send(embed);
         } else {
@@ -142,7 +141,7 @@ export class Help {
         }
     }
 
-    async helpDescription(command: HelpSchema, embed: RichEmbed, message: Message) {
+    async helpDescription(command: HelpSchema, embed: MessageEmbed, message: Message) {
         embed.addField("Command:", `@BGSBot ${command.command}`);
         embed.addField("Description", command.helpMessage);
         embed.addField("Template", command.template);
@@ -152,7 +151,7 @@ export class Help {
         });
         embed.addField("Examples", exampleString);
 
-        let member = await message.guild.fetchMember(message.author)
+        let member = message.guild.member(message.author);
         if (member) {
             return member.send(embed);
         } else {
