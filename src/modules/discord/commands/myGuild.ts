@@ -66,10 +66,11 @@ export class MyGuild {
                         }
                     } else {
                         try {
-                            await this.db.model.guild.create({
+                            let newGuild = new this.db.model.guild({
                                 guild_id: guildId,
                                 updated_at: new Date(),
                             });
+                            await newGuild.save();
                             message.channel.send(Responses.getResponse(Responses.SUCCESS));
                         } catch (err) {
                             message.channel.send(Responses.getResponse(Responses.FAIL));

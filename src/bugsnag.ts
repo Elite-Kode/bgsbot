@@ -16,14 +16,14 @@
 
 "use strict";
 
-import bugsnag, { Bugsnag } from '@bugsnag/js';
+import bugsnag, { Client } from '@bugsnag/js';
 import bugsnagExpress from '@bugsnag/plugin-express';
 import { ProcessVars } from './processVars';
 import { BugsnagSecrets } from './secrets';
 
 export class BugsnagClient {
     private version;
-    public client: Bugsnag.Client;
+    public client: Client;
 
     constructor() {
         this.version = ProcessVars.version;
@@ -31,17 +31,19 @@ export class BugsnagClient {
     }
 
     initialiseBugsnag(): void {
-        this.client = bugsnag({
+        this.client = bugsnag.start({
             apiKey: BugsnagSecrets.token,
-            notifyReleaseStages: ['development', 'production'],
+            enabledReleaseStages: ['development', 'production'],
+            plugins: [bugsnagExpress],
             appVersion: this.version
         });
-        this.client.use(bugsnagExpress);
     }
 
     call(err, metaData?, logToConsole = true): void {
         if (BugsnagSecrets.use) {
-            this.client.notify(err, {metaData});
+            this.client.notify(err, event => {
+                event.addMetadata('Custom', metaData);
+            });
         }
         if (logToConsole) {
             console.log(err);
