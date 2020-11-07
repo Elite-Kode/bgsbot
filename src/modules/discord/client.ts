@@ -71,9 +71,8 @@ export class DiscordClient {
                         this.processNormal(message)
                     }
                 } catch (err) {
-                    App.bugsnagClient.client.notify(err);
                     message.channel.send(Responses.getResponse(Responses.FAIL));
-                    console.log(err);
+                    App.bugsnagClient.call(err);
                 }
             }
         });
@@ -97,7 +96,7 @@ export class DiscordClient {
         });
 
         this.client.on("rateLimit", rateLimitInfo => {
-            App.bugsnagClient.client.notify(new Error("Discord Rate Limit Hit"), {
+            App.bugsnagClient.call(new Error("Discord Rate Limit Hit"), {
                 metaData: rateLimitInfo
             });
         });

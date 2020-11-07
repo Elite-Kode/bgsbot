@@ -15,21 +15,23 @@
  */
 
 import * as request from 'request-promise-native';
+import { FullResponse, OptionsWithUrl } from 'request-promise-native';
 import * as moment from 'moment';
 import { Message, RichEmbed } from 'discord.js';
 import App from '../../../server';
 import { Responses } from '../responseDict';
-import { DB } from '../../../db/index';
-import { Access } from './../access';
-import { TickV4, TickSchema } from "../../../interfaces/typings";
-import { OptionsWithUrl, FullResponse } from 'request-promise-native';
+import { DB } from '../../../db';
+import { Access } from '../access';
+import { TickSchema, TickV4 } from "../../../interfaces/typings";
 import { TickDetector } from "../../listener";
 
 export class Tick {
     db: DB;
+
     constructor() {
         this.db = App.db;
     }
+
     exec(message: Message, commandArguments: string): void {
         let argsArray: string[] = [];
         if (commandArguments.length !== 0) {
@@ -63,12 +65,10 @@ export class Tick {
                     try {
                         message.channel.send(embed);
                     } catch (err) {
-                        App.bugsnagClient.client.notify(err);
-                        console.log(err);
+                        App.bugsnagClient.call(err);
                     }
                 } catch (err) {
-                    App.bugsnagClient.client.notify(err);
-                    console.log(err);
+                    App.bugsnagClient.call(err);
                 }
             } else {
                 message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
@@ -86,7 +86,7 @@ export class Tick {
 
                 try {
                     let guild = await this.db.model.guild.findOneAndUpdate(
-                        { guild_id: guildId },
+                        {guild_id: guildId},
                         {
                             updated_at: new Date(),
                             announce_tick: true
@@ -99,18 +99,16 @@ export class Tick {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
                             message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
                         } catch (err) {
-                            App.bugsnagClient.client.notify(err, {
+                            App.bugsnagClient.call(err, {
                                 metaData: {
                                     guild: guild._id
                                 }
                             });
-                            console.log(err);
                         }
                     }
                 } catch (err) {
                     message.channel.send(Responses.getResponse(Responses.FAIL));
-                    App.bugsnagClient.client.notify(err);
-                    console.log(err);
+                    App.bugsnagClient.call(err);
                 }
             } else {
                 message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
@@ -128,7 +126,7 @@ export class Tick {
 
                 try {
                     let guild = await this.db.model.guild.findOneAndUpdate(
-                        { guild_id: guildId },
+                        {guild_id: guildId},
                         {
                             updated_at: new Date(),
                             announce_tick: false
@@ -141,18 +139,16 @@ export class Tick {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
                             message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
                         } catch (err) {
-                            App.bugsnagClient.client.notify(err, {
+                            App.bugsnagClient.call(err, {
                                 metaData: {
                                     guild: guild._id
                                 }
                             });
-                            console.log(err);
                         }
                     }
                 } catch (err) {
                     message.channel.send(Responses.getResponse(Responses.FAIL));
-                    App.bugsnagClient.client.notify(err);
-                    console.log(err);
+                    App.bugsnagClient.call(err)
                 }
             } else {
                 message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));

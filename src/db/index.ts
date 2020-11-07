@@ -50,8 +50,7 @@ export class DB {
     connectToDB(): void {
         mongoose.connect(this.url, this.options, (err) => {
             if (err) {
-                App.bugsnagClient.client.notify(err);
-                return console.log(err);
+                App.bugsnagClient.call(err);
             }
         });
         this.listenToEvents();

@@ -43,13 +43,12 @@ export class AutoReport {
                                 console.log(`BGS Channel for Guild ${guild.guild_id} has not been set up`)
                             }
                         } catch (err) {
-                            App.bugsnagClient.client.notify(err, {
+                            App.bugsnagClient.call(err, {
                                 metaData: {
                                     time: guild.bgs_time,
                                     guild: guild._id
                                 }
                             });
-                            console.log(err);
                         }
                     });
                     this.jobs.push({
@@ -60,13 +59,12 @@ export class AutoReport {
                     cronJob.start();
                 }
                 catch (err) {
-                    App.bugsnagClient.client.notify(err, {
+                    App.bugsnagClient.call(err, {
                         metaData: {
                             time: guild.bgs_time,
                             guild: guild._id
                         }
                     });
-                    console.log(err);
                 }
             }
         });
@@ -101,13 +99,12 @@ export class AutoReport {
                     cronJob.start();
                 }
                 catch (err) {
-                    App.bugsnagClient.client.notify(err, {
+                    App.bugsnagClient.call(err, {
                         metaData: {
                             time: guild.bgs_time,
                             guild: guild._id
                         }
                     });
-                    console.log(err);
                 }
             }
         }
@@ -140,13 +137,12 @@ export class AutoReport {
                     cronJob.start();
                 }
                 catch (err) {
-                    App.bugsnagClient.client.notify(err, {
+                    App.bugsnagClient.call(err, {
                         metaData: {
                             time: guild.bgs_time,
                             guild: guild._id
                         }
                     });
-                    console.log(err);
                     console.log(`Time ${guild.bgs_time} is not a suitable cron time`);
                 }
             }

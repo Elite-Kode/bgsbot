@@ -15,9 +15,9 @@
  */
 
 import * as discord from 'discord.js';
+import { Message, MessageReaction, RichEmbed, User } from 'discord.js';
 import App from '../../../server';
 import { Responses } from '../responseDict';
-import { Message, RichEmbed, MessageReaction, User } from 'discord.js';
 import { HelpSchema } from '../../../interfaces/typings';
 
 export class Help {
@@ -27,12 +27,14 @@ export class Help {
     helpMessageID: string;
     numberSelected: number;
     emojiArray = ["1⃣", "2⃣", "3⃣", "4⃣", "5⃣", "6⃣", "7⃣", "8⃣", "9⃣", "🔟"];
+
     constructor() {
         this.helpArray = [];
         this.displayState = 0;
         this.helpDepth = 0;
         this.helpMessageID = null;
     }
+
     exec(message: discord.Message, commandArguments: string): void {
         let argsArray: string[] = [];
         if (commandArguments.length !== 0) {
@@ -101,8 +103,7 @@ export class Help {
                 this.helpMessageID = (returnMessage as Message).id
                 this.helpEmoji(displayCommands, this.displayState, maxDisplayState, returnMessage as Message);
             } catch (err) {
-                App.bugsnagClient.client.notify(err);
-                console.log(err);
+                App.bugsnagClient.call(err);
             }
         } else if (this.helpDepth === 1) {
             try {
@@ -111,8 +112,7 @@ export class Help {
                 this.helpMessageID = (returnMessage as Message).id;
                 (returnMessage as Message).react("⬅");
             } catch (err) {
-                App.bugsnagClient.client.notify(err);
-                console.log(err);
+                App.bugsnagClient.call(err);
             }
         }
     }

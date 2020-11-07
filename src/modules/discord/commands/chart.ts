@@ -16,18 +16,20 @@
 
 import * as discord from 'discord.js';
 import * as request from 'request-promise-native';
+import { FullResponse, OptionsWithUrl } from 'request-promise-native';
 import * as contentDisposition from 'content-disposition';
 import App from '../../../server';
 import { Responses } from '../responseDict';
-import { DB } from '../../../db/index';
-import { Access } from './../access';
-import { OptionsWithUrl, FullResponse } from 'request-promise-native';
+import { DB } from '../../../db';
+import { Access } from '../access';
 
 export class Chart {
     db: DB;
+
     constructor() {
         this.db = App.db;
     }
+
     exec(message: discord.Message, commandArguments: string): void {
         let argsArray: string[] = [];
         if (commandArguments.length !== 0) {
@@ -61,7 +63,7 @@ export class Chart {
                 let timenow = Date.now();
 
                 try {
-                    let guild = await this.db.model.guild.findOne({ guild_id: message.guild.id });
+                    let guild = await this.db.model.guild.findOne({guild_id: message.guild.id});
                     if (guild) {
                         let theme = 'light';
                         if (guild.theme) {
@@ -84,30 +86,27 @@ export class Chart {
                             let attachment = new discord.Attachment(response.body as Buffer, contentDisposition.parse(response.headers['content-disposition']).parameters.filename);
                             message.channel.send(attachment);
                         } else {
-                            App.bugsnagClient.client.notify(response.statusMessage, {
+                            App.bugsnagClient.call(response.statusMessage, {
                                 metaData: {
                                     guild: guild._id
                                 }
                             });
-                            console.log(response.statusMessage);
                         }
                     } else {
                         try {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
                             message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
                         } catch (err) {
-                            App.bugsnagClient.client.notify(err, {
+                            App.bugsnagClient.call(err, {
                                 metaData: {
                                     guild: guild._id
                                 }
                             });
-                            console.log(err);
                         }
                     }
                 } catch (err) {
                     message.channel.send(Responses.getResponse(Responses.FAIL));
-                    App.bugsnagClient.client.notify(err);
-                    console.log(err);
+                    App.bugsnagClient.call(err);
                 }
             } else {
                 message.channel.send(Responses.getResponse(Responses.NOPARAMS));

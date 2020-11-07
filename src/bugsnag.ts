@@ -24,6 +24,7 @@ import { BugsnagSecrets } from './secrets';
 export class BugsnagClient {
     private version;
     public client: Bugsnag.Client;
+
     constructor() {
         this.version = ProcessVars.version;
         this.initialiseBugsnag();
@@ -36,5 +37,14 @@ export class BugsnagClient {
             appVersion: this.version
         });
         this.client.use(bugsnagExpress);
+    }
+
+    call(err, metaData?, logToConsole = true): void {
+        if (BugsnagSecrets.use) {
+            this.client.notify(err, {metaData});
+        }
+        if (logToConsole) {
+            console.log(err);
+        }
     }
 }

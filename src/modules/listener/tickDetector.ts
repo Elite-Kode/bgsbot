@@ -51,12 +51,11 @@ export class TickDetector {
                         }
                     }
                 } catch (err) {
-                    App.bugsnagClient.client.notify(err, {
+                    App.bugsnagClient.call(err, {
                         metaData: {
                             guild: guild._id
                         }
                     });
-                    console.log(err);
                 }
                 ;
             }

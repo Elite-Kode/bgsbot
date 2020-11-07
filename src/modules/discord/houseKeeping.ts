@@ -42,8 +42,7 @@ export class HouseKeeping {
                     console.log("Channel deleted");
                 }
             } catch (err) {
-                App.bugsnagClient.client.notify(err);
-                console.log(err);
+                App.bugsnagClient.call(err);
             }
         }
     }
@@ -65,8 +64,7 @@ export class HouseKeeping {
                     console.log("Role deleted");
                 }
             } catch (err) {
-                App.bugsnagClient.client.notify(err);
-                console.log(err);
+                App.bugsnagClient.call(err);
             }
         }
         let adminRole = async () => {
@@ -84,8 +82,7 @@ export class HouseKeeping {
                     console.log("Role deleted");
                 }
             } catch (err) {
-                App.bugsnagClient.client.notify(err);
-                console.log(err);
+                App.bugsnagClient.call(err);
             }
         }
         let forbiddenRole = async () => {
@@ -103,8 +100,7 @@ export class HouseKeeping {
                     console.log("Role deleted");
                 }
             } catch (err) {
-                App.bugsnagClient.client.notify(err);
-                console.log(err);
+                App.bugsnagClient.call(err);
             }
         }
         await Promise.all([bgsRole, adminRole, forbiddenRole]);

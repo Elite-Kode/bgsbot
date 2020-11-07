@@ -16,18 +16,20 @@
 
 import * as discord from 'discord.js';
 import * as request from 'request-promise-native';
+import { FullResponse, OptionsWithUrl } from 'request-promise-native';
 import App from '../../../server';
 import { Responses } from '../responseDict';
-import { DB } from '../../../db/index';
-import { Access } from './../access';
+import { DB } from '../../../db';
+import { Access } from '../access';
 import { EBGSFactionsV4WOHistory } from "../../../interfaces/typings";
-import { OptionsWithUrl, FullResponse } from 'request-promise-native';
 
 export class MonitorFactions {
     db: DB;
+
     constructor() {
         this.db = App.db;
     }
+
     exec(message: discord.Message, commandArguments: string): void {
         let argsArray: string[] = [];
         if (commandArguments.length !== 0) {
@@ -53,7 +55,7 @@ export class MonitorFactions {
                 let factionName = argsArray.slice(1).join(" ");
                 let requestOptions: OptionsWithUrl = {
                     url: "https://elitebgs.app/api/ebgs/v4/factions",
-                    qs: { name: factionName },
+                    qs: {name: factionName},
                     json: true,
                     resolveWithFullResponse: true
                 }
@@ -66,8 +68,7 @@ export class MonitorFactions {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
                             message.channel.send("Faction not found");
                         } catch (err) {
-                            App.bugsnagClient.client.notify(err);
-                            console.log(err);
+                            App.bugsnagClient.call(err);
                         }
                     } else {
                         let responseFaction = body.docs[0];
@@ -80,10 +81,10 @@ export class MonitorFactions {
                         }
                         try {
                             let guild = await this.db.model.guild.findOneAndUpdate(
-                                { guild_id: guildId },
+                                {guild_id: guildId},
                                 {
                                     updated_at: new Date(),
-                                    $addToSet: { monitor_factions: monitorFactions }
+                                    $addToSet: {monitor_factions: monitorFactions}
                                 });
                             if (guild) {
                                 message.channel.send(Responses.getResponse(Responses.SUCCESS));
@@ -92,23 +93,20 @@ export class MonitorFactions {
                                     await message.channel.send(Responses.getResponse(Responses.FAIL));
                                     message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
                                 } catch (err) {
-                                    App.bugsnagClient.client.notify(err, {
+                                    App.bugsnagClient.call(err, {
                                         metaData: {
                                             guild: guild._id
                                         }
                                     });
-                                    console.log(err);
                                 }
                             }
                         } catch (err) {
                             message.channel.send(Responses.getResponse(Responses.FAIL));
-                            App.bugsnagClient.client.notify(err);
-                            console.log(err);
+                            App.bugsnagClient.call(err);
                         }
                     }
                 } else {
-                    App.bugsnagClient.client.notify(response.statusMessage);
-                    console.log(response.statusMessage);
+                    App.bugsnagClient.call(response.statusMessage);
                 }
             } else {
                 message.channel.send(Responses.getResponse(Responses.NOPARAMS));
@@ -131,10 +129,10 @@ export class MonitorFactions {
 
                 try {
                     let guild = await this.db.model.guild.findOneAndUpdate(
-                        { guild_id: guildId },
+                        {guild_id: guildId},
                         {
                             updated_at: new Date(),
-                            $pull: { monitor_factions: { faction_name_lower: factionName } }
+                            $pull: {monitor_factions: {faction_name_lower: factionName}}
                         });
                     if (guild) {
                         message.channel.send(Responses.getResponse(Responses.SUCCESS));
@@ -143,18 +141,16 @@ export class MonitorFactions {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
                             message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
                         } catch (err) {
-                            App.bugsnagClient.client.notify(err, {
+                            App.bugsnagClient.call(err, {
                                 metaData: {
                                     guild: guild._id
                                 }
                             });
-                            console.log(err);
                         }
                     }
                 } catch (err) {
                     message.channel.send(Responses.getResponse(Responses.FAIL));
-                    App.bugsnagClient.client.notify(err);
-                    console.log(err);
+                    App.bugsnagClient.call(err);
                 }
             } else {
                 message.channel.send(Responses.getResponse(Responses.NOPARAMS));
@@ -171,7 +167,7 @@ export class MonitorFactions {
                 let guildId = message.guild.id;
 
                 try {
-                    let guild = await this.db.model.guild.findOne({ guild_id: guildId });
+                    let guild = await this.db.model.guild.findOne({guild_id: guildId});
                     if (guild) {
                         if (guild.monitor_factions && guild.monitor_factions.length !== 0) {
                             let embed = new discord.RichEmbed();
@@ -190,24 +186,22 @@ export class MonitorFactions {
                             try {
                                 message.channel.send(embed);
                             } catch (err) {
-                                App.bugsnagClient.client.notify(err, {
+                                App.bugsnagClient.call(err, {
                                     metaData: {
                                         guild: guild._id
                                     }
                                 });
-                                console.log(err);
                             }
                         } else {
                             try {
                                 await message.channel.send(Responses.getResponse(Responses.FAIL));
                                 message.channel.send("You don't have any monitored faction set up");
                             } catch (err) {
-                                App.bugsnagClient.client.notify(err, {
+                                App.bugsnagClient.call(err, {
                                     metaData: {
                                         guild: guild._id
                                     }
                                 });
-                                console.log(err);
                             }
                         }
                     } else {
@@ -215,18 +209,16 @@ export class MonitorFactions {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
                             message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
                         } catch (err) {
-                            App.bugsnagClient.client.notify(err, {
+                            App.bugsnagClient.call(err, {
                                 metaData: {
                                     guild: guild._id
                                 }
                             });
-                            console.log(err);
                         }
                     }
                 } catch (err) {
                     message.channel.send(Responses.getResponse(Responses.FAIL));
-                    App.bugsnagClient.client.notify(err);
-                    console.log(err);
+                    App.bugsnagClient.call(err);
                 }
             } else {
                 message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));

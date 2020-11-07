@@ -17,14 +17,16 @@
 import * as discord from 'discord.js';
 import App from '../../../server';
 import { Responses } from '../responseDict';
-import { DB } from '../../../db/index';
-import { Access } from './../access';
+import { DB } from '../../../db';
+import { Access } from '../access';
 
 export class ForbiddenRoles {
     db: DB;
+
     constructor() {
         this.db = App.db;
     }
+
     exec(message: discord.Message, commandArguments: string): void {
         let argsArray: string[] = [];
         if (commandArguments.length !== 0) {
@@ -52,10 +54,10 @@ export class ForbiddenRoles {
                 if (message.guild.roles.has(forbiddenRoleId)) {
                     try {
                         let guild = await this.db.model.guild.findOneAndUpdate(
-                            { guild_id: guildId },
+                            {guild_id: guildId},
                             {
                                 updated_at: new Date(),
-                                $addToSet: { forbidden_roles_id: forbiddenRoleId }
+                                $addToSet: {forbidden_roles_id: forbiddenRoleId}
                             });
                         if (guild) {
                             message.channel.send(Responses.getResponse(Responses.SUCCESS));
@@ -64,18 +66,16 @@ export class ForbiddenRoles {
                                 await message.channel.send(Responses.getResponse(Responses.FAIL));
                                 message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
                             } catch (err) {
-                                App.bugsnagClient.client.notify(err, {
+                                App.bugsnagClient.call(err, {
                                     metaData: {
                                         guild: guild._id
                                     }
                                 });
-                                console.log(err);
                             }
                         }
                     } catch (err) {
                         message.channel.send(Responses.getResponse(Responses.FAIL));
-                        App.bugsnagClient.client.notify(err);
-                        console.log(err);
+                        App.bugsnagClient.call(err);
                     }
                 } else {
                     message.channel.send(Responses.getResponse(Responses.IDNOTFOUND));
@@ -99,10 +99,10 @@ export class ForbiddenRoles {
 
                 try {
                     let guild = await this.db.model.guild.findOneAndUpdate(
-                        { guild_id: guildId },
+                        {guild_id: guildId},
                         {
                             updated_at: new Date(),
-                            $pull: { forbidden_roles_id: forbiddenRoleId }
+                            $pull: {forbidden_roles_id: forbiddenRoleId}
                         });
                     if (guild) {
                         message.channel.send(Responses.getResponse(Responses.SUCCESS));
@@ -111,18 +111,16 @@ export class ForbiddenRoles {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
                             message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
                         } catch (err) {
-                            App.bugsnagClient.client.notify(err, {
+                            App.bugsnagClient.call(err, {
                                 metaData: {
                                     guild: guild._id
                                 }
                             });
-                            console.log(err);
                         }
                     }
                 } catch (err) {
                     message.channel.send(Responses.getResponse(Responses.FAIL));
-                    App.bugsnagClient.client.notify(err);
-                    console.log(err);
+                    App.bugsnagClient.call(err);
                 }
             } else if (argsArray.length > 2) {
                 message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
@@ -141,7 +139,7 @@ export class ForbiddenRoles {
                 let guildId = message.guild.id;
 
                 try {
-                    let guild = await this.db.model.guild.findOne({ guild_id: guildId });
+                    let guild = await this.db.model.guild.findOne({guild_id: guildId});
                     if (guild) {
                         if (guild.forbidden_roles_id && guild.forbidden_roles_id.length !== 0) {
                             let embed = new discord.RichEmbed();
@@ -160,24 +158,22 @@ export class ForbiddenRoles {
                             try {
                                 message.channel.send(embed);
                             } catch (err) {
-                                App.bugsnagClient.client.notify(err, {
+                                App.bugsnagClient.call(err, {
                                     metaData: {
                                         guild: guild._id
                                     }
                                 });
-                                console.log(err);
                             }
                         } else {
                             try {
                                 await message.channel.send(Responses.getResponse(Responses.FAIL));
                                 message.channel.send("You don't have any forbidden roles set up");
                             } catch (err) {
-                                App.bugsnagClient.client.notify(err, {
+                                App.bugsnagClient.call(err, {
                                     metaData: {
                                         guild: guild._id
                                     }
                                 });
-                                console.log(err);
                             }
                         }
                     } else {
@@ -185,18 +181,16 @@ export class ForbiddenRoles {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
                             message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
                         } catch (err) {
-                            App.bugsnagClient.client.notify(err, {
+                            App.bugsnagClient.call(err, {
                                 metaData: {
                                     guild: guild._id
                                 }
                             });
-                            console.log(err);
                         }
                     }
                 } catch (err) {
                     message.channel.send(Responses.getResponse(Responses.FAIL));
-                    App.bugsnagClient.client.notify(err);
-                    console.log(err);
+                    App.bugsnagClient.call(err);
                 }
             } else {
                 message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));

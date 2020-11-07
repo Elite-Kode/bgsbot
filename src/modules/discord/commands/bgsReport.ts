@@ -15,26 +15,33 @@
  */
 
 import * as discord from 'discord.js';
+import { RichEmbed } from 'discord.js';
 import * as request from 'request-promise-native';
+import { FullResponse, OptionsWithUrl } from 'request-promise-native';
 import * as moment from 'moment';
 import App from '../../../server';
 import { Responses } from '../responseDict';
-import { DB } from '../../../db/index';
-import { Access } from './../access';
-import { EBGSFactionsV4WOHistory, EBGSSystemsV4WOHistory, FieldRecordSchema, TickV4, EBGSFactionsV4 } from "../../../interfaces/typings";
-import { OptionsWithUrl, FullResponse } from 'request-promise-native';
-import { RichEmbed } from 'discord.js';
-import { AutoReport } from '../../cron/autoReport';
+import { DB } from '../../../db';
+import { Access } from '../access';
+import {
+    EBGSFactionsV4,
+    EBGSFactionsV4WOHistory,
+    EBGSSystemsV4WOHistory,
+    FieldRecordSchema
+} from "../../../interfaces/typings";
+import { AutoReport } from '../../cron';
 import { FdevIds } from '../../../fdevids';
 import { Tick } from './tick';
 
 export class BGSReport {
     db: DB;
     tickTime: string;
+
     constructor() {
         this.db = App.db;
         this.tickTime = "";
     }
+
     exec(message: discord.Message, commandArguments: string): void {
         let argsArray: string[] = [];
         if (commandArguments.length !== 0) {
@@ -64,8 +71,7 @@ export class BGSReport {
                     }
                 } catch (err) {
                     message.channel.send(Responses.getResponse(Responses.FAIL));
-                    App.bugsnagClient.client.notify(err);
-                    console.log(err);
+                    App.bugsnagClient.call(err);
                 }
             } else {
                 message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
@@ -89,7 +95,7 @@ export class BGSReport {
                     && time[2] >= 0 && time[2] < 59) {
                     try {
                         let guild = await this.db.model.guild.findOneAndUpdate(
-                            { guild_id: guildId },
+                            {guild_id: guildId},
                             {
                                 updated_at: new Date(),
                                 bgs_time: time.map(element => {
@@ -100,7 +106,7 @@ export class BGSReport {
                                     return elementString;
                                 }).join(":")
                             },
-                            { new: true });
+                            {new: true});
                         if (guild) {
                             message.channel.send(Responses.getResponse(Responses.SUCCESS));
                             AutoReport.createJob(guild, message.client);
@@ -109,26 +115,23 @@ export class BGSReport {
                                 await message.channel.send(Responses.getResponse(Responses.FAIL));
                                 message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
                             } catch (err) {
-                                App.bugsnagClient.client.notify(err, {
+                                App.bugsnagClient.call(err, {
                                     metaData: {
                                         guild: guild._id
                                     }
                                 });
-                                console.log(err);
                             }
                         }
                     } catch (err) {
                         message.channel.send(Responses.getResponse(Responses.FAIL));
-                        App.bugsnagClient.client.notify(err);
-                        console.log(err);
+                        App.bugsnagClient.call(err);
                     }
                 } else {
                     try {
                         await message.channel.send(Responses.getResponse(Responses.FAIL));
                         message.channel.send("Time must be of the form HH:mm:ss");
                     } catch (err) {
-                        App.bugsnagClient.client.notify(err);
-                        console.log(err);
+                        App.bugsnagClient.call(err);
                     }
                 }
             } else if (argsArray.length > 2) {
@@ -148,7 +151,7 @@ export class BGSReport {
                 let guildId = message.guild.id;
 
                 try {
-                    let guild = await this.db.model.guild.findOne({ guild_id: guildId });
+                    let guild = await this.db.model.guild.findOne({guild_id: guildId});
                     if (guild) {
                         if (guild.bgs_time && guild.bgs_time.length !== 0) {
                             let embed = new discord.RichEmbed();
@@ -159,24 +162,22 @@ export class BGSReport {
                             try {
                                 message.channel.send(embed);
                             } catch (err) {
-                                App.bugsnagClient.client.notify(err, {
+                                App.bugsnagClient.call(err, {
                                     metaData: {
                                         guild: guild._id
                                     }
                                 });
-                                console.log(err);
                             }
                         } else {
                             try {
                                 await message.channel.send(Responses.getResponse(Responses.FAIL));
                                 message.channel.send("You don't have a bgs reporting time set up");
                             } catch (err) {
-                                App.bugsnagClient.client.notify(err, {
+                                App.bugsnagClient.call(err, {
                                     metaData: {
                                         guild: guild._id
                                     }
                                 });
-                                console.log(err);
                             }
                         }
                     } else {
@@ -184,18 +185,16 @@ export class BGSReport {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
                             message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
                         } catch (err) {
-                            App.bugsnagClient.client.notify(err, {
+                            App.bugsnagClient.call(err, {
                                 metaData: {
                                     guild: guild._id
                                 }
                             });
-                            console.log(err);
                         }
                     }
                 } catch (err) {
                     message.channel.send(Responses.getResponse(Responses.FAIL));
-                    App.bugsnagClient.client.notify(err);
-                    console.log(err);
+                    App.bugsnagClient.call(err);
                 }
             } else {
                 message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
@@ -213,10 +212,10 @@ export class BGSReport {
 
                 try {
                     let guild = await this.db.model.guild.findOneAndUpdate(
-                        { guild_id: guildId },
+                        {guild_id: guildId},
                         {
                             updated_at: new Date(),
-                            $unset: { bgs_time: 1 }
+                            $unset: {bgs_time: 1}
                         });
                     if (guild) {
                         message.channel.send(Responses.getResponse(Responses.SUCCESS));
@@ -226,18 +225,16 @@ export class BGSReport {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
                             message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
                         } catch (err) {
-                            App.bugsnagClient.client.notify(err, {
+                            App.bugsnagClient.call(err, {
                                 metaData: {
                                     guild: guild._id
                                 }
                             });
-                            console.log(err);
                         }
                     }
                 } catch (err) {
                     message.channel.send(Responses.getResponse(Responses.FAIL));
-                    App.bugsnagClient.client.notify(err);
-                    console.log(err);
+                    App.bugsnagClient.call(err);
                 }
             } else {
                 message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
@@ -253,10 +250,9 @@ export class BGSReport {
             this.tickTime = (await tick.getTickData()).updated_at;
         } catch (err) {
             this.tickTime = "";
-            App.bugsnagClient.client.notify(err);
-            console.log(err);
+            App.bugsnagClient.call(err);
         }
-        let guild = await this.db.model.guild.findOne({ guild_id: guildId });
+        let guild = await this.db.model.guild.findOne({guild_id: guildId});
         if (guild) {
             let fdevIds = await FdevIds.getIds();
             let primaryFactions: string[] = [];
@@ -287,7 +283,7 @@ export class BGSReport {
                 primarySystemPromises.push((async () => {
                     let requestOptions: OptionsWithUrl = {
                         url: "https://elitebgs.app/api/ebgs/v4/systems",
-                        qs: { name: system.toLowerCase() },
+                        qs: {name: system.toLowerCase()},
                         json: true,
                         resolveWithFullResponse: true
                     }
@@ -313,7 +309,7 @@ export class BGSReport {
                                     primaryFactionPromises.push((async () => {
                                         let requestOptions: OptionsWithUrl = {
                                             url: "https://elitebgs.app/api/ebgs/v4/factions",
-                                            qs: { name: faction.name_lower, count: 2 },
+                                            qs: {name: faction.name_lower, count: 2},
                                             json: true,
                                             resolveWithFullResponse: true
                                         }
@@ -403,7 +399,7 @@ export class BGSReport {
                                     secondaryFactionPromises.push((async () => {
                                         let requestOptions: OptionsWithUrl = {
                                             url: "https://elitebgs.app/api/ebgs/v4/factions",
-                                            qs: { name: faction.name_lower },
+                                            qs: {name: faction.name_lower},
                                             json: true,
                                             resolveWithFullResponse: true
                                         }
@@ -574,7 +570,7 @@ export class BGSReport {
                 secondarySystemPromises.push((async () => {
                     let requestOptions: OptionsWithUrl = {
                         url: "https://elitebgs.app/api/ebgs/v4/systems",
-                        qs: { name: system.toLowerCase() },
+                        qs: {name: system.toLowerCase()},
                         json: true,
                         resolveWithFullResponse: true
                     }
@@ -600,7 +596,7 @@ export class BGSReport {
                                     primaryFactionPromises.push((async () => {
                                         let requestOptions: OptionsWithUrl = {
                                             url: "https://elitebgs.app/api/ebgs/v4/factions",
-                                            qs: { name: faction.name_lower },
+                                            qs: {name: faction.name_lower},
                                             json: true,
                                             resolveWithFullResponse: true
                                         }
@@ -671,7 +667,7 @@ export class BGSReport {
                                     secondaryFactionPromises.push((async () => {
                                         let requestOptions: OptionsWithUrl = {
                                             url: "https://elitebgs.app/api/ebgs/v4/factions",
-                                            qs: { name: faction.name_lower },
+                                            qs: {name: faction.name_lower},
                                             json: true,
                                             resolveWithFullResponse: true
                                         }
@@ -866,7 +862,7 @@ export class BGSReport {
                     unusedFactionFetchPromises.push((async () => {
                         let requestOptions: OptionsWithUrl = {
                             url: "https://elitebgs.app/api/ebgs/v4/factions",
-                            qs: { name: faction.toLowerCase() },
+                            qs: {name: faction.toLowerCase()},
                             json: true,
                             resolveWithFullResponse: true
                         }

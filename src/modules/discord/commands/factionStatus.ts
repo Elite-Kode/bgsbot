@@ -16,13 +16,13 @@
 
 import * as discord from 'discord.js';
 import * as request from 'request-promise-native';
+import { FullResponse, OptionsWithUrl } from 'request-promise-native';
 import * as moment from 'moment';
 import App from '../../../server';
 import { Responses } from '../responseDict';
-import { DB } from '../../../db/index';
-import { Access } from './../access';
-import { EBGSFactionsV4WOHistory, FieldRecordSchema, EBGSSystemsV4WOHistory, EBGSFactionsV4 } from "../../../interfaces/typings";
-import { OptionsWithUrl, FullResponse } from 'request-promise-native';
+import { DB } from '../../../db';
+import { Access } from '../access';
+import { EBGSFactionsV4, EBGSSystemsV4WOHistory, FieldRecordSchema } from "../../../interfaces/typings";
 import { StringHandlers } from '../../../stringHandlers';
 import { FdevIds } from '../../../fdevids';
 import { Tick } from './tick';
@@ -30,10 +30,12 @@ import { Tick } from './tick';
 export class FactionStatus {
     db: DB;
     tickTime: string;
+
     constructor() {
         this.db = App.db;
         this.tickTime = "";
     }
+
     exec(message: discord.Message, commandArguments: string): void {
         let argsArray: string[] = [];
         if (commandArguments.length !== 0) {
@@ -59,7 +61,7 @@ export class FactionStatus {
 
                 let requestOptions: OptionsWithUrl = {
                     url: "https://elitebgs.app/api/ebgs/v4/factions",
-                    qs: { name: factionName, count: 2 },
+                    qs: {name: factionName, count: 2},
                     json: true,
                     resolveWithFullResponse: true
                 }
@@ -74,8 +76,7 @@ export class FactionStatus {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
                             message.channel.send("Faction not found");
                         } catch (err) {
-                            App.bugsnagClient.client.notify(err);
-                            console.log(err);
+                            App.bugsnagClient.call(err);
                         }
                     } else {
                         let fdevIds = await FdevIds.getIds();
@@ -87,7 +88,7 @@ export class FactionStatus {
                         presence.forEach(system => {
                             let requestOptions: OptionsWithUrl = {
                                 url: "https://elitebgs.app/api/ebgs/v4/systems",
-                                qs: { name: system.system_name_lower },
+                                qs: {name: system.system_name_lower},
                                 json: true,
                                 resolveWithFullResponse: true
                             }
@@ -100,8 +101,7 @@ export class FactionStatus {
                                             await message.channel.send(Responses.getResponse(Responses.FAIL));
                                             return [system.system_name, "System status not found", system.system_name, 0] as [string, string, string, number];
                                         } catch (err) {
-                                            App.bugsnagClient.client.notify(err);
-                                            console.log(err);
+                                            App.bugsnagClient.call(err);
                                         }
                                     } else {
                                         let responseSystem = body.docs[0];
@@ -191,7 +191,7 @@ export class FactionStatus {
                                     name: system[2]
                                 });
                             });
-                            let guild = await this.db.model.guild.findOne({ guild_id: message.guild.id });
+                            let guild = await this.db.model.guild.findOne({guild_id: message.guild.id});
                             if (guild) {
                                 if (guild.sort && guild.sort_order && guild.sort_order !== 0) {
                                     fieldRecord.sort((a, b) => {
@@ -251,12 +251,11 @@ export class FactionStatus {
                                     try {
                                         message.channel.send(embed);
                                     } catch (err) {
-                                        App.bugsnagClient.client.notify(err, {
+                                        App.bugsnagClient.call(err, {
                                             metaData: {
                                                 guild: guild._id
                                             }
                                         });
-                                        console.log(err);
                                     }
                                 }
                             } else {
@@ -264,23 +263,20 @@ export class FactionStatus {
                                     await message.channel.send(Responses.getResponse(Responses.FAIL));
                                     message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
                                 } catch (err) {
-                                    App.bugsnagClient.client.notify(err, {
+                                    App.bugsnagClient.call(err, {
                                         metaData: {
                                             guild: guild._id
                                         }
                                     });
-                                    console.log(err);
                                 }
                             }
                         } catch (err) {
                             message.channel.send(Responses.getResponse(Responses.FAIL));
-                            App.bugsnagClient.client.notify(err);
-                            console.log(err);
+                            App.bugsnagClient.call(err);
                         }
                     }
                 } else {
-                    App.bugsnagClient.client.notify(response.statusMessage);
-                    console.log(response.statusMessage);
+                    App.bugsnagClient.call(response.statusMessage);
                 }
             } else {
                 message.channel.send(Responses.getResponse(Responses.NOPARAMS));

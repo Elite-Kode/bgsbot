@@ -17,14 +17,16 @@
 import * as discord from 'discord.js';
 import App from '../../../server';
 import { Responses } from '../responseDict';
-import { DB } from '../../../db/index';
-import { Access } from './../access';
+import { DB } from '../../../db';
+import { Access } from '../access';
 
 export class Theme {
     db: DB;
+
     constructor() {
         this.db = App.db;
     }
+
     exec(message: discord.Message, commandArguments: string): void {
         let argsArray: string[] = [];
         if (commandArguments.length !== 0) {
@@ -52,7 +54,7 @@ export class Theme {
                 if ((theme === 'light' || theme === 'dark')) {
                     try {
                         let guild = await this.db.model.guild.findOneAndUpdate(
-                            { guild_id: guildId },
+                            {guild_id: guildId},
                             {
                                 updated_at: new Date(),
                                 theme: theme
@@ -64,26 +66,23 @@ export class Theme {
                                 await message.channel.send(Responses.getResponse(Responses.FAIL));
                                 message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
                             } catch (err) {
-                                App.bugsnagClient.client.notify(err, {
+                                App.bugsnagClient.call(err, {
                                     metaData: {
                                         guild: guild._id
                                     }
                                 });
-                                console.log(err);
                             }
                         }
                     } catch (err) {
                         message.channel.send(Responses.getResponse(Responses.FAIL));
-                        App.bugsnagClient.client.notify(err);
-                        console.log(err);
+                        App.bugsnagClient.call(err);
                     }
                 } else {
                     try {
                         await message.channel.send(Responses.getResponse(Responses.FAIL));
                         message.channel.send("Theme name is incorrect.");
                     } catch (err) {
-                        App.bugsnagClient.client.notify(err);
-                        console.log(err);
+                        App.bugsnagClient.call(err);
                     }
                 }
             } else if (argsArray.length > 2) {
@@ -104,7 +103,7 @@ export class Theme {
 
                 try {
                     let guild = await this.db.model.guild.findOneAndUpdate(
-                        { guild_id: guildId },
+                        {guild_id: guildId},
                         {
                             updated_at: new Date(),
                             $unset: {
@@ -118,18 +117,16 @@ export class Theme {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
                             message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
                         } catch (err) {
-                            App.bugsnagClient.client.notify(err, {
+                            App.bugsnagClient.call(err, {
                                 metaData: {
                                     guild: guild._id
                                 }
                             });
-                            console.log(err);
                         }
                     }
                 } catch (err) {
                     message.channel.send(Responses.getResponse(Responses.FAIL));
-                    App.bugsnagClient.client.notify(err);
-                    console.log(err);
+                    App.bugsnagClient.call(err);
                 }
             } else {
                 message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
@@ -146,7 +143,7 @@ export class Theme {
                 let guildId = message.guild.id;
 
                 try {
-                    let guild = await this.db.model.guild.findOne({ guild_id: guildId });
+                    let guild = await this.db.model.guild.findOne({guild_id: guildId});
                     if (guild) {
                         if (guild.theme) {
                             let embed = new discord.RichEmbed();
@@ -157,24 +154,23 @@ export class Theme {
                             try {
                                 message.channel.send(embed);
                             } catch (err) {
-                                App.bugsnagClient.client.notify(err, {
+                                App.bugsnagClient.call(err, {
                                     metaData: {
                                         guild: guild._id
                                     }
                                 });
-                                console.log(err);
                             }
                         } else {
                             try {
                                 await message.channel.send(Responses.getResponse(Responses.FAIL));
-                                message.channel.send("You don't have sorting set up");;
+                                message.channel.send("You don't have sorting set up");
+                                ;
                             } catch (err) {
-                                App.bugsnagClient.client.notify(err, {
+                                App.bugsnagClient.call(err, {
                                     metaData: {
                                         guild: guild._id
                                     }
                                 });
-                                console.log(err);
                             }
                         }
                     } else {
@@ -182,18 +178,16 @@ export class Theme {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
                             message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
                         } catch (err) {
-                            App.bugsnagClient.client.notify(err, {
+                            App.bugsnagClient.call(err, {
                                 metaData: {
                                     guild: guild._id
                                 }
                             });
-                            console.log(err);
                         }
                     }
                 } catch (err) {
                     message.channel.send(Responses.getResponse(Responses.FAIL));
-                    App.bugsnagClient.client.notify(err);
-                    console.log(err);
+                    App.bugsnagClient.call(err);
                 }
             } else {
                 message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));

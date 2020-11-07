@@ -16,18 +16,20 @@
 
 import * as discord from 'discord.js';
 import * as request from 'request-promise-native';
+import { FullResponse, OptionsWithUrl } from 'request-promise-native';
 import App from '../../../server';
 import { Responses } from '../responseDict';
-import { DB } from '../../../db/index';
-import { Access } from './../access';
+import { DB } from '../../../db';
+import { Access } from '../access';
 import { EBGSSystemsV4WOHistory } from "../../../interfaces/typings";
-import { OptionsWithUrl, FullResponse } from 'request-promise-native';
 
 export class MonitorSystems {
     db: DB;
+
     constructor() {
         this.db = App.db;
     }
+
     exec(message: discord.Message, commandArguments: string): void {
         let argsArray: string[] = [];
         if (commandArguments.length !== 0) {
@@ -53,7 +55,7 @@ export class MonitorSystems {
                 let systemName = argsArray.slice(1).join(" ");
                 let requestOptions: OptionsWithUrl = {
                     url: "https://elitebgs.app/api/ebgs/v4/systems",
-                    qs: { name: systemName },
+                    qs: {name: systemName},
                     json: true,
                     resolveWithFullResponse: true
                 }
@@ -66,8 +68,7 @@ export class MonitorSystems {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
                             message.channel.send("System not found");
                         } catch (err) {
-                            App.bugsnagClient.client.notify(err);
-                            console.log(err);
+                            App.bugsnagClient.call(err);
                         }
                     } else {
                         let responseSystem = body.docs[0];
@@ -85,10 +86,10 @@ export class MonitorSystems {
                         }
                         try {
                             let guild = await this.db.model.guild.findOneAndUpdate(
-                                { guild_id: guildId },
+                                {guild_id: guildId},
                                 {
                                     updated_at: new Date(),
-                                    $addToSet: { monitor_systems: monitorSystems }
+                                    $addToSet: {monitor_systems: monitorSystems}
                                 });
                             if (guild) {
                                 message.channel.send(Responses.getResponse(Responses.SUCCESS));
@@ -97,23 +98,20 @@ export class MonitorSystems {
                                     await message.channel.send(Responses.getResponse(Responses.FAIL));
                                     message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
                                 } catch (err) {
-                                    App.bugsnagClient.client.notify(err, {
+                                    App.bugsnagClient.call(err, {
                                         metaData: {
                                             guild: guild._id
                                         }
                                     });
-                                    console.log(err);
                                 }
                             }
                         } catch (err) {
                             message.channel.send(Responses.getResponse(Responses.FAIL));
-                            App.bugsnagClient.client.notify(err);
-                            console.log(err);
+                            App.bugsnagClient.call(err);
                         }
                     }
                 } else {
-                    App.bugsnagClient.client.notify(response.statusMessage);
-                    console.log(response.statusMessage);
+                    App.bugsnagClient.call(response.statusMessage);
                 }
             } else {
                 message.channel.send(Responses.getResponse(Responses.NOPARAMS));
@@ -136,10 +134,10 @@ export class MonitorSystems {
 
                 try {
                     let guild = await this.db.model.guild.findOneAndUpdate(
-                        { guild_id: guildId },
+                        {guild_id: guildId},
                         {
                             updated_at: new Date(),
-                            $pull: { monitor_systems: { system_name_lower: systemName } }
+                            $pull: {monitor_systems: {system_name_lower: systemName}}
                         });
                     if (guild) {
                         message.channel.send(Responses.getResponse(Responses.SUCCESS));
@@ -148,18 +146,16 @@ export class MonitorSystems {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
                             message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
                         } catch (err) {
-                            App.bugsnagClient.client.notify(err, {
+                            App.bugsnagClient.call(err, {
                                 metaData: {
                                     guild: guild._id
                                 }
                             });
-                            console.log(err);
                         }
                     }
                 } catch (err) {
                     message.channel.send(Responses.getResponse(Responses.FAIL));
-                    App.bugsnagClient.client.notify(err);
-                    console.log(err);
+                    App.bugsnagClient.call(err);
                 }
             } else {
                 message.channel.send(Responses.getResponse(Responses.NOPARAMS));
@@ -176,7 +172,7 @@ export class MonitorSystems {
                 let guildId = message.guild.id;
 
                 try {
-                    let guild = await this.db.model.guild.findOne({ guild_id: guildId });
+                    let guild = await this.db.model.guild.findOne({guild_id: guildId});
                     if (guild) {
                         if (guild.monitor_systems && guild.monitor_systems.length !== 0) {
                             let embed = new discord.RichEmbed();
@@ -195,24 +191,22 @@ export class MonitorSystems {
                             try {
                                 message.channel.send(embed);
                             } catch (err) {
-                                App.bugsnagClient.client.notify(err, {
+                                App.bugsnagClient.call(err, {
                                     metaData: {
                                         guild: guild._id
                                     }
                                 });
-                                console.log(err);
                             }
                         } else {
                             try {
                                 await message.channel.send(Responses.getResponse(Responses.FAIL));
                                 message.channel.send("You don't have any monitored system set up");
                             } catch (err) {
-                                App.bugsnagClient.client.notify(err, {
+                                App.bugsnagClient.call(err, {
                                     metaData: {
                                         guild: guild._id
                                     }
                                 });
-                                console.log(err);
                             }
                         }
                     } else {
@@ -220,18 +214,16 @@ export class MonitorSystems {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
                             message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
                         } catch (err) {
-                            App.bugsnagClient.client.notify(err, {
+                            App.bugsnagClient.call(err, {
                                 metaData: {
                                     guild: guild._id
                                 }
                             });
-                            console.log(err);
                         }
                     }
                 } catch (err) {
                     message.channel.send(Responses.getResponse(Responses.FAIL));
-                    App.bugsnagClient.client.notify(err);
-                    console.log(err);
+                    App.bugsnagClient.call(err);
                 }
             } else {
                 message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));

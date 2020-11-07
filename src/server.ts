@@ -20,10 +20,11 @@ import * as logger from 'morgan';
 import IndexRouter from './routes/index';
 import { DiscordClient } from './modules/discord/client';
 import { DB } from './db';
-import { AutoReport } from './modules/cron/index';
-import { TickDetector } from './modules/listener/index';
+import { AutoReport } from './modules/cron';
+import { TickDetector } from './modules/listener';
 import { BugsnagClient } from './bugsnag';
 import { FdevIds } from './fdevids';
+import { BugsnagSecrets } from './secrets';
 
 class App {
     public express: express.Application;
@@ -34,9 +35,11 @@ class App {
 
     constructor() {
         this.express = express();
-        this.bugsnagClient = new BugsnagClient();
-        this.bugsnagClientMiddleware = this.bugsnagClient.client.getPlugin('express');
-        this.express.use(this.bugsnagClientMiddleware.requestHandler);
+        if (BugsnagSecrets.use) {
+            this.bugsnagClient = new BugsnagClient();
+            this.bugsnagClientMiddleware = this.bugsnagClient.client.getPlugin('express');
+            this.express.use(this.bugsnagClientMiddleware.requestHandler);
+        }
         this.middleware();
         this.routes();
         this.discordClient = new DiscordClient();
@@ -47,7 +50,9 @@ class App {
     }
 
     private middleware(): void {
-        this.express.use(this.bugsnagClientMiddleware.errorHandler);
+        if (BugsnagSecrets.use) {
+            this.express.use(this.bugsnagClientMiddleware.errorHandler);
+        }
         this.express.use(logger('dev'));
     }
 
@@ -60,8 +65,7 @@ class App {
             let guilds = await this.db.model.guild.find();
             AutoReport.initiateJob(guilds, this.discordClient.client);
         } catch (err) {
-            this.bugsnagClient.client.notify(err);
-            console.log(err);
+            this.bugsnagClient.call(err);
         }
     }
 
@@ -70,8 +74,7 @@ class App {
             let guilds = await this.db.model.guild.find();
             TickDetector.initiateSocket(guilds, this.discordClient.client);
         } catch (err) {
-            this.bugsnagClient.client.notify(err);
-            console.log(err);
+            this.bugsnagClient.call(err);
         }
     }
 
@@ -79,8 +82,7 @@ class App {
         try {
             FdevIds.initialiseIds();
         } catch (err) {
-            this.bugsnagClient.client.notify(err);
-            console.log(err);
+            this.bugsnagClient.call(err);
         }
     }
 }
