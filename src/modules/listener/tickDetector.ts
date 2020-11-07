@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import { io } from 'socket.io-client';
+import * as io from 'socket.io-client';
 import * as moment from 'moment';
 import App from '../../server';
 import { IGuildModel } from '../../db/models';
 import { Client, GuildChannel, MessageEmbed, TextChannel } from 'discord.js';
-import { Socket } from 'socket.io-client/build/socket';
+import { Socket } from 'socket.io';
 
 export class TickDetector {
     private static socket: Socket;
