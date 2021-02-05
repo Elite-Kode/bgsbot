@@ -26,9 +26,9 @@ export class TickDetector {
     private static socket: Socket;
     private static db: DB
 
-    public static initiateSocket(client: Client) {
+    public static initiateSocket(db: DB, client: Client) {
         this.socket = io('http://tick.phelbore.com:31173');
-        this.db = App.db;
+        this.db = db;
 
         this.socket.on('connect', () => {
             console.log('Connected to Tick Detector');

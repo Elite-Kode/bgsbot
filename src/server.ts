@@ -71,7 +71,7 @@ class App {
 
     private async listener() {
         try {
-            TickDetector.initiateSocket(this.discordClient.client);
+            TickDetector.initiateSocket(this.db, this.discordClient.client);
         } catch (err) {
             this.bugsnagClient.call(err);
         }
