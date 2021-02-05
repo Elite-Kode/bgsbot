@@ -71,8 +71,7 @@ class App {
 
     private async listener() {
         try {
-            let guilds = await this.db.model.guild.find();
-            TickDetector.initiateSocket(guilds, this.discordClient.client);
+            TickDetector.initiateSocket(this.discordClient.client);
         } catch (err) {
             this.bugsnagClient.call(err);
         }

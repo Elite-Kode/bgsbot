@@ -17,26 +17,29 @@
 import * as io from 'socket.io-client';
 import * as moment from 'moment';
 import App from '../../server';
-import { IGuildModel } from '../../db/models';
 import { Client, GuildChannel, MessageEmbed, Permissions, TextChannel } from 'discord.js';
 import { Socket } from 'socket.io';
-import { Responses } from "../discord/responseDict";
+import { Responses } from '../discord/responseDict';
+import { DB } from '../../db';
 
 export class TickDetector {
     private static socket: Socket;
-    private static guilds: IGuildModel[];
+    private static db: DB
 
-    public static initiateSocket(guilds: IGuildModel[], client: Client) {
+    public static initiateSocket(client: Client) {
         this.socket = io('http://tick.phelbore.com:31173');
-        this.guilds = guilds;
+        this.db = App.db;
 
         this.socket.on('connect', () => {
             console.log('Connected to Tick Detector');
         });
 
-        this.socket.on('tick', (data) => {
+        this.socket.on('tick', async (data) => {
             let tickTime = new Date(data);
-            for (let guild of this.guilds) {
+            let guilds = await this.db.model.guild.find({
+                announce_tick: true
+            }).lean();
+            for (let guild of guilds) {
                 try {
                     if (guild.announce_tick && guild.bgs_channel_id && guild.bgs_channel_id.length > 0) {
                         let bgsChannel: GuildChannel = client.guilds.cache.get(guild.guild_id).channels.cache.get(guild.bgs_channel_id);
@@ -73,22 +76,5 @@ export class TickDetector {
                 }
             }
         });
-    }
-
-    public static addGuildToSocket(guild: IGuildModel) {
-        if (this.guilds.findIndex(element => {
-            return element.guild_id === guild.guild_id;
-        }) === -1) {
-            this.guilds.push(guild)
-        }
-    }
-
-    public static removeGuildFromSocket(guild: IGuildModel) {
-        let index = this.guilds.findIndex(element => {
-            return element.guild_id === guild.guild_id;
-        });
-        if (index !== -1) {
-            this.guilds.splice(index)
-        }
     }
 }

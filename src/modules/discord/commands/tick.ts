@@ -102,7 +102,6 @@ export class Tick {
                         });
                     if (guild) {
                         message.channel.send(Responses.getResponse(Responses.SUCCESS));
-                        TickDetector.addGuildToSocket(guild)
                     } else {
                         try {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
@@ -142,7 +141,6 @@ export class Tick {
                         });
                     if (guild) {
                         message.channel.send(Responses.getResponse(Responses.SUCCESS));
-                        TickDetector.removeGuildFromSocket(guild)
                     } else {
                         try {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
