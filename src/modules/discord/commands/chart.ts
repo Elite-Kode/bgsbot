@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Message, MessageAttachment } from 'discord.js';
+import { Message, MessageAttachment, Permissions } from 'discord.js';
 import * as request from 'request-promise-native';
 import { FullResponse, OptionsWithUrl } from 'request-promise-native';
 import * as contentDisposition from 'content-disposition';
@@ -65,32 +65,45 @@ export class Chart {
                 try {
                     let guild = await this.db.model.guild.findOne({guild_id: message.guild.id});
                     if (guild) {
-                        let theme = 'light';
-                        if (guild.theme) {
-                            theme = guild.theme;
-                        }
-                        let requestOptions: OptionsWithUrl = {
-                            url: url,
-                            qs: {
-                                name: name,
-                                timemin: timenow - 10 * 24 * 60 * 60 * 1000,
-                                timemax: timenow,
-                                theme: theme
-                            },
-                            encoding: null,
-                            resolveWithFullResponse: true
-                        }
+                        let flags = Permissions.FLAGS;
+                        if (message.guild.me.permissionsIn(message.channel).has([flags.EMBED_LINKS, flags.ATTACH_FILES])) {
+                            let theme = 'light';
+                            if (guild.theme) {
+                                theme = guild.theme;
+                            }
+                            let requestOptions: OptionsWithUrl = {
+                                url: url,
+                                qs: {
+                                    name: name,
+                                    timemin: timenow - 10 * 24 * 60 * 60 * 1000,
+                                    timemax: timenow,
+                                    theme: theme
+                                },
+                                encoding: null,
+                                resolveWithFullResponse: true
+                            }
 
-                        let response: FullResponse = await request.get(requestOptions);
-                        if (response.statusCode === 200) {
-                            let attachment = new MessageAttachment(response.body as Buffer, contentDisposition.parse(response.headers['content-disposition']).parameters.filename);
-                            message.channel.send(attachment);
+                            let response: FullResponse = await request.get(requestOptions);
+                            if (response.statusCode === 200) {
+                                let attachment = new MessageAttachment(response.body as Buffer, contentDisposition.parse(response.headers['content-disposition']).parameters.filename);
+                                message.channel.send(attachment);
+                            } else {
+                                App.bugsnagClient.call(response.statusMessage, {
+                                    metaData: {
+                                        guild: guild._id
+                                    }
+                                });
+                            }
                         } else {
-                            App.bugsnagClient.call(response.statusMessage, {
-                                metaData: {
-                                    guild: guild._id
-                                }
-                            });
+                            try {
+                                message.channel.send(Responses.getResponse(Responses.EMBEDPERMISSION));
+                            } catch (err) {
+                                App.bugsnagClient.call(err, {
+                                    metaData: {
+                                        guild: guild._id
+                                    }
+                                });
+                            }
                         }
                     } else {
                         try {

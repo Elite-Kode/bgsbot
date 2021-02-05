@@ -21,7 +21,7 @@ import { Responses } from '../responseDict';
 import { DB } from '../../../db';
 import { Access } from '../access';
 import { EBGSSystemsV4WOHistory } from "../../../interfaces/typings";
-import { Message, MessageEmbed } from "discord.js";
+import { Message, MessageEmbed, Permissions } from "discord.js";
 
 export class MonitorSystems {
     db: DB;
@@ -175,27 +175,40 @@ export class MonitorSystems {
                     let guild = await this.db.model.guild.findOne({guild_id: guildId});
                     if (guild) {
                         if (guild.monitor_systems && guild.monitor_systems.length !== 0) {
-                            let embed = new MessageEmbed();
-                            embed.setTitle("MONITORED SYSTEMS");
-                            embed.setColor([255, 0, 255]);
-                            let systemList = "";
-                            guild.monitor_systems.forEach(system => {
-                                systemList += `${system.system_name}`;
-                                if (system.primary) {
-                                    systemList += ` | PRIMARY`;
-                                }
-                                systemList += `\n`;
-                            });
-                            embed.addField("Systems", systemList);
-                            embed.setTimestamp(new Date());
-                            try {
-                                message.channel.send(embed);
-                            } catch (err) {
-                                App.bugsnagClient.call(err, {
-                                    metaData: {
-                                        guild: guild._id
+                            let flags = Permissions.FLAGS;
+                            if (message.guild.me.permissionsIn(message.channel).has([flags.EMBED_LINKS])) {
+                                let embed = new MessageEmbed();
+                                embed.setTitle("MONITORED SYSTEMS");
+                                embed.setColor([255, 0, 255]);
+                                let systemList = "";
+                                guild.monitor_systems.forEach(system => {
+                                    systemList += `${system.system_name}`;
+                                    if (system.primary) {
+                                        systemList += ` | PRIMARY`;
                                     }
+                                    systemList += `\n`;
                                 });
+                                embed.addField("Systems", systemList);
+                                embed.setTimestamp(new Date());
+                                try {
+                                    message.channel.send(embed);
+                                } catch (err) {
+                                    App.bugsnagClient.call(err, {
+                                        metaData: {
+                                            guild: guild._id
+                                        }
+                                    });
+                                }
+                            } else {
+                                try {
+                                    message.channel.send(Responses.getResponse(Responses.EMBEDPERMISSION));
+                                } catch (err) {
+                                    App.bugsnagClient.call(err, {
+                                        metaData: {
+                                            guild: guild._id
+                                        }
+                                    });
+                                }
                             }
                         } else {
                             try {

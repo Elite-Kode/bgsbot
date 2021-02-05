@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Message, MessageEmbed } from 'discord.js';
+import { Message, MessageEmbed, Permissions } from 'discord.js';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db';
@@ -57,6 +57,15 @@ export class BGSChannel {
 
                 if (message.guild.channels.cache.has(bgsChannelId)) {
                     try {
+                        let channel = message.guild.channels.cache.get(bgsChannelId)
+                        if (channel.type !== 'text') {
+                            try {
+                                await message.channel.send(Responses.getResponse(Responses.FAIL));
+                                message.channel.send(Responses.getResponse(Responses.NOTATEXTCHANNEL));
+                            } catch (err) {
+                                App.bugsnagClient.call(err);
+                            }
+                        }
                         let guild = await this.db.model.guild.findOneAndUpdate(
                             {guild_id: guildId},
                             {
@@ -69,6 +78,18 @@ export class BGSChannel {
                             try {
                                 await message.channel.send(Responses.getResponse(Responses.FAIL));
                                 message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
+                            } catch (err) {
+                                App.bugsnagClient.call(err, {
+                                    metaData: {
+                                        guild: guild._id
+                                    }
+                                });
+                            }
+                        }
+                        let flags = Permissions.FLAGS;
+                        if (!message.guild.me.permissionsIn(channel).has([flags.EMBED_LINKS, flags.SEND_MESSAGES])) {
+                            try {
+                                message.channel.send(Responses.getResponse(Responses.EMBEDPERMISSION));
                             } catch (err) {
                                 App.bugsnagClient.call(err, {
                                     metaData: {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Message, MessageEmbed } from 'discord.js';
+import { Message, MessageEmbed, Permissions } from 'discord.js';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db';
@@ -139,25 +139,39 @@ export class BGSRole {
                     let guild = await this.db.model.guild.findOne({guild_id: guildId});
                     if (guild) {
                         if (guild.bgs_role_id && guild.bgs_role_id.length !== 0) {
-                            let embed = new MessageEmbed();
-                            embed.setTitle("BGS Role");
-                            embed.setColor([255, 0, 255]);
-                            let id = "";
-                            if (message.guild.channels.cache.has(guild.bgs_channel_id)) {
-                                id = `${guild.bgs_role_id} - @${message.guild.roles.cache.get(guild.bgs_role_id).name}\n`;
+                            let flags = Permissions.FLAGS;
+                            if (message.guild.me.permissionsIn(message.channel).has([flags.EMBED_LINKS])) {
+                                let embed = new MessageEmbed();
+                                embed.setTitle("BGS Role");
+                                embed.setColor([255, 0, 255]);
+                                let id = "";
+                                if (message.guild.channels.cache.has(guild.bgs_channel_id)) {
+                                    id = `${guild.bgs_role_id} - @${message.guild.roles.cache.get(guild.bgs_role_id).name}\n`;
+                                } else {
+                                    id = `${guild.bgs_role_id} - Does not exist in Discord. Please delete this from BGSBot`;
+                                }
+                                embed.addField("Ids and Names", id);
+                                embed.setTimestamp(new Date());
+                                try {
+                                    message.channel.send(embed);
+                                } catch (err) {
+                                    App.bugsnagClient.call(err, {
+                                        metaData: {
+                                            guild: guild._id
+                                        }
+                                    });
+                                }
                             } else {
-                                id = `${guild.bgs_role_id} - Does not exist in Discord. Please delete this from BGSBot`;
-                            }
-                            embed.addField("Ids and Names", id);
-                            embed.setTimestamp(new Date());
-                            try {
-                                message.channel.send(embed);
-                            } catch (err) {
-                                App.bugsnagClient.call(err, {
-                                    metaData: {
-                                        guild: guild._id
-                                    }
-                                });
+                                try {
+                                    await message.channel.send(Responses.getResponse(Responses.EMBEDPERMISSION));
+                                    message.channel.send(guild.bgs_time);
+                                } catch (err) {
+                                    App.bugsnagClient.call(err, {
+                                        metaData: {
+                                            guild: guild._id
+                                        }
+                                    });
+                                }
                             }
                         } else {
                             try {

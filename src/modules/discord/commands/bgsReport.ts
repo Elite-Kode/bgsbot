@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Message, MessageEmbed, TextChannel } from 'discord.js';
+import { Message, MessageEmbed, Permissions, TextChannel } from 'discord.js';
 import * as request from 'request-promise-native';
 import { FullResponse, OptionsWithUrl } from 'request-promise-native';
 import * as moment from 'moment';
@@ -64,9 +64,18 @@ export class BGSReport {
             if (argsArray.length === 1) {
                 let guildId = message.guild.id;
                 try {
-                    let embedArray = await this.getBGSReportEmbed(guildId, message.channel as TextChannel);
-                    for (let index = 0; index < embedArray.length; index++) {
-                        await message.channel.send(embedArray[index]);
+                    let flags = Permissions.FLAGS;
+                    if (message.guild.me.permissionsIn(message.channel).has([flags.EMBED_LINKS])) {
+                        let embedArray = await this.getBGSReportEmbed(guildId, message.channel as TextChannel);
+                        for (let index = 0; index < embedArray.length; index++) {
+                            await message.channel.send(embedArray[index]);
+                        }
+                    } else {
+                        try {
+                            message.channel.send(Responses.getResponse(Responses.EMBEDPERMISSION));
+                        } catch (err) {
+                            App.bugsnagClient.call(err);
+                        }
                     }
                 } catch (err) {
                     message.channel.send(Responses.getResponse(Responses.FAIL));
@@ -153,19 +162,33 @@ export class BGSReport {
                     let guild = await this.db.model.guild.findOne({guild_id: guildId});
                     if (guild) {
                         if (guild.bgs_time && guild.bgs_time.length !== 0) {
-                            let embed = new MessageEmbed();
-                            embed.setTitle("BGS Reporting Time");
-                            embed.setColor([255, 0, 255]);
-                            embed.addField("Ids and Names", `${guild.bgs_time} UTC`);
-                            embed.setTimestamp(new Date());
-                            try {
-                                message.channel.send(embed);
-                            } catch (err) {
-                                App.bugsnagClient.call(err, {
-                                    metaData: {
-                                        guild: guild._id
-                                    }
-                                });
+                            let flags = Permissions.FLAGS;
+                            if (message.guild.me.permissionsIn(message.channel).has([flags.EMBED_LINKS])) {
+                                let embed = new MessageEmbed();
+                                embed.setTitle("BGS Reporting Time");
+                                embed.setColor([255, 0, 255]);
+                                embed.addField("Ids and Names", `${guild.bgs_time} UTC`);
+                                embed.setTimestamp(new Date());
+                                try {
+                                    message.channel.send(embed);
+                                } catch (err) {
+                                    App.bugsnagClient.call(err, {
+                                        metaData: {
+                                            guild: guild._id
+                                        }
+                                    });
+                                }
+                            } else {
+                                try {
+                                    await message.channel.send(Responses.getResponse(Responses.EMBEDPERMISSION));
+                                    message.channel.send(guild.bgs_time);
+                                } catch (err) {
+                                    App.bugsnagClient.call(err, {
+                                        metaData: {
+                                            guild: guild._id
+                                        }
+                                    });
+                                }
                             }
                         } else {
                             try {

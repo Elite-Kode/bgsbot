@@ -17,7 +17,7 @@
 import * as request from 'request-promise-native';
 import { FullResponse, OptionsWithUrl } from 'request-promise-native';
 import * as moment from 'moment';
-import { Message, MessageEmbed } from 'discord.js';
+import { Message, MessageEmbed, Permissions } from 'discord.js';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db';
@@ -53,22 +53,31 @@ export class Tick {
         try {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
             if (argsArray.length === 1) {
-                try {
-                    let lastTick = await this.getTickData();
-                    let embed = new MessageEmbed();
-                    embed.setTitle("Tick");
-                    embed.setColor([255, 0, 255]);
-                    let lastTickFormattedTime = moment(lastTick.time).utc().format('HH:mm');
-                    let lastTickFormattedDate = moment(lastTick.time).utc().format('Do MMM');
-                    embed.addField("Last Tick", lastTickFormattedTime + ' UTC - ' + lastTickFormattedDate);
-                    embed.setTimestamp(new Date(lastTick.time));
+                let flags = Permissions.FLAGS;
+                if (message.guild.me.permissionsIn(message.channel).has([flags.EMBED_LINKS])) {
                     try {
-                        message.channel.send(embed);
+                        let lastTick = await this.getTickData();
+                        let embed = new MessageEmbed();
+                        embed.setTitle("Tick");
+                        embed.setColor([255, 0, 255]);
+                        let lastTickFormattedTime = moment(lastTick.time).utc().format('HH:mm');
+                        let lastTickFormattedDate = moment(lastTick.time).utc().format('Do MMM');
+                        embed.addField("Last Tick", lastTickFormattedTime + ' UTC - ' + lastTickFormattedDate);
+                        embed.setTimestamp(new Date(lastTick.time));
+                        try {
+                            message.channel.send(embed);
+                        } catch (err) {
+                            App.bugsnagClient.call(err);
+                        }
                     } catch (err) {
                         App.bugsnagClient.call(err);
                     }
-                } catch (err) {
-                    App.bugsnagClient.call(err);
+                } else {
+                    try {
+                        message.channel.send(Responses.getResponse(Responses.EMBEDPERMISSION));
+                    } catch (err) {
+                        App.bugsnagClient.call(err);
+                    }
                 }
             } else {
                 message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Message, MessageEmbed } from 'discord.js';
+import { Message, MessageEmbed, Permissions } from 'discord.js';
 import * as request from 'request-promise-native';
 import { FullResponse, OptionsWithUrl } from 'request-promise-native';
 import App from '../../../server';
@@ -170,27 +170,40 @@ export class MonitorFactions {
                     let guild = await this.db.model.guild.findOne({guild_id: guildId});
                     if (guild) {
                         if (guild.monitor_factions && guild.monitor_factions.length !== 0) {
-                            let embed = new MessageEmbed();
-                            embed.setTitle("MONITORED FACTIONS");
-                            embed.setColor([255, 0, 255]);
-                            let factionList = "";
-                            guild.monitor_factions.forEach(faction => {
-                                factionList += `${faction.faction_name}`;
-                                if (faction.primary) {
-                                    factionList += ` | PRIMARY`;
-                                }
-                                factionList += `\n`;
-                            });
-                            embed.addField("Factions", factionList);
-                            embed.setTimestamp(new Date());
-                            try {
-                                message.channel.send(embed);
-                            } catch (err) {
-                                App.bugsnagClient.call(err, {
-                                    metaData: {
-                                        guild: guild._id
+                            let flags = Permissions.FLAGS;
+                            if (message.guild.me.permissionsIn(message.channel).has([flags.EMBED_LINKS])) {
+                                let embed = new MessageEmbed();
+                                embed.setTitle("MONITORED FACTIONS");
+                                embed.setColor([255, 0, 255]);
+                                let factionList = "";
+                                guild.monitor_factions.forEach(faction => {
+                                    factionList += `${faction.faction_name}`;
+                                    if (faction.primary) {
+                                        factionList += ` | PRIMARY`;
                                     }
+                                    factionList += `\n`;
                                 });
+                                embed.addField("Factions", factionList);
+                                embed.setTimestamp(new Date());
+                                try {
+                                    message.channel.send(embed);
+                                } catch (err) {
+                                    App.bugsnagClient.call(err, {
+                                        metaData: {
+                                            guild: guild._id
+                                        }
+                                    });
+                                }
+                            } else {
+                                try {
+                                    message.channel.send(Responses.getResponse(Responses.EMBEDPERMISSION));
+                                } catch (err) {
+                                    App.bugsnagClient.call(err, {
+                                        metaData: {
+                                            guild: guild._id
+                                        }
+                                    });
+                                }
                             }
                         } else {
                             try {

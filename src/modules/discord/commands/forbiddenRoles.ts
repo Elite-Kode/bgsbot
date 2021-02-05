@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Message, MessageEmbed } from 'discord.js';
+import { Message, MessageEmbed, Permissions } from 'discord.js';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db';
@@ -142,27 +142,40 @@ export class ForbiddenRoles {
                     let guild = await this.db.model.guild.findOne({guild_id: guildId});
                     if (guild) {
                         if (guild.forbidden_roles_id && guild.forbidden_roles_id.length !== 0) {
-                            let embed = new MessageEmbed();
-                            embed.setTitle("Forbidden Roles");
-                            embed.setColor([255, 0, 255]);
-                            let idList = "";
-                            guild.forbidden_roles_id.forEach(id => {
-                                if (message.guild.roles.cache.has(id)) {
-                                    idList += `${id} - @${message.guild.roles.cache.get(id).name}\n`;
-                                } else {
-                                    idList += `${id} - Does not exist in Discord. Please delete this from BGSBot`;
-                                }
-                            });
-                            embed.addField("Ids and Names", idList);
-                            embed.setTimestamp(new Date());
-                            try {
-                                message.channel.send(embed);
-                            } catch (err) {
-                                App.bugsnagClient.call(err, {
-                                    metaData: {
-                                        guild: guild._id
+                            let flags = Permissions.FLAGS;
+                            if (message.guild.me.permissionsIn(message.channel).has([flags.EMBED_LINKS])) {
+                                let embed = new MessageEmbed();
+                                embed.setTitle("Forbidden Roles");
+                                embed.setColor([255, 0, 255]);
+                                let idList = "";
+                                guild.forbidden_roles_id.forEach(id => {
+                                    if (message.guild.roles.cache.has(id)) {
+                                        idList += `${id} - @${message.guild.roles.cache.get(id).name}\n`;
+                                    } else {
+                                        idList += `${id} - Does not exist in Discord. Please delete this from BGSBot`;
                                     }
                                 });
+                                embed.addField("Ids and Names", idList);
+                                embed.setTimestamp(new Date());
+                                try {
+                                    message.channel.send(embed);
+                                } catch (err) {
+                                    App.bugsnagClient.call(err, {
+                                        metaData: {
+                                            guild: guild._id
+                                        }
+                                    });
+                                }
+                            } else {
+                                try {
+                                    message.channel.send(Responses.getResponse(Responses.EMBEDPERMISSION));
+                                } catch (err) {
+                                    App.bugsnagClient.call(err, {
+                                        metaData: {
+                                            guild: guild._id
+                                        }
+                                    });
+                                }
                             }
                         } else {
                             try {

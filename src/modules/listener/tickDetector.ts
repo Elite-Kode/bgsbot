@@ -18,8 +18,9 @@ import * as io from 'socket.io-client';
 import * as moment from 'moment';
 import App from '../../server';
 import { IGuildModel } from '../../db/models';
-import { Client, GuildChannel, MessageEmbed, TextChannel } from 'discord.js';
+import { Client, GuildChannel, MessageEmbed, Permissions, TextChannel } from 'discord.js';
 import { Socket } from 'socket.io';
+import { Responses } from "../discord/responseDict";
 
 export class TickDetector {
     private static socket: Socket;
@@ -40,14 +41,27 @@ export class TickDetector {
                     if (guild.announce_tick && guild.bgs_channel_id && guild.bgs_channel_id.length > 0) {
                         let bgsChannel: GuildChannel = client.guilds.cache.get(guild.guild_id).channels.cache.get(guild.bgs_channel_id);
                         if (bgsChannel && bgsChannel.type === 'text') {
-                            let embed = new MessageEmbed();
-                            embed.setTitle("Tick Detected");
-                            embed.setColor([255, 0, 255]);
-                            let lastTickFormattedTime = moment(tickTime).utc().format('HH:mm');
-                            let lastTickFormattedDate = moment(tickTime).utc().format('Do MMM');
-                            embed.addField("Latest Tick At", lastTickFormattedTime + ' UTC - ' + lastTickFormattedDate);
-                            embed.setTimestamp(new Date(tickTime));
-                            (bgsChannel as TextChannel).send(embed);
+                            let flags = Permissions.FLAGS;
+                            if (bgsChannel.guild.me.permissionsIn(bgsChannel).has([flags.EMBED_LINKS])) {
+                                let embed = new MessageEmbed();
+                                embed.setTitle("Tick Detected");
+                                embed.setColor([255, 0, 255]);
+                                let lastTickFormattedTime = moment(tickTime).utc().format('HH:mm');
+                                let lastTickFormattedDate = moment(tickTime).utc().format('Do MMM');
+                                embed.addField("Latest Tick At", lastTickFormattedTime + ' UTC - ' + lastTickFormattedDate);
+                                embed.setTimestamp(new Date(tickTime));
+                                (bgsChannel as TextChannel).send(embed);
+                            } else {
+                                try {
+                                    (bgsChannel as TextChannel).send(Responses.getResponse(Responses.EMBEDPERMISSION));
+                                } catch (err) {
+                                    App.bugsnagClient.call(err, {
+                                        metaData: {
+                                            guild: guild._id
+                                        }
+                                    });
+                                }
+                            }
                         }
                     }
                 } catch (err) {
@@ -57,7 +71,6 @@ export class TickDetector {
                         }
                     });
                 }
-                ;
             }
         });
     }

@@ -16,10 +16,11 @@
 
 import { CronJob } from 'cron';
 import { IGuildModel } from '../../db/models';
-import { Client, GuildChannel, TextChannel } from 'discord.js';
+import { Client, GuildChannel, Permissions, TextChannel } from 'discord.js';
 import { CronJobStore } from '../../interfaces/typings';
 import { BGSReport } from '../discord/commands';
 import App from '../../server';
+import { Responses } from "../discord/responseDict";
 
 export class AutoReport {
     private static jobs: CronJobStore[] = [];
@@ -81,10 +82,23 @@ export class AutoReport {
                     let cronJob = new CronJob(cronPattern, async () => {
                         let bgsChannel: GuildChannel = client.guilds.cache.get(guild.guild_id).channels.cache.get(guild.bgs_channel_id);
                         if (bgsChannel && bgsChannel.type === 'text') {
-                            let bgsReport = new BGSReport();
-                            let embedArray = await bgsReport.getBGSReportEmbed(guild.guild_id, bgsChannel as TextChannel);
-                            for (let index = 0; index < embedArray.length; index++) {
-                                await (bgsChannel as TextChannel).send(embedArray[index]);
+                            let flags = Permissions.FLAGS;
+                            if (bgsChannel.guild.me.permissionsIn(bgsChannel).has([flags.EMBED_LINKS])) {
+                                let bgsReport = new BGSReport();
+                                let embedArray = await bgsReport.getBGSReportEmbed(guild.guild_id, bgsChannel as TextChannel);
+                                for (let index = 0; index < embedArray.length; index++) {
+                                    await (bgsChannel as TextChannel).send(embedArray[index]);
+                                }
+                            } else {
+                                try {
+                                    (bgsChannel as TextChannel).send(Responses.getResponse(Responses.EMBEDPERMISSION));
+                                } catch (err) {
+                                    App.bugsnagClient.call(err, {
+                                        metaData: {
+                                            guild: guild._id
+                                        }
+                                    });
+                                }
                             }
                         } else {
                             console.log(`BGS Channel for Guild ${guild.guild_id} has not been set up`)
