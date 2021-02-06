@@ -59,6 +59,8 @@ export class SystemStatus {
         switch (command) {
             case 'g':
                 return 'get';
+            default:
+                return command;
         }
     }
 

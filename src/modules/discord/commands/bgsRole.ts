@@ -53,6 +53,8 @@ export class BGSRole {
                 return 'remove';
             case 'sh':
                 return 'show';
+            default:
+                return command;
         }
     }
 

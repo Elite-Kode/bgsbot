@@ -53,6 +53,8 @@ export class ForbiddenRoles {
                 return 'remove';
             case 'l':
                 return 'list';
+            default:
+                return command;
         }
     }
 

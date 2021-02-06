@@ -60,6 +60,8 @@ export class FactionStatus {
         switch (command) {
             case 'g':
                 return 'get';
+            default:
+                return command;
         }
     }
 

@@ -57,6 +57,8 @@ export class BGSChannel {
                 return 'remove';
             case 'sh':
                 return 'show';
+            default:
+                return command;
         }
     }
 

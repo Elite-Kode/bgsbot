@@ -51,6 +51,8 @@ export class MyGuild {
                 return 'set';
             case 'r':
                 return 'remove';
+            default:
+                return command;
         }
     }
 

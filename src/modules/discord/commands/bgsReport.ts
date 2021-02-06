@@ -66,6 +66,8 @@ export class BGSReport {
                 return 'showtime';
             case 'u':
                 return 'unsettime';
+            default:
+                return command;
         }
     }
 
