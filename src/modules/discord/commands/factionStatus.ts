@@ -22,7 +22,7 @@ import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db';
 import { Access } from '../access';
-import { EBGSFactionsV4, EBGSSystemsV4WOHistory, FieldRecordSchema } from "../../../interfaces/typings";
+import { EBGSFactionsDetailed, FieldRecordSchema } from "../../../interfaces/typings";
 import { StringHandlers } from '../../../stringHandlers';
 import { FdevIds } from '../../../fdevids';
 import { Tick } from './tick';
@@ -62,8 +62,12 @@ export class FactionStatus {
                     let factionName: string = argsArray.slice(1).join(" ").toLowerCase();
 
                     let requestOptions: OptionsWithUrl = {
-                        url: "https://elitebgs.app/api/ebgs/v4/factions",
-                        qs: {name: factionName, count: 2},
+                        url: "https://elitebgs.app/api/ebgs/v5/factions",
+                        qs: {
+                            name: factionName,
+                            systemDetails: true,
+                            count: 2
+                        },
                         json: true,
                         resolveWithFullResponse: true
                     }
@@ -72,7 +76,7 @@ export class FactionStatus {
                     this.tickTime = (await tick.getTickData()).updated_at;
                     let response: FullResponse = await request.get(requestOptions);
                     if (response.statusCode === 200) {
-                        let body: EBGSFactionsV4 = response.body;
+                        let body: EBGSFactionsDetailed = response.body;
                         if (body.total === 0) {
                             try {
                                 await message.channel.send(Responses.getResponse(Responses.FAIL));
@@ -86,111 +90,80 @@ export class FactionStatus {
                             let factionName = responseFaction.name;
                             let government = StringHandlers.titlify(responseFaction.government);
                             let presence = responseFaction.faction_presence;
-                            let systemPromises: Promise<[string, string, string, number]>[] = [];
-                            presence.forEach(system => {
-                                let requestOptions: OptionsWithUrl = {
-                                    url: "https://elitebgs.app/api/ebgs/v4/systems",
-                                    qs: {name: system.system_name_lower},
-                                    json: true,
-                                    resolveWithFullResponse: true
-                                }
-                                systemPromises.push((async () => {
-                                    let response: FullResponse = await request.get(requestOptions);
-                                    if (response.statusCode === 200) {
-                                        let body: EBGSSystemsV4WOHistory = response.body;
-                                        if (body.total === 0) {
-                                            try {
-                                                await message.channel.send(Responses.getResponse(Responses.FAIL));
-                                                return [system.system_name, "System status not found", system.system_name, 0] as [string, string, string, number];
-                                            } catch (err) {
-                                                App.bugsnagClient.call(err);
-                                            }
-                                        } else {
-                                            let responseSystem = body.docs[0];
-                                            let systemName = system.system_name;
-                                            let state = fdevIds.state[system.state].name;
-                                            let influence = system.influence;
-                                            let filtered = responseFaction.history.filter(systemEach => {
-                                                return systemEach.system_lower === system.system_name_lower;
-                                            });
-                                            let influenceDifference = 0;
-                                            if (filtered.length > 2) {
-                                                influenceDifference = influence - filtered[1].influence;
-                                            }
-                                            let happiness = fdevIds.happiness[system.happiness].name;
-                                            let activeStatesArray = system.active_states;
-                                            let pendingStatesArray = system.pending_states;
-                                            let recoveringStatesArray = system.recovering_states;
-                                            let factionDetail = "";
-                                            let influenceDifferenceText;
-                                            if (influenceDifference > 0) {
-                                                influenceDifferenceText = `📈${(influenceDifference * 100).toFixed(1)}%`;
-                                            } else if (influenceDifference < 0) {
-                                                influenceDifferenceText = `📉${(-influenceDifference * 100).toFixed(1)}%`;
-                                            } else {
-                                                influenceDifferenceText = `🔷${(influenceDifference * 100).toFixed(1)}%`;
-                                            }
-                                            let updateMoment = moment(responseSystem.updated_at);
-                                            let tickMoment = moment(this.tickTime);
-                                            let suffix = updateMoment.isAfter(tickMoment) ? "after" : "before";
-                                            factionDetail += `Last Updated : ${updateMoment.fromNow()}, ${updateMoment.from(tickMoment, true)} ${suffix} last detected tick \n`;
-                                            factionDetail += `State : ${state}\n`;
-                                            factionDetail += `Happiness: ${happiness}\n`;
-                                            factionDetail += `Influence : ${(influence * 100).toFixed(1)}%${influenceDifferenceText}\n`;
-                                            let activeStates: string = "";
-                                            if (activeStatesArray.length === 0) {
-                                                activeStates = "None";
-                                            } else {
-                                                activeStatesArray.forEach((activeState, index, factionActiveStates) => {
-                                                    activeStates = `${activeStates}${fdevIds.state[activeState.state].name}`;
-                                                    if (index !== factionActiveStates.length - 1) {
-                                                        activeStates = `${activeStates}, `
-                                                    }
-                                                });
-                                            }
-                                            factionDetail += `Active States : ${activeStates}\n`;
-                                            let pendingStates: string = "";
-                                            if (pendingStatesArray.length === 0) {
-                                                pendingStates = "None";
-                                            } else {
-                                                pendingStatesArray.forEach((pendingState, index, factionPendingStates) => {
-                                                    let trend = this.getTrendIcon(pendingState.trend);
-                                                    pendingStates = `${pendingStates}${fdevIds.state[pendingState.state].name}${trend}`;
-                                                    if (index !== factionPendingStates.length - 1) {
-                                                        pendingStates = `${pendingStates}, `
-                                                    }
-                                                });
-                                            }
-                                            factionDetail += `Pending States : ${pendingStates}\n`;
-                                            let recoveringStates: string = "";
-                                            if (recoveringStatesArray.length === 0) {
-                                                recoveringStates = "None";
-                                            } else {
-                                                recoveringStatesArray.forEach((recoveringState, index, factionRecoveringState) => {
-                                                    let trend = this.getTrendIcon(recoveringState.trend);
-                                                    recoveringStates = `${recoveringStates}${fdevIds.state[recoveringState.state].name}${trend}`;
-                                                    if (index !== factionRecoveringState.length - 1) {
-                                                        recoveringStates = `${recoveringStates}, `
-                                                    }
-                                                })
-                                            }
-                                            factionDetail += `Recovering States : ${recoveringStates}`;
-                                            return [systemName, factionDetail, systemName, influence] as [string, string, string, number];
-                                        }
-                                    } else {
-                                        throw new Error(response.statusMessage);
-                                    }
-                                })());
-                            });
+                            let tickMoment = moment(this.tickTime);
                             try {
-                                let systems = await Promise.all(systemPromises);
                                 let fieldRecord: FieldRecordSchema[] = [];
-                                systems.forEach(system => {
+                                presence.forEach(system => {
+                                    let state = fdevIds.state[system.state].name;
+                                    let influence = system.influence;
+                                    let filtered = responseFaction.history.filter(systemEach => {
+                                        return systemEach.system_lower === system.system_name_lower;
+                                    });
+                                    let influenceDifference = 0;
+                                    if (filtered.length > 2) {
+                                        influenceDifference = influence - filtered[1].influence;
+                                    }
+                                    let happiness = fdevIds.happiness[system.happiness].name;
+                                    let activeStatesArray = system.active_states;
+                                    let pendingStatesArray = system.pending_states;
+                                    let recoveringStatesArray = system.recovering_states;
+                                    let influenceDifferenceText;
+                                    if (influenceDifference > 0) {
+                                        influenceDifferenceText = `📈${(influenceDifference * 100).toFixed(1)}%`;
+                                    } else if (influenceDifference < 0) {
+                                        influenceDifferenceText = `📉${(-influenceDifference * 100).toFixed(1)}%`;
+                                    } else {
+                                        influenceDifferenceText = `🔷${(influenceDifference * 100).toFixed(1)}%`;
+                                    }
+                                    let updateMoment = moment(system.updated_at);
+                                    let suffix = updateMoment.isAfter(tickMoment) ? "after" : "before";
+                                    let factionDetail = `Last Updated : ${updateMoment.fromNow()}, ${updateMoment.from(tickMoment, true)} ${suffix} last detected tick \n`;
+                                    factionDetail += `State : ${state}\n`;
+                                    factionDetail += `Happiness: ${happiness}\n`;
+                                    factionDetail += `Influence : ${(influence * 100).toFixed(1)}%${influenceDifferenceText}\n`;
+                                    let activeStates: string = "";
+                                    if (activeStatesArray.length === 0) {
+                                        activeStates = "None";
+                                    } else {
+                                        activeStatesArray.forEach((activeState, index, factionActiveStates) => {
+                                            activeStates = `${activeStates}${fdevIds.state[activeState.state].name}`;
+                                            if (index !== factionActiveStates.length - 1) {
+                                                activeStates = `${activeStates}, `
+                                            }
+                                        });
+                                    }
+                                    factionDetail += `Active States : ${activeStates}\n`;
+                                    let pendingStates: string = "";
+                                    if (pendingStatesArray.length === 0) {
+                                        pendingStates = "None";
+                                    } else {
+                                        pendingStatesArray.forEach((pendingState, index, factionPendingStates) => {
+                                            let trend = this.getTrendIcon(pendingState.trend);
+                                            pendingStates = `${pendingStates}${fdevIds.state[pendingState.state].name}${trend}`;
+                                            if (index !== factionPendingStates.length - 1) {
+                                                pendingStates = `${pendingStates}, `
+                                            }
+                                        });
+                                    }
+                                    factionDetail += `Pending States : ${pendingStates}\n`;
+                                    let recoveringStates: string = "";
+                                    if (recoveringStatesArray.length === 0) {
+                                        recoveringStates = "None";
+                                    } else {
+                                        recoveringStatesArray.forEach((recoveringState, index, factionRecoveringState) => {
+                                            let trend = this.getTrendIcon(recoveringState.trend);
+                                            recoveringStates = `${recoveringStates}${fdevIds.state[recoveringState.state].name}${trend}`;
+                                            if (index !== factionRecoveringState.length - 1) {
+                                                recoveringStates = `${recoveringStates}, `
+                                            }
+                                        })
+                                    }
+                                    factionDetail += `Recovering States : ${recoveringStates}`;
                                     fieldRecord.push({
-                                        fieldTitle: system[0],
-                                        fieldDescription: system[1],
-                                        influence: system[3],
-                                        name: system[2]
+                                        fieldTitle: system.system_name,
+                                        fieldDescription: factionDetail,
+                                        name: system.system_name,
+                                        influence: system.influence
                                     });
                                 });
                                 let guild = await this.db.model.guild.findOne({guild_id: message.guild.id});

@@ -21,7 +21,7 @@ import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db';
 import { Access } from '../access';
-import { EBGSFactionsV4WOHistory } from "../../../interfaces/typings";
+import { EBGSFactionsMinimal } from "../../../interfaces/typings";
 
 export class MonitorFactions {
     db: DB;
@@ -54,15 +54,18 @@ export class MonitorFactions {
                 let guildId = message.guild.id;
                 let factionName = argsArray.slice(1).join(" ");
                 let requestOptions: OptionsWithUrl = {
-                    url: "https://elitebgs.app/api/ebgs/v4/factions",
-                    qs: {name: factionName},
+                    url: "https://elitebgs.app/api/ebgs/v5/factions",
+                    qs: {
+                        name: factionName,
+                        minimal: true
+                    },
                     json: true,
                     resolveWithFullResponse: true
                 }
 
                 let response: FullResponse = await request.get(requestOptions);
                 if (response.statusCode == 200) {
-                    let body: EBGSFactionsV4WOHistory = response.body;
+                    let body: EBGSFactionsMinimal = response.body;
                     if (body.total === 0) {
                         try {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));

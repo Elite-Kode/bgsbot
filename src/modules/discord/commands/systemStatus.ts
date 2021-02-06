@@ -22,7 +22,7 @@ import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db';
 import { Access } from '../access';
-import { EBGSFactionsV4WOHistory, EBGSSystemsV4WOHistory, FieldRecordSchema } from "../../../interfaces/typings";
+import { EBGSSystemsDetailed, FieldRecordSchema } from "../../../interfaces/typings";
 import { FdevIds } from '../../../fdevids';
 import { Tick } from './tick';
 
@@ -61,8 +61,13 @@ export class SystemStatus {
                     let systemName: string = argsArray.slice(1).join(" ").toLowerCase();
 
                     let requestOptions: OptionsWithUrl = {
-                        url: "https://elitebgs.app/api/ebgs/v4/systems",
-                        qs: {name: systemName},
+                        url: "https://elitebgs.app/api/ebgs/v5/systems",
+                        qs: {
+                            name: systemName,
+                            factionDetails: true,
+                            factionHistory: true,
+                            count: 2
+                        },
                         json: true,
                         resolveWithFullResponse: true
                     }
@@ -71,7 +76,7 @@ export class SystemStatus {
                     this.tickTime = (await tick.getTickData()).updated_at;
                     let response: FullResponse = await request.get(requestOptions);
                     if (response.statusCode == 200) {
-                        let body: EBGSSystemsV4WOHistory = response.body;
+                        let body: EBGSSystemsDetailed = response.body;
                         if (body.total === 0) {
                             try {
                                 await message.channel.send(Responses.getResponse(Responses.FAIL));
@@ -84,109 +89,74 @@ export class SystemStatus {
                             let responseSystem = body.docs[0];
                             let systemName = responseSystem.name;
                             let systemState = fdevIds.state[responseSystem.state].name;
-                            let controlling = responseSystem.controlling_minor_faction;
+                            let controlling = responseSystem.controlling_minor_faction_id;
                             let minorFactions = responseSystem.factions;
+                            let updateMoment = moment(responseSystem.updated_at);
+                            let tickMoment = moment(this.tickTime);
+                            let suffix = updateMoment.isAfter(tickMoment) ? "after" : "before";
                             if (systemState === null) {
                                 systemState = "None";
                             }
-                            let factionPromises: Promise<[string, string, string, number]>[] = [];
-                            minorFactions.forEach((faction) => {
-                                let requestOptions: OptionsWithUrl = {
-                                    url: "https://elitebgs.app/api/ebgs/v4/factions",
-                                    qs: {name: faction.name_lower},
-                                    json: true,
-                                    resolveWithFullResponse: true
-                                }
-                                factionPromises.push((async () => {
-                                    let response: FullResponse = await request.get(requestOptions);
-                                    if (response.statusCode == 200) {
-                                        let body: EBGSFactionsV4WOHistory = response.body;
-                                        if (body.total === 0) {
-                                            try {
-                                                await message.channel.send(Responses.getResponse(Responses.FAIL));
-                                                return [faction.name, "Faction status not found", faction.name, 0] as [string, string, string, number];
-                                            } catch (err) {
-                                                App.bugsnagClient.call(err);
-                                            }
-                                        } else {
-                                            let responseFaction = body.docs[0];
-                                            let factionName = responseFaction.name;
-                                            let factionNameLower = responseFaction.name_lower;
-                                            let systemIndex = responseFaction.faction_presence.findIndex(element => {
-                                                return element.system_name_lower === systemName.toLowerCase();
-                                            });
-                                            let state = fdevIds.state[responseFaction.faction_presence[systemIndex].state].name;
-                                            let influence = responseFaction.faction_presence[systemIndex].influence;
-                                            let happiness = fdevIds.happiness[responseFaction.faction_presence[systemIndex].happiness].name;
-                                            let activeStatesArray = responseFaction.faction_presence[systemIndex].active_states;
-                                            let pendingStatesArray = responseFaction.faction_presence[systemIndex].pending_states;
-                                            let recoveringStatesArray = responseFaction.faction_presence[systemIndex].recovering_states;
-                                            let updateMoment = moment(responseSystem.updated_at);
-                                            let tickMoment = moment(this.tickTime);
-                                            let suffix = updateMoment.isAfter(tickMoment) ? "after" : "before";
-                                            let factionDetail = "";
-                                            factionDetail += `Last Updated : ${updateMoment.fromNow()}, ${updateMoment.from(tickMoment, true)} ${suffix} last detected tick \n`;
-                                            factionDetail += `State : ${state}\n`;
-                                            factionDetail += `Happiness: ${happiness}\n`;
-                                            factionDetail += `Influence : ${(influence * 100).toFixed(1)}%\n`;
-                                            let activeStates: string = "";
-                                            if (activeStatesArray.length === 0) {
-                                                activeStates = "None";
-                                            } else {
-                                                activeStatesArray.forEach((activeState, index, factionActiveStates) => {
-                                                    activeStates = `${activeStates}${fdevIds.state[activeState.state].name}`;
-                                                    if (index !== factionActiveStates.length - 1) {
-                                                        activeStates = `${activeStates}, `
-                                                    }
-                                                });
-                                            }
-                                            factionDetail += `Active States : ${activeStates}\n`;
-                                            let pendingStates: string = "";
-                                            if (pendingStatesArray.length === 0) {
-                                                pendingStates = "None";
-                                            } else {
-                                                pendingStatesArray.forEach((pendingState, index, factionPendingStates) => {
-                                                    let trend = this.getTrendIcon(pendingState.trend);
-                                                    pendingStates = `${pendingStates}${fdevIds.state[pendingState.state].name}${trend}`;
-                                                    if (index !== factionPendingStates.length - 1) {
-                                                        pendingStates = `${pendingStates}, `
-                                                    }
-                                                });
-                                            }
-                                            factionDetail += `Pending States : ${pendingStates}\n`;
-                                            let recoveringStates: string = "";
-                                            if (recoveringStatesArray.length === 0) {
-                                                recoveringStates = "None";
-                                            } else {
-                                                recoveringStatesArray.forEach((recoveringState, index, factionRecoveringState) => {
-                                                    let trend = this.getTrendIcon(recoveringState.trend);
-                                                    recoveringStates = `${recoveringStates}${fdevIds.state[recoveringState.state].name}${trend}`;
-                                                    if (index !== factionRecoveringState.length - 1) {
-                                                        recoveringStates = `${recoveringStates}, `
-                                                    }
-                                                })
-                                            }
-                                            factionDetail += `Recovering States : ${recoveringStates}`;
-                                            if (controlling === factionNameLower) {
-                                                return [factionName + '👑', factionDetail, factionName, influence] as [string, string, string, number];
-                                            } else {
-                                                return [factionName, factionDetail, factionName, influence] as [string, string, string, number];
-                                            }
-                                        }
-                                    } else {
-                                        throw new Error(response.statusMessage);
-                                    }
-                                })());
-                            });
                             try {
-                                let factions = await Promise.all(factionPromises);
                                 let fieldRecord: FieldRecordSchema[] = [];
-                                factions.forEach(field => {
+                                minorFactions.forEach(faction => {
+                                    let state = fdevIds.state[faction.faction_details.faction_presence.state].name;
+                                    let influence = faction.faction_details.faction_presence.influence;
+                                    let happiness = fdevIds.happiness[faction.faction_details.faction_presence.happiness].name;
+                                    let activeStatesArray = faction.faction_details.faction_presence.active_states;
+                                    let pendingStatesArray = faction.faction_details.faction_presence.pending_states;
+                                    let recoveringStatesArray = faction.faction_details.faction_presence.recovering_states;
+                                    let factionDetail = `Last Updated : ${updateMoment.fromNow()}, ${updateMoment.from(tickMoment, true)} ${suffix} last detected tick \n`;
+                                    factionDetail += `State : ${state}\n`;
+                                    factionDetail += `Happiness: ${happiness}\n`;
+                                    factionDetail += `Influence : ${(influence * 100).toFixed(1)}%\n`;
+                                    let activeStates: string = "";
+                                    if (activeStatesArray.length === 0) {
+                                        activeStates = "None";
+                                    } else {
+                                        activeStatesArray.forEach((activeState, index, factionActiveStates) => {
+                                            activeStates = `${activeStates}${fdevIds.state[activeState.state].name}`;
+                                            if (index !== factionActiveStates.length - 1) {
+                                                activeStates = `${activeStates}, `
+                                            }
+                                        });
+                                    }
+                                    factionDetail += `Active States : ${activeStates}\n`;
+                                    let pendingStates: string = "";
+                                    if (pendingStatesArray.length === 0) {
+                                        pendingStates = "None";
+                                    } else {
+                                        pendingStatesArray.forEach((pendingState, index, factionPendingStates) => {
+                                            let trend = this.getTrendIcon(pendingState.trend);
+                                            pendingStates = `${pendingStates}${fdevIds.state[pendingState.state].name}${trend}`;
+                                            if (index !== factionPendingStates.length - 1) {
+                                                pendingStates = `${pendingStates}, `
+                                            }
+                                        });
+                                    }
+                                    factionDetail += `Pending States : ${pendingStates}\n`;
+                                    let recoveringStates: string = "";
+                                    if (recoveringStatesArray.length === 0) {
+                                        recoveringStates = "None";
+                                    } else {
+                                        recoveringStatesArray.forEach((recoveringState, index, factionRecoveringState) => {
+                                            let trend = this.getTrendIcon(recoveringState.trend);
+                                            recoveringStates = `${recoveringStates}${fdevIds.state[recoveringState.state].name}${trend}`;
+                                            if (index !== factionRecoveringState.length - 1) {
+                                                recoveringStates = `${recoveringStates}, `
+                                            }
+                                        })
+                                    }
+                                    factionDetail += `Recovering States : ${recoveringStates}`;
+                                    let fieldTitle = faction.name;
+                                    if (faction.faction_id === controlling) {
+                                        fieldTitle += '👑';
+                                    }
                                     fieldRecord.push({
-                                        fieldTitle: field[0],
-                                        fieldDescription: field[1],
-                                        influence: field[3],
-                                        name: field[2]
+                                        fieldTitle: fieldTitle,
+                                        fieldDescription: factionDetail,
+                                        name: faction.name,
+                                        influence: faction.faction_details.faction_presence.influence
                                     });
                                 });
                                 let guild = await this.db.model.guild.findOne({guild_id: message.guild.id});

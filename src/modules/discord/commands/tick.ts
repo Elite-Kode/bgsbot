@@ -22,8 +22,7 @@ import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db';
 import { Access } from '../access';
-import { TickSchema, TickV4 } from "../../../interfaces/typings";
-import { TickDetector } from "../../listener";
+import { TickSchema, TickType } from '../../../interfaces/typings';
 
 export class Tick {
     db: DB;
@@ -167,14 +166,14 @@ export class Tick {
 
     public async getTickData(): Promise<TickSchema> {
         let requestOptions: OptionsWithUrl = {
-            url: "https://elitebgs.app/api/ebgs/v4/ticks",
+            url: "https://elitebgs.app/api/ebgs/v5/ticks",
             json: true,
             resolveWithFullResponse: true
         }
 
         let response: FullResponse = await request.get(requestOptions);
         if (response.statusCode == 200) {
-            let body: TickV4 = response.body;
+            let body: TickType = response.body;
             if (body.length === 0) {
                 return Promise.reject("No tick data received");
             } else {

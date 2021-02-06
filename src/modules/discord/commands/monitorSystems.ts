@@ -20,8 +20,8 @@ import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db';
 import { Access } from '../access';
-import { EBGSSystemsV4WOHistory } from "../../../interfaces/typings";
 import { Message, MessageEmbed, Permissions } from "discord.js";
+import { EBGSSystemsMinimal } from "../../../interfaces/typings";
 
 export class MonitorSystems {
     db: DB;
@@ -54,15 +54,18 @@ export class MonitorSystems {
                 let guildId = message.guild.id;
                 let systemName = argsArray.slice(1).join(" ");
                 let requestOptions: OptionsWithUrl = {
-                    url: "https://elitebgs.app/api/ebgs/v4/systems",
-                    qs: {name: systemName},
+                    url: "https://elitebgs.app/api/ebgs/v5/systems",
+                    qs: {
+                        name: systemName,
+                        minimal: true
+                    },
                     json: true,
                     resolveWithFullResponse: true
                 }
 
                 let response: FullResponse = await request.get(requestOptions);
                 if (response.statusCode == 200) {
-                    let body: EBGSSystemsV4WOHistory = response.body;
+                    let body: EBGSSystemsMinimal = response.body;
                     if (body.total === 0) {
                         try {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
