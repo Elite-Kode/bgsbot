@@ -102,14 +102,29 @@ export class SystemStatus {
                                 minorFactions.forEach(faction => {
                                     let state = fdevIds.state[faction.faction_details.faction_presence.state].name;
                                     let influence = faction.faction_details.faction_presence.influence;
+                                    let filtered = responseSystem.faction_history.filter(factionEach => {
+                                        return factionEach.faction_name_lower === faction.name_lower;
+                                    });
+                                    let influenceDifference = 0;
+                                    if (filtered.length === 2) {
+                                        influenceDifference = influence - filtered[1].influence;
+                                    }
                                     let happiness = fdevIds.happiness[faction.faction_details.faction_presence.happiness].name;
                                     let activeStatesArray = faction.faction_details.faction_presence.active_states;
                                     let pendingStatesArray = faction.faction_details.faction_presence.pending_states;
                                     let recoveringStatesArray = faction.faction_details.faction_presence.recovering_states;
+                                    let influenceDifferenceText;
+                                    if (influenceDifference > 0) {
+                                        influenceDifferenceText = `📈${(influenceDifference * 100).toFixed(1)}%`;
+                                    } else if (influenceDifference < 0) {
+                                        influenceDifferenceText = `📉${(-influenceDifference * 100).toFixed(1)}%`;
+                                    } else {
+                                        influenceDifferenceText = `🔷${(influenceDifference * 100).toFixed(1)}%`;
+                                    }
                                     let factionDetail = `Last Updated : ${updateMoment.fromNow()}, ${updateMoment.from(tickMoment, true)} ${suffix} last detected tick \n`;
                                     factionDetail += `State : ${state}\n`;
                                     factionDetail += `Happiness: ${happiness}\n`;
-                                    factionDetail += `Influence : ${(influence * 100).toFixed(1)}%\n`;
+                                    factionDetail += `Influence : ${(influence * 100).toFixed(1)}%${influenceDifferenceText}\n`;
                                     let activeStates: string = "";
                                     if (activeStatesArray.length === 0) {
                                         activeStates = "None";

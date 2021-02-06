@@ -358,9 +358,12 @@ export class BGSReport {
                                 }
                                 if (primaryFactions.indexOf(faction.name) !== -1) {
                                     allMonitoredFactionsUsed.push(faction.name);
+                                    let filtered = systemResponse.faction_history.filter(factionEach => {
+                                        return factionEach.faction_name_lower === faction.name_lower;
+                                    });
                                     let influenceDifference = 0;
-                                    if (systemResponse.faction_history.length > 2) {
-                                        influenceDifference = influence - systemResponse.faction_history[1].influence;
+                                    if (filtered.length === 2) {
+                                        influenceDifference = influence - filtered[1].influence;
                                     }
                                     let influenceDifferenceText;
                                     if (influenceDifference > 0) {

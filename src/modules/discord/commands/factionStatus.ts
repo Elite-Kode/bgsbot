@@ -100,7 +100,7 @@ export class FactionStatus {
                                         return systemEach.system_lower === system.system_name_lower;
                                     });
                                     let influenceDifference = 0;
-                                    if (filtered.length > 2) {
+                                    if (filtered.length === 2) {
                                         influenceDifference = influence - filtered[1].influence;
                                     }
                                     let happiness = fdevIds.happiness[system.happiness].name;
