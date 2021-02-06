@@ -29,10 +29,12 @@ import { Tick } from './tick';
 export class SystemStatus {
     db: DB;
     tickTime: string;
+    dm: boolean;
 
-    constructor() {
+    constructor(dm = false) {
         this.db = App.db;
         this.tickTime = "";
+        this.dm = dm;
     }
 
     exec(message: Message, commandArguments: string): void {
@@ -42,6 +44,7 @@ export class SystemStatus {
         }
         if (argsArray.length > 0) {
             let command = argsArray[0].toLowerCase();
+            command = this.checkAndMapAlias(command);
             if (this[command]) {
                 this[command](message, argsArray);
             } else {
@@ -49,6 +52,13 @@ export class SystemStatus {
             }
         } else {
             message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+        }
+    }
+
+    checkAndMapAlias(command: string) {
+        switch (command) {
+            case 'g':
+                return 'get';
         }
     }
 
@@ -233,7 +243,12 @@ export class SystemStatus {
                                             embed.addField(fieldRecord[recordIndex].fieldTitle, fieldRecord[recordIndex].fieldDescription);
                                         }
                                         try {
-                                            message.channel.send(embed);
+                                            if (this.dm) {
+                                                message.channel.send("I have DM'd the result to you");
+                                                message.member.send(embed);
+                                            } else {
+                                                message.channel.send(embed);
+                                            }
                                         } catch (err) {
                                             App.bugsnagClient.call(err, {
                                                 metaData: {

@@ -25,9 +25,11 @@ import { Access } from '../access';
 
 export class Chart {
     db: DB;
+    dm: boolean;
 
-    constructor() {
+    constructor(dm = false) {
         this.db = App.db;
+        this.dm = dm;
     }
 
     exec(message: Message, commandArguments: string): void {
@@ -86,7 +88,12 @@ export class Chart {
                             let response: FullResponse = await request.get(requestOptions);
                             if (response.statusCode === 200) {
                                 let attachment = new MessageAttachment(response.body as Buffer, contentDisposition.parse(response.headers['content-disposition']).parameters.filename);
-                                message.channel.send(attachment);
+                                if (this.dm) {
+                                    message.channel.send("I have DM'd the result to you");
+                                    message.member.send(attachment);
+                                } else {
+                                    message.channel.send(attachment);
+                                }
                             } else {
                                 App.bugsnagClient.call(response.statusMessage, {
                                     metaData: {

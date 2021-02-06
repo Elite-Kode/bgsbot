@@ -35,6 +35,7 @@ export class AdminRoles {
         try {
             if (argsArray.length > 0) {
                 let command = argsArray[0].toLowerCase();
+                command = this.checkAndMapAlias(command);
                 if (this[command]) {
                     this[command](message, argsArray);
                 } else {
@@ -45,6 +46,17 @@ export class AdminRoles {
             }
         } catch (err) {
             App.bugsnagClient.call(err);
+        }
+    }
+
+    checkAndMapAlias(command: string) {
+        switch (command) {
+            case 'a':
+                return 'add';
+            case 'r':
+                return 'remove';
+            case 'l':
+                return 'list';
         }
     }
 

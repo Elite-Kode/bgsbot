@@ -37,6 +37,7 @@ export class MonitorSystems {
         }
         if (argsArray.length > 0) {
             let command = argsArray[0].toLowerCase();
+            command = this.checkAndMapAlias(command);
             if (this[command]) {
                 this[command](message, argsArray);
             } else {
@@ -44,6 +45,19 @@ export class MonitorSystems {
             }
         } else {
             message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+        }
+    }
+
+    checkAndMapAlias(command: string) {
+        switch (command) {
+            case 'a':
+                return 'add';
+            case 'ap':
+                return 'addprimary';
+            case 'r':
+                return 'remove';
+            case 'l':
+                return 'list';
         }
     }
 

@@ -34,6 +34,7 @@ export class BGSRole {
         }
         if (argsArray.length > 0) {
             let command = argsArray[0].toLowerCase();
+            command = this.checkAndMapAlias(command);
             if (this[command]) {
                 this[command](message, argsArray);
             } else {
@@ -41,6 +42,17 @@ export class BGSRole {
             }
         } else {
             message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+        }
+    }
+
+    checkAndMapAlias(command: string) {
+        switch (command) {
+            case 's':
+                return 'set';
+            case 'r':
+                return 'remove';
+            case 'sh':
+                return 'show';
         }
     }
 

@@ -34,6 +34,7 @@ export class MyGuild {
         }
         if (argsArray.length > 0) {
             let command = argsArray[0].toLowerCase();
+            command = this.checkAndMapAlias(command);
             if (this[command]) {
                 this[command](message, argsArray);
             } else {
@@ -41,6 +42,15 @@ export class MyGuild {
             }
         } else {
             message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+        }
+    }
+
+    checkAndMapAlias(command: string) {
+        switch (command) {
+            case 's':
+                return 'set';
+            case 'r':
+                return 'remove';
         }
     }
 

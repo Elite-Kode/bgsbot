@@ -26,9 +26,11 @@ import { TickSchema, TickType } from '../../../interfaces/typings';
 
 export class Tick {
     db: DB;
+    dm: boolean;
 
-    constructor() {
+    constructor(dm = false) {
         this.db = App.db;
+        this.dm = dm;
     }
 
     exec(message: Message, commandArguments: string): void {
@@ -64,7 +66,12 @@ export class Tick {
                         embed.addField("Last Tick", lastTickFormattedTime + ' UTC - ' + lastTickFormattedDate);
                         embed.setTimestamp(new Date(lastTick.time));
                         try {
-                            message.channel.send(embed);
+                            if (this.dm) {
+                                message.channel.send("I have DM'd the result to you");
+                                message.member.send(embed);
+                            } else {
+                                message.channel.send(embed);
+                            }
                         } catch (err) {
                             App.bugsnagClient.call(err);
                         }

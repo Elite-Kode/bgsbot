@@ -120,22 +120,55 @@ export class DiscordClient {
     }
 
     private initiateCommands(): void {
+        let myGuild = new MyGuild();
+        let bgsRole = new BGSRole();
+        let adminRoles = new AdminRoles();
+        let forbiddenRoles = new ForbiddenRoles();
+        let bgaChannel = new BGSChannel();
+        let monitorSystems = new MonitorSystems();
+        let monitorFactions = new MonitorFactions();
+        let systemStatus = new SystemStatus();
+        let systemStatusDm = new SystemStatus(true);
+        let factionStatus = new FactionStatus();
+        let factionStatusDm = new FactionStatus(true);
+        let bgsReport = new BGSReport();
+        let bgsReportDm = new BGSReport(true);
+
         this.commandsMap.set("hi", new Hi());
         this.commandsMap.set("help", new Help());
-        this.commandsMap.set("myguild", new MyGuild());
-        this.commandsMap.set("bgsrole", new BGSRole());
-        this.commandsMap.set("adminroles", new AdminRoles());
-        this.commandsMap.set("forbiddenroles", new ForbiddenRoles());
-        this.commandsMap.set("bgschannel", new BGSChannel());
-        this.commandsMap.set("monitorsystems", new MonitorSystems());
-        this.commandsMap.set("monitorfactions", new MonitorFactions());
-        this.commandsMap.set("systemstatus", new SystemStatus());
-        this.commandsMap.set("factionstatus", new FactionStatus());
-        this.commandsMap.set("bgsreport", new BGSReport());
+        this.commandsMap.set("myguild", myGuild);
+        this.commandsMap.set("mgd", myGuild);
+        this.commandsMap.set("bgsrole", bgsRole);
+        this.commandsMap.set("brl", bgsRole);
+        this.commandsMap.set("adminroles", adminRoles);
+        this.commandsMap.set("arl", adminRoles);
+        this.commandsMap.set("forbiddenroles", forbiddenRoles);
+        this.commandsMap.set("frl", forbiddenRoles);
+        this.commandsMap.set("bgschannel", bgaChannel);
+        this.commandsMap.set("bcl", bgaChannel);
+        this.commandsMap.set("monitorsystems", monitorSystems);
+        this.commandsMap.set("ms", monitorSystems);
+        this.commandsMap.set("monitorfactions", monitorFactions);
+        this.commandsMap.set("mf", monitorFactions);
+        this.commandsMap.set("systemstatus", systemStatus);
+        this.commandsMap.set("ss", systemStatus);
+        this.commandsMap.set("systemstatusdm", systemStatusDm);
+        this.commandsMap.set("ssdm", systemStatusDm);
+        this.commandsMap.set("factionstatus", factionStatus);
+        this.commandsMap.set("fs", factionStatus);
+        this.commandsMap.set("factionstatusdm", factionStatusDm);
+        this.commandsMap.set("fsdm", factionStatusDm);
+        this.commandsMap.set("bgsreport", bgsReport);
+        this.commandsMap.set("bgsreport", bgsReport);
+        this.commandsMap.set("brt", bgsReport);
+        this.commandsMap.set("bgsreportdm", bgsReportDm);
+        this.commandsMap.set("brtdm", bgsReportDm);
         this.commandsMap.set("sort", new Sort());
         this.commandsMap.set("chart", new Chart());
+        this.commandsMap.set("chartdm", new Chart(true));
         this.commandsMap.set("theme", new Theme());
         this.commandsMap.set("tick", new Tick());
+        this.commandsMap.set("tickdm", new Tick(true));
     }
 
     private initiateCustom(): void {

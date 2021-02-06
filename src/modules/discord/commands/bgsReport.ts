@@ -30,10 +30,12 @@ import { Tick } from './tick';
 export class BGSReport {
     db: DB;
     tickTime: string;
+    dm: boolean;
 
-    constructor() {
+    constructor(dm = false) {
         this.db = App.db;
         this.tickTime = "";
+        this.dm = dm;
     }
 
     exec(message: Message, commandArguments: string): void {
@@ -43,6 +45,7 @@ export class BGSReport {
         }
         if (argsArray.length > 0) {
             let command = argsArray[0].toLowerCase();
+            command = this.checkAndMapAlias(command);
             if (this[command]) {
                 this[command](message, argsArray);
             } else {
@@ -50,6 +53,19 @@ export class BGSReport {
             }
         } else {
             message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+        }
+    }
+
+    checkAndMapAlias(command: string) {
+        switch (command) {
+            case 'g':
+                return 'get';
+            case 'st':
+                return 'settime';
+            case 'sh':
+                return 'showtime';
+            case 'u':
+                return 'unsettime';
         }
     }
 
@@ -63,7 +79,12 @@ export class BGSReport {
                     if (message.guild.me.permissionsIn(message.channel).has([flags.EMBED_LINKS])) {
                         let embedArray = await this.getBGSReportEmbed(guildId, message.channel as TextChannel);
                         for (let index = 0; index < embedArray.length; index++) {
-                            await message.channel.send(embedArray[index]);
+                            if (this.dm) {
+                                message.channel.send("I have DM'd the result to you");
+                                message.member.send(embedArray[index]);
+                            } else {
+                                message.channel.send(embedArray[index]);
+                            }
                         }
                     } else {
                         try {
