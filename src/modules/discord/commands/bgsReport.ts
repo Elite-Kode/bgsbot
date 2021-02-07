@@ -26,8 +26,9 @@ import { EBGSFactions, EBGSSystemsDetailed, FieldRecordSchema } from "../../../i
 import { AutoReport } from '../../cron';
 import { FdevIds } from '../../../fdevids';
 import { Tick } from './tick';
+import { Command } from "../../../interfaces/Command";
 
-export class BGSReport {
+export class BGSReport implements Command {
     db: DB;
     tickTime: string;
     dm: boolean;
@@ -907,7 +908,7 @@ export class BGSReport {
             .reduce((accumulator, word) => accumulator + word.charAt(0), '');
     }
 
-    help() {
+    help(): [string, string, string, string[]] {
         return [
             'bgsreport',
             'Gets the BGS Report or sets, unsets, shows the time when the BGS Report will be automatically generated',

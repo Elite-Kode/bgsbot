@@ -22,8 +22,9 @@ import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db';
 import { Access } from '../access';
+import { Command } from "../../../interfaces/Command";
 
-export class Chart {
+export class Chart implements Command {
     db: DB;
     dm: boolean;
 
@@ -136,7 +137,7 @@ export class Chart {
         }
     }
 
-    help() {
+    help(): [string, string, string, string[]] {
         return [
             'chart',
             'Generates a chart for the last 7 days',

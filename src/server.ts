@@ -35,8 +35,8 @@ class App {
 
     constructor() {
         this.express = express();
+        this.bugsnagClient = new BugsnagClient();
         if (BugsnagSecrets.use) {
-            this.bugsnagClient = new BugsnagClient();
             this.bugsnagClientMiddleware = this.bugsnagClient.client.getPlugin('express');
             this.express.use(this.bugsnagClientMiddleware.requestHandler);
         }

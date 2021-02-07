@@ -26,8 +26,9 @@ import { EBGSFactionsDetailed, FieldRecordSchema } from "../../../interfaces/typ
 import { StringHandlers } from '../../../stringHandlers';
 import { FdevIds } from '../../../fdevids';
 import { Tick } from './tick';
+import { Command } from "../../../interfaces/Command";
 
-export class FactionStatus {
+export class FactionStatus implements Command {
     db: DB;
     tickTime: string;
     dm: boolean;
@@ -295,7 +296,7 @@ export class FactionStatus {
         }
     }
 
-    help() {
+    help(): [string, string, string, string[]] {
         return [
             'factionStatus',
             'Gets the details of a faction',

@@ -19,8 +19,9 @@ import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db';
 import { Access } from '../access';
+import { Command } from "../../../interfaces/Command";
 
-export class MyGuild {
+export class MyGuild implements Command {
     db: DB;
 
     constructor() {
@@ -58,7 +59,7 @@ export class MyGuild {
 
     async set(message: Message, argsArray: string[]) {
         // Only the server admins can set the guild
-        let member = await message.guild.member(message.author)
+        let member = await message.member;
         if (member.hasPermission("ADMINISTRATOR")) {
             if (argsArray.length === 1) {
                 let guildId = message.guild.id;
@@ -139,7 +140,7 @@ export class MyGuild {
         }
     }
 
-    help() {
+    help(): [string, string, string, string[]] {
         return [
             'myguild',
             'Sets or removes your guild from BGSBot. Setting your guild is necessary for the bot to function',

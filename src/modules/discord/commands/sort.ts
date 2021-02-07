@@ -19,8 +19,9 @@ import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db';
 import { Access } from '../access';
+import { Command } from "../../../interfaces/Command";
 
-export class Sort {
+export class Sort implements Command {
     db: DB;
 
     constructor() {
@@ -218,7 +219,7 @@ export class Sort {
         }
     }
 
-    help() {
+    help(): [string, string, string, string[]] {
         return [
             'sort',
             'Sets, removes or shows your sorting settings. This helps in sorting your reports in a predefined order. Use disable to temporarily disable sorting',

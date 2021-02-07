@@ -14,24 +14,19 @@
  * limitations under the License.
  */
 
-import { Message, MessageEmbed, MessageReaction, User } from 'discord.js';
+import { Message, MessageEmbed, MessageReaction } from 'discord.js';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { HelpSchema } from '../../../interfaces/typings';
+import { Command } from "../../../interfaces/Command";
 
-export class Help {
+export class Help implements Command {
     helpArray: HelpSchema[];
-    displayState: number;
-    helpDepth: number;
-    helpMessageID: string;
-    numberSelected: number;
     emojiArray = ["1⃣", "2⃣", "3⃣", "4⃣", "5⃣", "6⃣", "7⃣", "8⃣", "9⃣", "🔟"];
+    public title = ':grey_question: BGSBot Help';
 
     constructor() {
         this.helpArray = [];
-        this.displayState = 0;
-        this.helpDepth = 0;
-        this.helpMessageID = null;
     }
 
     exec(message: Message, commandArguments: string): void {
@@ -41,7 +36,7 @@ export class Help {
         }
         if (argsArray.length === 0) {
             message.channel.send("I have DM'd the help documents to you");
-            this.display(message);
+            this.display(message, 1, null);
         } else {
             message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
         }
@@ -58,57 +53,50 @@ export class Help {
         }
     }
 
-    emojiCaught(msgReaction: MessageReaction, user: User): void {
-        var index = this.emojiArray.indexOf(msgReaction.emoji.toString());
+    emojiCaught(msgReaction: MessageReaction): void {
+        let index = this.emojiArray.indexOf(msgReaction.emoji.toString());
+        let messageEmbed = msgReaction.message.embeds[0];
+        let page = messageEmbed.fields.find(field => field.name === 'PAGE');
         if (index !== -1) {
-            this.numberSelected = index + 1;
             msgReaction.message.delete();
-            this.helpDepth++;
-            this.display(msgReaction.message);
+            this.display(msgReaction.message, +page.value, index);
         } else if (msgReaction.emoji.toString() === "◀") {
-            this.displayState--;
             msgReaction.message.delete();
-            this.display(msgReaction.message);
+            this.display(msgReaction.message, +page.value - 1, null);
         } else if (msgReaction.emoji.toString() === "▶") {
-            this.displayState++;
             msgReaction.message.delete();
-            this.display(msgReaction.message);
+            this.display(msgReaction.message, +page.value + 1, null);
         } else if (msgReaction.emoji.toString() === "⬅") {
             msgReaction.message.delete();
-            this.helpDepth--;
-            this.display(msgReaction.message);
+            this.display(msgReaction.message, +page.value, null);
         }
     }
 
-    async display(message: Message) {
+    async display(message: Message, page: number, item: number) {
         let embed = new MessageEmbed();
         embed.setColor(6684774);
-        embed.setTitle(`:grey_question: BGSBot Help`);
+        embed.setTitle(this.title);
         embed.setDescription(`Help Associated with BGSBot commands`);
 
-        let length = this.helpArray.length;
+        if (!item) {
+            let length = this.helpArray.length;
 
-        let displayArray: HelpSchema[][] = [];
-        for (let i = 0; i < length / 10; i++) {
-            displayArray.push(this.helpArray.slice(i * 10, (i + 1) * 10));
-        }
+            let displayArray: HelpSchema[][] = [];
+            for (let i = 0; i < length / 10; i++) {
+                displayArray.push(this.helpArray.slice(i * 10, (i + 1) * 10));
+            }
 
-        let maxDisplayState = displayArray.length - 1;
-        let displayCommands = displayArray[this.displayState];
-
-        if (this.helpDepth === 0) {
+            let maxDisplayState = displayArray.length;
+            let displayCommands = displayArray[page - 1];
             try {
-                let returnMessage = await this.helpList(displayCommands, embed, message);
-                this.helpMessageID = (returnMessage as Message).id
-                this.helpEmoji(displayCommands, this.displayState, maxDisplayState, returnMessage as Message);
+                let returnMessage = await this.helpList(displayCommands, embed, message, page);
+                this.helpEmoji(displayCommands, page, maxDisplayState, returnMessage as Message);
             } catch (err) {
                 App.bugsnagClient.call(err);
             }
-        } else if (this.helpDepth === 1) {
+        } else {
             try {
-                let returnMessage = await this.helpDescription(this.helpArray[this.displayState * 10 + this.numberSelected - 1], embed, message);
-                this.helpMessageID = (returnMessage as Message).id
-                this.helpMessageID = (returnMessage as Message).id;
+                let returnMessage = await this.helpDescription(this.helpArray[(page - 1) * 10 + item], embed, message, page);
                 (returnMessage as Message).react("⬅");
             } catch (err) {
                 App.bugsnagClient.call(err);
@@ -116,12 +104,13 @@ export class Help {
         }
     }
 
-    async helpList(displayCommands: HelpSchema[], embed: MessageEmbed, message: Message) {
+    async helpList(displayCommands: HelpSchema[], embed: MessageEmbed, message: Message, page: number) {
         displayCommands.forEach((help, index) => {
             embed.addField(`${index + 1}. ${help.command}`, help.helpMessage);
         });
+        embed.addField("PAGE", page);
 
-        let member = message.guild.member(message.author);
+        let member = message.member;
         if (member) {
             return member.send(embed);
         } else {
@@ -130,7 +119,7 @@ export class Help {
     }
 
     async helpEmoji(displayCommands: HelpSchema[], displayState: number, maxDisplayState: number, message: Message) {
-        if (displayState !== 0) {
+        if (displayState > 1) {
             await message.react("◀");
         }
         for (let index = 0; index < displayCommands.length; index++) {
@@ -141,17 +130,18 @@ export class Help {
         }
     }
 
-    async helpDescription(command: HelpSchema, embed: MessageEmbed, message: Message) {
+    async helpDescription(command: HelpSchema, embed: MessageEmbed, message: Message, page: number) {
         embed.addField("Command:", `@BGSBot ${command.command}`);
         embed.addField("Description", command.helpMessage);
         embed.addField("Template", command.template);
         let exampleString = "";
-        command.example.forEach((example, index, examples) => {
+        command.example.forEach((example, index) => {
             exampleString = exampleString + (index + 1) + ". " + example + "\n";
         });
         embed.addField("Examples", exampleString);
+        embed.addField("PAGE", page);
 
-        let member = message.guild.member(message.author);
+        let member = message.member;
         if (member) {
             return member.send(embed);
         } else {
@@ -159,7 +149,7 @@ export class Help {
         }
     }
 
-    help() {
+    help(): [string, string, string, string[]] {
         return [
             'help',
             'Gets this help document in a DM',

@@ -23,8 +23,9 @@ import { Responses } from '../responseDict';
 import { DB } from '../../../db';
 import { Access } from '../access';
 import { TickSchema, TickType } from '../../../interfaces/typings';
+import { Command } from "../../../interfaces/Command";
 
-export class Tick {
+export class Tick implements Command {
     db: DB;
     dm: boolean;
 
@@ -191,7 +192,7 @@ export class Tick {
         }
     }
 
-    help() {
+    help(): [string, string, string, string[]] {
         return [
             'tick',
             'Gets the last tick or sets and removes the automatic announcement of the tick',

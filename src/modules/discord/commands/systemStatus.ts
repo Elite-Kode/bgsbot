@@ -25,8 +25,9 @@ import { Access } from '../access';
 import { EBGSSystemsDetailed, FieldRecordSchema } from "../../../interfaces/typings";
 import { FdevIds } from '../../../fdevids';
 import { Tick } from './tick';
+import { Command } from "../../../interfaces/Command";
 
-export class SystemStatus {
+export class SystemStatus implements Command {
     db: DB;
     tickTime: string;
     dm: boolean;
@@ -304,7 +305,7 @@ export class SystemStatus {
         }
     }
 
-    help() {
+    help(): [string, string, string, string[]] {
         return [
             'systemStatus',
             'Gets the details of a system',

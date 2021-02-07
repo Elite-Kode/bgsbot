@@ -22,8 +22,9 @@ import { Responses } from '../responseDict';
 import { DB } from '../../../db';
 import { Access } from '../access';
 import { EBGSFactionsMinimal } from "../../../interfaces/typings";
+import { Command } from "../../../interfaces/Command";
 
-export class MonitorFactions {
+export class MonitorFactions implements Command {
     db: DB;
 
     constructor() {
@@ -260,7 +261,7 @@ export class MonitorFactions {
         }
     }
 
-    help() {
+    help(): [string, string, string, string[]] {
         return [
             'monitorfactions',
             'Adds a faction to monitor for displaying in the BGS Report. A faction can be optionally added as a primary for more detailed results',

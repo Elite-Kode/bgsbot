@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Client, Message, User } from 'discord.js';
+import { Client, DMChannel, Message, User } from 'discord.js';
 import { DiscordSecrets } from '../../secrets';
 import { Responses } from './responseDict';
 import {
@@ -40,10 +40,11 @@ import { HelpSchema } from '../../interfaces/typings';
 import App from '../../server';
 import { DB } from '../../db';
 import { CustomFunctionality } from './custom'
+import { Command } from "../../interfaces/Command";
 
 export class DiscordClient {
     public client: Client;
-    public commandsMap: Map<string, any>;
+    public commandsMap: Map<string, Command>;
     private houseKeeping: HouseKeeping;
     private db: DB;
     private custom: CustomFunctionality;
@@ -96,11 +97,22 @@ export class DiscordClient {
 
         this.client.on("messageReactionAdd", (messageReaction, user: User) => {
             let helpObject = this.commandsMap.get('help') as Help;
-            if (!user.bot && messageReaction.message.id === helpObject.helpMessageID) {
-                if (!messageReaction.users.cache.has(this.client.user.id)) {
-                    messageReaction.users.remove(user);
+            let message = messageReaction.message
+            if (!user.bot && message.embeds && message.embeds.length > 0 && message.embeds[0].title === helpObject.title) {
+                helpObject.emojiCaught(messageReaction);
+            }
+        });
+
+        this.client.on('raw', async packet => {
+            if (['MESSAGE_REACTION_ADD'].includes(packet.t)) {
+                let channel: DMChannel = await this.client.channels.fetch(packet.d.channel_id) as DMChannel;
+                if (!channel.messages.cache.has(packet.d.message_id)) {
+                    let message = await channel.messages.fetch(packet.d.message_id);
+                    let emoji: string = packet.d.emoji.id ? `${packet.d.emoji.name}:${packet.d.emoji.id}` : packet.d.emoji.name;
+                    let reaction = message.reactions.cache.get(emoji);
+                    let user = await this.client.users.fetch(packet.d.user_id);
+                    this.client.emit("messageReactionAdd", reaction, user);
                 }
-                helpObject.emojiCaught(messageReaction, user);
             }
         });
 
@@ -183,8 +195,8 @@ export class DiscordClient {
                 helpMessage: helpArray[1],
                 template: helpArray[2],
                 example: helpArray[3]
-            }
-            this.commandsMap.get('help').addHelp(helpObject);
+            };
+            (this.commandsMap.get('help') as Help).addHelp(helpObject);
         });
     }
 

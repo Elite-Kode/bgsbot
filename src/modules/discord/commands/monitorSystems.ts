@@ -22,8 +22,9 @@ import { DB } from '../../../db';
 import { Access } from '../access';
 import { Message, MessageEmbed, Permissions } from "discord.js";
 import { EBGSSystemsMinimal } from "../../../interfaces/typings";
+import { Command } from "../../../interfaces/Command";
 
-export class MonitorSystems {
+export class MonitorSystems implements Command {
     db: DB;
 
     constructor() {
@@ -265,7 +266,7 @@ export class MonitorSystems {
         }
     }
 
-    help() {
+    help(): [string, string, string, string[]] {
         return [
             'monitorsystems',
             'Adds a system to monitor for displaying in the BGS Report. A system can be optionally added as a primary for more detailed results',

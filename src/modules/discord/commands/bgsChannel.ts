@@ -19,8 +19,9 @@ import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db';
 import { Access } from '../access';
+import { Command } from "../../../interfaces/Command";
 
-export class BGSChannel {
+export class BGSChannel implements Command {
     db: DB;
 
     constructor() {
@@ -236,7 +237,7 @@ export class BGSChannel {
         }
     }
 
-    help() {
+    help(): [string, string, string, string[]] {
         return [
             'bgschannel',
             'Sets, removes or shows the channel set up for BGS reporting',

@@ -19,8 +19,9 @@ import { Responses } from '../responseDict';
 import { DB } from '../../../db';
 import { Access } from '../access';
 import { Message, MessageEmbed, Permissions } from 'discord.js';
+import { Command } from "../../../interfaces/Command";
 
-export class AdminRoles {
+export class AdminRoles implements Command {
     db: DB;
 
     constructor() {
@@ -64,7 +65,7 @@ export class AdminRoles {
 
     async add(message: Message, argsArray: string[]) {
         // Only the server admins can set the admin roles
-        let member = message.guild.member(message.author);
+        let member = message.member;
         if (member.hasPermission(Permissions.FLAGS.ADMINISTRATOR)) {
             if (argsArray.length === 2) {
                 let guildId = message.guild.id;
@@ -221,7 +222,7 @@ export class AdminRoles {
         }
     }
 
-    help() {
+    help(): [string, string, string, string[]] {
         return [
             'adminroles',
             'Adds, removes or lists the roles that should have administering capability over BGSBot',

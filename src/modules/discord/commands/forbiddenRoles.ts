@@ -19,8 +19,9 @@ import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db';
 import { Access } from '../access';
+import { Command } from "../../../interfaces/Command";
 
-export class ForbiddenRoles {
+export class ForbiddenRoles implements Command {
     db: DB;
 
     constructor() {
@@ -227,7 +228,7 @@ export class ForbiddenRoles {
         }
     }
 
-    help() {
+    help(): [string, string, string, string[]] {
         return [
             'forbiddenroles',
             'Adds, removes or lists the roles that should be forbidden from accessing BGSBot',

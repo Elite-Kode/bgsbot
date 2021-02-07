@@ -19,8 +19,9 @@ import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db';
 import { Access } from '../access';
+import { Command } from "../../../interfaces/Command";
 
-export class Theme {
+export class Theme implements Command {
     db: DB;
 
     constructor() {
@@ -210,7 +211,7 @@ export class Theme {
         }
     }
 
-    help() {
+    help(): [string, string, string, string[]] {
         return [
             'theme',
             'Sets, removes or shows your current theme. Used in charts and other areas. Defaults to light',

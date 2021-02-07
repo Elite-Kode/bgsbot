@@ -19,8 +19,9 @@ import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db';
 import { Access } from '../access';
+import { Command } from "../../../interfaces/Command";
 
-export class BGSRole {
+export class BGSRole implements Command {
     db: DB;
 
     constructor() {
@@ -223,7 +224,7 @@ export class BGSRole {
         }
     }
 
-    help() {
+    help(): [string, string, string, string[]] {
         return [
             'bgsrole',
             'Sets, removes or shows the role set up for using the general commands of BGSBot',
