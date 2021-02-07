@@ -299,11 +299,14 @@ export class FactionStatus implements Command {
 
     help(): [string, string, string, string[]] {
         return [
-            'factionStatus',
+            'factionStatus(aliases: fs), factionstatusdm(aliases: fsdm)',
             'Gets the details of a faction',
-            'factionStatus get <faction name>',
+            'factionStatus get <faction name>\nfactionStatus g <faction name>',
             [
-                '`@BGSBot factionStatus get knights of karma`'
+                '`@BGSBot factionStatus get knights of karma`',
+                '`@BGSBot fs g knights of karma`',
+                '`@BGSBot fsdm get knights of karma`',
+                '`@BGSBot factionstatusdm get knights of karma`'
             ]
         ];
     }

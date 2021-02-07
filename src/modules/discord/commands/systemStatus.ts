@@ -308,11 +308,15 @@ export class SystemStatus implements Command {
 
     help(): [string, string, string, string[]] {
         return [
-            'systemStatus',
+            'systemStatus(aliases: ss), systemstatusdm(aliases: ssdm)',
             'Gets the details of a system',
-            'systemStatus get <system name>',
+            'systemStatus get <system name>\nsystemStatus g <system name>',
             [
-                '`@BGSBot systemStatus get qa\'wakana`'
+                '`@BGSBot systemStatus get qa\'wakana`',
+                '`@BGSBot ss g qa\'wakana`',
+                '`@BGSBot ss get qa\'wakana`',
+                '`@BGSBot systemStatus g qa\'wakana`',
+                '`@BGSBot ssdm get qa\'wakana`'
             ]
         ];
     }

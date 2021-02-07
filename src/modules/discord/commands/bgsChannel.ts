@@ -240,13 +240,16 @@ export class BGSChannel implements Command {
 
     help(): [string, string, string, string[]] {
         return [
-            'bgschannel',
+            'bgschannel(aliases: bcl)',
             'Sets, removes or shows the channel set up for BGS reporting',
-            'bgschannel <set|remove|show> <channel id>',
+            'bgschannel <set|remove|show> <channel id>\nbgschannel <s|r|sh> <channel id>',
             [
                 '`@BGSBot bgschannel set 1234564789012345678`',
+                '`@BGSBot bcl s 1234564789012345678`',
                 '`@BGSBot bgschannel remove`',
-                '`@BGSBot bgschannel show`'
+                '`@BGSBot bcl remove`',
+                '`@BGSBot bgschannel show`',
+                '`@BGSBot bgschannel sh`'
             ]
         ];
     }

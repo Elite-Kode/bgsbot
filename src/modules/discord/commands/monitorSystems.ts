@@ -269,13 +269,16 @@ export class MonitorSystems implements Command {
 
     help(): [string, string, string, string[]] {
         return [
-            'monitorsystems',
+            'monitorsystems(aliases: ms)',
             'Adds a system to monitor for displaying in the BGS Report. A system can be optionally added as a primary for more detailed results',
-            'monitorsystems <add|addprimary|remove|list> <system name>',
+            'monitorsystems <add|addprimary|remove|list> <system name>\nmonitorsystems <a|ap|r|l> <system name>',
             [
                 '`@BGSBot monitorsystems add qa\'wakana`',
+                '`@BGSBot ms a qa\'wakana`',
                 '`@BGSBot monitorsystems addprimary qa\'wakana`',
+                '`@BGSBot monitorsystems ap qa\'wakana`',
                 '`@BGSBot monitorsystems remove qa\'wakana`',
+                '`@BGSBot mf remove qa\'wakana`',
                 '`@BGSBot monitorsystems list`'
             ]
         ];

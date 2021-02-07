@@ -264,13 +264,16 @@ export class MonitorFactions implements Command {
 
     help(): [string, string, string, string[]] {
         return [
-            'monitorfactions',
+            'monitorfactions(aliases: mf)',
             'Adds a faction to monitor for displaying in the BGS Report. A faction can be optionally added as a primary for more detailed results',
-            'monitorfactions <add|addprimary|remove|list> <faction name>',
+            'monitorfactions <add|addprimary|remove|list> <faction name>\nmonitorfactions <a|ap|r|l> <faction name>',
             [
                 '`@BGSBot monitorfactions add knights of karma`',
+                '`@BGSBot mf a knights of karma`',
                 '`@BGSBot monitorfactions addprimary knights of karma`',
+                '`@BGSBot monitorfactions ap knights of karma`',
                 '`@BGSBot monitorfactions remove knights of karma`',
+                '`@BGSBot mf remove knights of karma`',
                 '`@BGSBot monitorfactions list`'
             ]
         ];

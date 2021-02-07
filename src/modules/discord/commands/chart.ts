@@ -140,7 +140,7 @@ export class Chart implements Command {
 
     help(): [string, string, string, string[]] {
         return [
-            'chart',
+            'chart, chartdm',
             'Generates a chart for the last 7 days',
             'chart get <factions|systems|tick> <influence|state|pending|recovering> <system name|faction name>',
             [
@@ -148,6 +148,7 @@ export class Chart implements Command {
                 '`@BGSBot chart get factions state knights of karma`',
                 '`@BGSBot chart get factions pending knights of karma`',
                 '`@BGSBot chart get factions recovering knights of karma`',
+                '`@BGSBot chartdm get factions recovering knights of karma`',
                 '`@BGSBot chart get tick`'
             ]
         ];

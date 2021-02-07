@@ -225,13 +225,16 @@ export class AdminRoles implements Command {
 
     help(): [string, string, string, string[]] {
         return [
-            'adminroles',
+            'adminroles(aliases: arl)',
             'Adds, removes or lists the roles that should have administering capability over BGSBot',
-            'adminroles <add|remove|list> <role id>',
+            'adminroles <add|remove|list> <role id>\nadminroles <a|r|l> <role id>',
             [
                 '`@BGSBot adminroles add 1234564789012345678`',
+                '`@BGSBot arl a 1234564789012345678`',
                 '`@BGSBot adminroles remove 123456789012345678`',
-                '`@BGSBot adminroles list`'
+                '`@BGSBot arl remove 123456789012345678`',
+                '`@BGSBot adminroles list`',
+                '`@BGSBot adminroles l`'
             ]
         ];
     }

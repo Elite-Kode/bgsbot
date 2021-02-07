@@ -231,13 +231,16 @@ export class ForbiddenRoles implements Command {
 
     help(): [string, string, string, string[]] {
         return [
-            'forbiddenroles',
+            'forbiddenroles(aliases: frl)',
             'Adds, removes or lists the roles that should be forbidden from accessing BGSBot',
-            'forbiddenroles <add|remove|list> <role id>',
+            'forbiddenroles <add|remove|list> <role id>\nforbiddenroles <a|r|l> <role id>',
             [
                 '`@BGSBot forbiddenroles add 1234564789012345678`',
+                '`@BGSBot frl a 1234564789012345678`',
                 '`@BGSBot forbiddenroles remove 123456789012345678`',
-                '`@BGSBot forbiddenroles list`'
+                '`@BGSBot forbiddenroles r 123456789012345678`',
+                '`@BGSBot forbiddenroles list`',
+                '`@BGSBot frl list`'
             ]
         ];
     }

@@ -195,11 +195,12 @@ export class Tick implements Command {
 
     help(): [string, string, string, string[]] {
         return [
-            'tick',
+            'tick, tickdm',
             'Gets the last tick or sets and removes the automatic announcement of the tick',
             'tick <get|detect|stopdetect>',
             [
                 '`@BGSBot tick get`',
+                '`@BGSBot tickdm get`',
                 '`@BGSBot tick detect`',
                 '`@BGSBot tick stopdetect`'
             ]

@@ -911,13 +911,18 @@ export class BGSReport implements Command {
 
     help(): [string, string, string, string[]] {
         return [
-            'bgsreport',
+            'bgsreport(aliases: brt), bgsreportdm(aliases: brtdm',
             'Gets the BGS Report or sets, unsets, shows the time when the BGS Report will be automatically generated',
-            'bgsreport <get|settime|showtime|unsettime> <time in UTC>',
+            'bgsreport <get|settime|showtime|unsettime> <time in UTC>\nbgsreport <g|st|sh|u> <time in UTC>',
             [
                 '`@BGSBot bgsreport get`',
+                '`@BGSBot brt g`',
+                '`@BGSBot brtdm g`',
+                '`@BGSBot bgsreportdm g`',
                 '`@BGSBot bgsreport settime 15:25:36`',
+                '`@BGSBot bgsreport st 15:25:36`',
                 '`@BGSBot bgsreport showtime`',
+                '`@BGSBot brt showtime`',
                 '`@BGSBot bgsreport unsettime`'
             ]
         ];

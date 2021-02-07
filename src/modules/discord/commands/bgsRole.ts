@@ -227,13 +227,16 @@ export class BGSRole implements Command {
 
     help(): [string, string, string, string[]] {
         return [
-            'bgsrole',
+            'bgsrole(aliases: brl)',
             'Sets, removes or shows the role set up for using the general commands of BGSBot',
-            'bgsrole <set|remove|show> <role id>',
+            'bgsrole <set|remove|show> <role id>\nbgsrole <s|r|sh> <role id>',
             [
                 '`@BGSBot bgsrole set 123456789012345678`',
+                '`@BGSBot brl s 123456789012345678`',
                 '`@BGSBot bgsrole remove`',
-                '`@BGSBot bgsrole show`'
+                '`@BGSBot brl remove`',
+                '`@BGSBot bgsrole show`',
+                '`@BGSBot bgsrole sh`'
             ]
         ];
     }

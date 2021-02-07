@@ -143,12 +143,15 @@ export class MyGuild implements Command {
 
     help(): [string, string, string, string[]] {
         return [
-            'myguild',
+            'myguild(aliases: mgd)',
             'Sets or removes your guild from BGSBot. Setting your guild is necessary for the bot to function',
-            'myguild <set|remove>',
+            'myguild <set|remove>\nmyguild <s|r>',
             [
                 '`@BGSBot myguild set`',
-                '`@BGSBot myguild remove`'
+                '`@BGSBot mgd s`',
+                '`@BGSBot myguild remove`',
+                '`@BGSBot mgd remove`',
+                '`@BGSBot myguild r`',
             ]
         ];
     }
