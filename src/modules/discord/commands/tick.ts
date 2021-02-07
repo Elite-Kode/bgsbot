@@ -28,6 +28,7 @@ import { Command } from "../../../interfaces/Command";
 export class Tick implements Command {
     db: DB;
     dm: boolean;
+    dmAble = false;
 
     constructor(dm = false) {
         this.db = App.db;

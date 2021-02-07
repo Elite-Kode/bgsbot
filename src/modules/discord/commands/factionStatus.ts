@@ -32,6 +32,7 @@ export class FactionStatus implements Command {
     db: DB;
     tickTime: string;
     dm: boolean;
+    dmAble = false;
 
     constructor(dm = false) {
         this.db = App.db;

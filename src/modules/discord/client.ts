@@ -70,7 +70,9 @@ export class DiscordClient {
         });
 
         this.client.on("message", async (message) => {
-            if (message.mentions.users.filter(user => {
+            if (message.channel.type === 'dm' && !message.author.bot) {
+                this.processDm(message)
+            } else if (message.mentions.users.filter(user => {
                 if (user.id === this.client.user.id) {
                     return true;
                 } else {
@@ -215,6 +217,16 @@ export class DiscordClient {
     public processNormal(message: Message): void {
         let commandArguments = this.getCommandArguments(message);
         if (this.commandsMap.has(commandArguments.command)) {
+            console.log(commandArguments.command + " command requested");
+            this.commandsMap.get(commandArguments.command).exec(message, commandArguments.commandArguments);
+        } else {
+            message.channel.send(Responses.getResponse(Responses.NOTACOMMAND));
+        }
+    }
+
+    public processDm(message: Message): void {
+        let commandArguments = this.getCommandArguments(message);
+        if (this.commandsMap.has(commandArguments.command) && this.commandsMap.get(commandArguments.command).dmAble) {
             console.log(commandArguments.command + " command requested");
             this.commandsMap.get(commandArguments.command).exec(message, commandArguments.commandArguments);
         } else {

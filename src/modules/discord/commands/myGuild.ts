@@ -23,6 +23,7 @@ import { Command } from "../../../interfaces/Command";
 
 export class MyGuild implements Command {
     db: DB;
+    dmAble = false;
 
     constructor() {
         this.db = App.db;

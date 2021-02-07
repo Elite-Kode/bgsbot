@@ -26,6 +26,7 @@ import { Command } from "../../../interfaces/Command";
 
 export class MonitorSystems implements Command {
     db: DB;
+    dmAble = false;
 
     constructor() {
         this.db = App.db;

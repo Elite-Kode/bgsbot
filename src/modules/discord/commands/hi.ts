@@ -18,6 +18,8 @@ import { Message } from 'discord.js';
 import { Command } from "../../../interfaces/Command";
 
 export class Hi implements Command {
+    dmAble = true;
+
     exec(message: Message, commandArguments: string): void {
         if (commandArguments.length === 0) {
             message.channel.send("Hey there!");
