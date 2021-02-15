@@ -36,11 +36,8 @@ export class DB {
         this.url = DBSecrets.url;
         this.model = Object();
         this.options = {
-            server: {
-                socketOptions: {
-                    keepAlive: 120
-                }
-            },
+            socketTimeoutMS: 120,
+            keepAlive: true,
             user: this.userName,
             pass: this.password
         };
