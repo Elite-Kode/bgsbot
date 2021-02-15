@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import * as request from 'request-promise-native';
-import { FullResponse, OptionsWithUrl } from 'request-promise-native';
 import * as moment from 'moment';
 import { Message, MessageEmbed, Permissions } from 'discord.js';
 import App from '../../../server';
@@ -24,6 +22,7 @@ import { DB } from '../../../db';
 import { Access } from '../access';
 import { TickSchema, TickType } from '../../../interfaces/typings';
 import { Command } from "../../../interfaces/Command";
+import axios from "axios";
 
 export class Tick implements Command {
     db: DB;
@@ -174,22 +173,18 @@ export class Tick implements Command {
     }
 
     public async getTickData(): Promise<TickSchema> {
-        let requestOptions: OptionsWithUrl = {
-            url: "https://elitebgs.app/api/ebgs/v5/ticks",
-            json: true,
-            resolveWithFullResponse: true
-        }
+        let url = "https://elitebgs.app/api/ebgs/v5/ticks";
 
-        let response: FullResponse = await request.get(requestOptions);
-        if (response.statusCode == 200) {
-            let body: TickType = response.body;
+        let response = await axios.get(url);
+        if (response.status == 200) {
+            let body: TickType = response.data;
             if (body.length === 0) {
                 return Promise.reject("No tick data received");
             } else {
                 return Promise.resolve(body[0])
             }
         } else {
-            return Promise.reject(response.statusMessage);
+            return Promise.reject(response.statusText);
         }
     }
 

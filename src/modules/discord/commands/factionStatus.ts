@@ -15,8 +15,6 @@
  */
 
 import { Message, MessageEmbed, Permissions } from 'discord.js';
-import * as request from 'request-promise-native';
-import { FullResponse, OptionsWithUrl } from 'request-promise-native';
 import * as moment from 'moment';
 import App from '../../../server';
 import { Responses } from '../responseDict';
@@ -27,6 +25,7 @@ import { StringHandlers } from '../../../stringHandlers';
 import { FdevIds } from '../../../fdevids';
 import { Tick } from './tick';
 import { Command } from "../../../interfaces/Command";
+import axios, { AxiosRequestConfig } from "axios";
 
 export class FactionStatus implements Command {
     db: DB;
@@ -75,22 +74,20 @@ export class FactionStatus implements Command {
                 if (message.guild.me.permissionsIn(message.channel).has([flags.EMBED_LINKS])) {
                     let factionName: string = argsArray.slice(1).join(" ").toLowerCase();
 
-                    let requestOptions: OptionsWithUrl = {
-                        url: "https://elitebgs.app/api/ebgs/v5/factions",
-                        qs: {
+                    let url = "https://elitebgs.app/api/ebgs/v5/factions";
+                    let requestOptions: AxiosRequestConfig = {
+                        params: {
                             name: factionName,
                             systemDetails: true,
                             count: 2
-                        },
-                        json: true,
-                        resolveWithFullResponse: true
-                    }
+                        }
+                    };
 
                     let tick = new Tick();
                     this.tickTime = (await tick.getTickData()).updated_at;
-                    let response: FullResponse = await request.get(requestOptions);
-                    if (response.statusCode === 200) {
-                        let body: EBGSFactionsDetailed = response.body;
+                    let response = await axios.get(url, requestOptions);
+                    if (response.status === 200) {
+                        let body: EBGSFactionsDetailed = response.data;
                         if (body.total === 0) {
                             try {
                                 await message.channel.send(Responses.getResponse(Responses.FAIL));
@@ -270,7 +267,7 @@ export class FactionStatus implements Command {
                             }
                         }
                     } else {
-                        App.bugsnagClient.call(response.statusMessage);
+                        App.bugsnagClient.call(response.statusText);
                     }
                 } else {
                     try {

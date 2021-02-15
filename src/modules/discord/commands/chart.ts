@@ -15,14 +15,13 @@
  */
 
 import { Message, MessageAttachment, Permissions } from 'discord.js';
-import * as request from 'request-promise-native';
-import { FullResponse, OptionsWithUrl } from 'request-promise-native';
 import * as contentDisposition from 'content-disposition';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db';
 import { Access } from '../access';
 import { Command } from "../../../interfaces/Command";
+import axios, { AxiosRequestConfig } from "axios";
 
 export class Chart implements Command {
     db: DB;
@@ -75,21 +74,18 @@ export class Chart implements Command {
                             if (guild.theme) {
                                 theme = guild.theme;
                             }
-                            let requestOptions: OptionsWithUrl = {
-                                url: url,
-                                qs: {
+                            let requestOptions: AxiosRequestConfig = {
+                                params: {
                                     name: name,
-                                    timemin: timenow - 10 * 24 * 60 * 60 * 1000,
-                                    timemax: timenow,
+                                    timeMin: timenow - 10 * 24 * 60 * 60 * 1000,
+                                    timeMax: timenow,
                                     theme: theme
-                                },
-                                encoding: null,
-                                resolveWithFullResponse: true
-                            }
+                                }
+                            };
 
-                            let response: FullResponse = await request.get(requestOptions);
-                            if (response.statusCode === 200) {
-                                let attachment = new MessageAttachment(response.body as Buffer, contentDisposition.parse(response.headers['content-disposition']).parameters.filename);
+                            let response = await axios.get(url, requestOptions);
+                            if (response.status === 200) {
+                                let attachment = new MessageAttachment(response.data as Buffer, contentDisposition.parse(response.headers['content-disposition']).parameters.filename);
                                 if (this.dm) {
                                     message.channel.send("I have DM'd the result to you");
                                     message.member.send(attachment);
@@ -97,7 +93,7 @@ export class Chart implements Command {
                                     message.channel.send(attachment);
                                 }
                             } else {
-                                App.bugsnagClient.call(response.statusMessage, {
+                                App.bugsnagClient.call(response.statusText, {
                                     metaData: {
                                         guild: guild._id
                                     }

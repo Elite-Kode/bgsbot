@@ -15,14 +15,13 @@
  */
 
 import { Message, MessageEmbed, Permissions } from 'discord.js';
-import * as request from 'request-promise-native';
-import { FullResponse, OptionsWithUrl } from 'request-promise-native';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db';
 import { Access } from '../access';
 import { EBGSFactionsMinimal } from "../../../interfaces/typings";
 import { Command } from "../../../interfaces/Command";
+import axios, { AxiosRequestConfig } from "axios";
 
 export class MonitorFactions implements Command {
     db: DB;
@@ -71,19 +70,17 @@ export class MonitorFactions implements Command {
             if (argsArray.length >= 2) {
                 let guildId = message.guild.id;
                 let factionName = argsArray.slice(1).join(" ");
-                let requestOptions: OptionsWithUrl = {
-                    url: "https://elitebgs.app/api/ebgs/v5/factions",
-                    qs: {
+                let url = "https://elitebgs.app/api/ebgs/v5/factions";
+                let requestOptions: AxiosRequestConfig = {
+                    params: {
                         name: factionName,
                         minimal: true
-                    },
-                    json: true,
-                    resolveWithFullResponse: true
-                }
+                    }
+                };
 
-                let response: FullResponse = await request.get(requestOptions);
-                if (response.statusCode == 200) {
-                    let body: EBGSFactionsMinimal = response.body;
+                let response = await axios.get(url, requestOptions);
+                if (response.status == 200) {
+                    let body: EBGSFactionsMinimal = response.data;
                     if (body.total === 0) {
                         try {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
@@ -127,7 +124,7 @@ export class MonitorFactions implements Command {
                         }
                     }
                 } else {
-                    App.bugsnagClient.call(response.statusMessage);
+                    App.bugsnagClient.call(response.statusText);
                 }
             } else {
                 message.channel.send(Responses.getResponse(Responses.NOPARAMS));

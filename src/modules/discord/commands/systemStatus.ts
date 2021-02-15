@@ -15,8 +15,7 @@
  */
 
 import { Message, MessageEmbed, Permissions } from 'discord.js';
-import * as request from 'request-promise-native';
-import { FullResponse, OptionsWithUrl } from 'request-promise-native';
+import axios, { AxiosRequestConfig } from 'axios'
 import * as moment from 'moment';
 import App from '../../../server';
 import { Responses } from '../responseDict';
@@ -74,23 +73,21 @@ export class SystemStatus implements Command {
                 if (message.guild.me.permissionsIn(message.channel).has([flags.EMBED_LINKS])) {
                     let systemName: string = argsArray.slice(1).join(" ").toLowerCase();
 
-                    let requestOptions: OptionsWithUrl = {
-                        url: "https://elitebgs.app/api/ebgs/v5/systems",
-                        qs: {
+                    let url = "https://elitebgs.app/api/ebgs/v5/systems";
+                    let requestOptions: AxiosRequestConfig = {
+                        params: {
                             name: systemName,
                             factionDetails: true,
                             factionHistory: true,
                             count: 2
-                        },
-                        json: true,
-                        resolveWithFullResponse: true
-                    }
+                        }
+                    };
 
                     let tick = new Tick();
                     this.tickTime = (await tick.getTickData()).updated_at;
-                    let response: FullResponse = await request.get(requestOptions);
-                    if (response.statusCode == 200) {
-                        let body: EBGSSystemsDetailed = response.body;
+                    let response = await axios.get(url, requestOptions);
+                    if (response.status == 200) {
+                        let body: EBGSSystemsDetailed = response.data;
                         if (body.total === 0) {
                             try {
                                 await message.channel.send(Responses.getResponse(Responses.FAIL));
@@ -279,7 +276,7 @@ export class SystemStatus implements Command {
                             }
                         }
                     } else {
-                        App.bugsnagClient.call(response.statusMessage);
+                        App.bugsnagClient.call(response.statusText);
                     }
                 } else {
                     try {

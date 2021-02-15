@@ -14,30 +14,25 @@
  * limitations under the License.
  */
 
-import * as request from 'request-promise-native';
 import { IngameIdsSchema } from "./interfaces/typings";
-import { OptionsWithUrl, FullResponse } from 'request-promise-native';
+import axios from "axios";
 
 export class FdevIds {
     private static ids: IngameIdsSchema;
 
     static async initialiseIds() {
-        let requestOptions: OptionsWithUrl = {
-            url: "https://elitebgs.app/ingameids/all",
-            json: true,
-            resolveWithFullResponse: true
-        }
+        let url = "https://elitebgs.app/ingameids/all";
 
-        let response: FullResponse = await request.get(requestOptions);
-        if (response.statusCode == 200) {
-            let body: IngameIdsSchema = response.body;
+        let response = await axios.get(url);
+        if (response.status == 200) {
+            let body: IngameIdsSchema = response.data;
             if (body) {
                 FdevIds.ids = body;
             } else {
-                throw new Error(response.statusMessage);
+                throw new Error(response.statusText);
             }
         } else {
-            throw new Error(response.statusMessage);
+            throw new Error(response.statusText);
         }
     }
 

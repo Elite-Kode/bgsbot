@@ -15,8 +15,6 @@
  */
 
 import { Message, MessageEmbed, Permissions, TextChannel } from 'discord.js';
-import * as request from 'request-promise-native';
-import { FullResponse, OptionsWithUrl } from 'request-promise-native';
 import * as moment from 'moment';
 import App from '../../../server';
 import { Responses } from '../responseDict';
@@ -27,6 +25,7 @@ import { AutoReport } from '../../cron';
 import { FdevIds } from '../../../fdevids';
 import { Tick } from './tick';
 import { Command } from "../../../interfaces/Command";
+import axios, { AxiosRequestConfig } from "axios";
 
 export class BGSReport implements Command {
     db: DB;
@@ -323,20 +322,18 @@ export class BGSReport implements Command {
 
             primarySystems.forEach(system => {
                 primarySystemPromises.push((async () => {
-                    let requestOptions: OptionsWithUrl = {
-                        url: "https://elitebgs.app/api/ebgs/v5/systems",
-                        qs: {
+                    let url = "https://elitebgs.app/api/ebgs/v5/systems";
+                    let requestOptions: AxiosRequestConfig = {
+                        params: {
                             name: system.toLowerCase(),
                             factionDetails: true,
                             factionHistory: true,
                             count: 2
-                        },
-                        json: true,
-                        resolveWithFullResponse: true
-                    }
-                    let response: FullResponse = await request.get(requestOptions);
-                    if (response.statusCode == 200) {
-                        let body: EBGSSystemsDetailed = response.body;
+                        }
+                    };
+                    let response = await axios.get(url, requestOptions);
+                    if (response.status == 200) {
+                        let body: EBGSSystemsDetailed = response.data;
                         if (body.total === 0) {
                             return [system, `${this.acronym(system)} System not found\n`, system] as [string, string, string];
                         } else {
@@ -501,26 +498,24 @@ export class BGSReport implements Command {
                             return [system, joined, system] as [string, string, string];
                         }
                     } else {
-                        throw new Error(response.statusMessage);
+                        throw new Error(response.statusText);
                     }
                 })());
             });
             secondarySystems.forEach(system => {
                 secondarySystemPromises.push((async () => {
-                    let requestOptions: OptionsWithUrl = {
-                        url: "https://elitebgs.app/api/ebgs/v5/systems",
-                        qs: {
+                    let url = "https://elitebgs.app/api/ebgs/v5/systems";
+                    let requestOptions: AxiosRequestConfig = {
+                        params: {
                             name: system.toLowerCase(),
                             factionDetails: true,
                             factionHistory: true,
                             count: 2
-                        },
-                        json: true,
-                        resolveWithFullResponse: true
-                    }
-                    let response: FullResponse = await request.get(requestOptions);
-                    if (response.statusCode == 200) {
-                        let body: EBGSSystemsDetailed = response.body;
+                        }
+                    };
+                    let response = await axios.get(url, requestOptions);
+                    if (response.status == 200) {
+                        let body: EBGSSystemsDetailed = response.data;
                         if (body.total === 0) {
                             return [system, `${this.acronym(system)} System not found\n`, system] as [string, string, string];
                         } else {
@@ -666,7 +661,7 @@ export class BGSReport implements Command {
                             return [system, joined, system] as [string, string, string];
                         }
                     } else {
-                        throw new Error(response.statusMessage);
+                        throw new Error(response.statusText);
                     }
                 })());
             });
@@ -696,15 +691,13 @@ export class BGSReport implements Command {
             allMonitoredFactions.forEach(faction => {
                 if (allMonitoredFactionsUsed.indexOf(faction) === -1) {
                     unusedFactionFetchPromises.push((async () => {
-                        let requestOptions: OptionsWithUrl = {
-                            url: "https://elitebgs.app/api/ebgs/v5/factions",
-                            qs: {name: faction.toLowerCase()},
-                            json: true,
-                            resolveWithFullResponse: true
-                        }
-                        let response: FullResponse = await request.get(requestOptions);
-                        if (response.statusCode == 200) {
-                            let body: EBGSFactions = response.body;
+                        let url = "https://elitebgs.app/api/ebgs/v5/factions";
+                        let requestOptions: AxiosRequestConfig = {
+                            params: {name: faction.toLowerCase()}
+                        };
+                        let response = await axios.get(url, requestOptions);
+                        if (response.status == 200) {
+                            let body: EBGSFactions = response.data;
                             if (body.total === 0) {
                                 return false;
                             } else {
@@ -749,7 +742,7 @@ export class BGSReport implements Command {
                                 return true;
                             }
                         } else {
-                            throw new Error(response.statusMessage);
+                            throw new Error(response.statusText);
                         }
                     })());
                 }

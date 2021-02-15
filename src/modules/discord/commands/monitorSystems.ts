@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import * as request from 'request-promise-native';
-import { FullResponse, OptionsWithUrl } from 'request-promise-native';
 import App from '../../../server';
 import { Responses } from '../responseDict';
 import { DB } from '../../../db';
@@ -23,6 +21,7 @@ import { Access } from '../access';
 import { Message, MessageEmbed, Permissions } from "discord.js";
 import { EBGSSystemsMinimal } from "../../../interfaces/typings";
 import { Command } from "../../../interfaces/Command";
+import axios, { AxiosRequestConfig } from "axios";
 
 export class MonitorSystems implements Command {
     db: DB;
@@ -71,19 +70,17 @@ export class MonitorSystems implements Command {
             if (argsArray.length >= 2) {
                 let guildId = message.guild.id;
                 let systemName = argsArray.slice(1).join(" ");
-                let requestOptions: OptionsWithUrl = {
-                    url: "https://elitebgs.app/api/ebgs/v5/systems",
-                    qs: {
+                let url = "https://elitebgs.app/api/ebgs/v5/systems";
+                let requestOptions: AxiosRequestConfig = {
+                    params: {
                         name: systemName,
                         minimal: true
-                    },
-                    json: true,
-                    resolveWithFullResponse: true
-                }
+                    }
+                };
 
-                let response: FullResponse = await request.get(requestOptions);
-                if (response.statusCode == 200) {
-                    let body: EBGSSystemsMinimal = response.body;
+                let response = await axios.get(url, requestOptions);
+                if (response.status == 200) {
+                    let body: EBGSSystemsMinimal = response.data;
                     if (body.total === 0) {
                         try {
                             await message.channel.send(Responses.getResponse(Responses.FAIL));
@@ -132,7 +129,7 @@ export class MonitorSystems implements Command {
                         }
                     }
                 } else {
-                    App.bugsnagClient.call(response.statusMessage);
+                    App.bugsnagClient.call(response.statusText);
                 }
             } else {
                 message.channel.send(Responses.getResponse(Responses.NOPARAMS));
