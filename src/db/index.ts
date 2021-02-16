@@ -36,8 +36,10 @@ export class DB {
         this.url = DBSecrets.url;
         this.model = Object();
         this.options = {
-            socketTimeoutMS: 120,
             keepAlive: true,
+            keepAliveInitialDelay: 120000,
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
             user: this.userName,
             pass: this.password
         };
