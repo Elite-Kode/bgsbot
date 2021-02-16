@@ -80,7 +80,8 @@ export class Chart implements Command {
                                     timemin: timenow - 10 * 24 * 60 * 60 * 1000,
                                     timemax: timenow,
                                     theme: theme
-                                }
+                                },
+                                responseType: 'arraybuffer'
                             };
 
                             let response = await axios.get(url, requestOptions);
