@@ -77,8 +77,8 @@ export class Chart implements Command {
                             let requestOptions: AxiosRequestConfig = {
                                 params: {
                                     name: name,
-                                    timeMin: timenow - 10 * 24 * 60 * 60 * 1000,
-                                    timeMax: timenow,
+                                    timemin: timenow - 10 * 24 * 60 * 60 * 1000,
+                                    timemax: timenow,
                                     theme: theme
                                 }
                             };
