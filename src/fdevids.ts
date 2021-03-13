@@ -21,7 +21,7 @@ export class FdevIds {
     private static ids: IngameIdsSchema;
 
     static async initialiseIds() {
-        let url = "https://elitebgs.app/ingameids/all";
+        let url = "https://elitebgs.app/api/ingameids/all";
 
         let response = await axios.get(url);
         if (response.status == 200) {
