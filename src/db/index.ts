@@ -46,12 +46,12 @@ export class DB {
         this.connectToDB();
     }
 
-    connectToDB(): void {
-        mongoose.connect(this.url, this.options, (err) => {
-            if (err) {
-                App.bugsnagClient.call(err);
-            }
-        });
+    async connectToDB() {
+        try {
+            await mongoose.connect(this.url, this.options);
+        } catch (err) {
+            App.bugsnagClient.call(err);
+        }
         this.listenToEvents();
         this.createModels();
     }
