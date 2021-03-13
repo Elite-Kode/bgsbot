@@ -44,6 +44,11 @@ class App {
         this.routes();
         this.discordClient = new DiscordClient();
         this.db = new DB();
+        this.setup()
+    }
+
+    private async setup() {
+        await this.db.connectToDB()
         this.cron();
         this.generateFdevIds();
         this.listener();

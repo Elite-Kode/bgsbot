@@ -43,16 +43,15 @@ export class DB {
             user: this.userName,
             pass: this.password
         };
-        this.connectToDB();
     }
 
-    async connectToDB() {
+    public async connectToDB() {
+        this.listenToEvents();
         try {
             await mongoose.connect(this.url, this.options);
         } catch (err) {
             App.bugsnagClient.call(err);
         }
-        this.listenToEvents();
         this.createModels();
     }
 
