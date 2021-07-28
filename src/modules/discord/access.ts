@@ -50,11 +50,14 @@ export class Access {
                         }
                             break;
                         case "bgs": {
-                            let bgsRole = guild.bgs_role_id;
-                            if (roles.cache.has(bgsRole)) {
-                                bool = true;
-                            }
+                            let bgsRole = guild.bgs_roles_id;
+                            bgsRole.forEach((role, index) => {
+                                if (roles.cache.has(role)) {
+                                    bool = true;
+                                }
+                            });
                         }
+                            break;
                         case "forbidden": {
                             let forbiddenRoles = guild.forbidden_roles_id;
                             forbiddenRoles.forEach((role, index) => {
@@ -69,9 +72,8 @@ export class Access {
 
             if (bool) {
                 return true;
-            } else {
-                throw new Error('Access Denied');
             }
+            throw new Error('Access Denied');
         }
     }
 }

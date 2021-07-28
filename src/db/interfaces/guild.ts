@@ -17,12 +17,12 @@
 export interface IGuild {
     guild_id: string,
     bgs_channel_id: string,
-    bgs_role_id: string,
     bgs_time: string,
     announce_tick: boolean,
     sort: string,
     sort_order: number,
     theme: string,
+    bgs_roles_id: string[],
     admin_roles_id: string[],
     forbidden_roles_id: string[],
     created_at: Date,

@@ -449,6 +449,14 @@ export class BGSReport implements Command {
                                         } else {
                                             return 0;
                                         }
+                                    } else if (guild.sort === 'updatedAt') {
+                                        if (guild.sort_order === -1) {
+                                            return b.influence - a.influence;
+                                        } else if (guild.sort_order === 1) {
+                                            return a.influence - b.influence;
+                                        } else {
+                                            return 0;
+                                        }
                                     } else {
                                         return 0;
                                     }

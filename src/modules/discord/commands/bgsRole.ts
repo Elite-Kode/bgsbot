@@ -61,6 +61,10 @@ export class BGSRole implements Command {
     }
 
     async set(message: Message, argsArray: string[]) {
+        this.add(message, argsArray)
+    }
+
+    async add(message: Message, argsArray: string[]) {
         try {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN]);
             if (argsArray.length === 2) {
@@ -73,7 +77,7 @@ export class BGSRole implements Command {
                             {guild_id: guildId},
                             {
                                 updated_at: new Date(),
-                                bgs_role_id: bgsRoleId
+                                $addToSet: {bgs_roles_id: bgsRoleId}
                             });
                         if (guild) {
                             message.channel.send(Responses.getResponse(Responses.SUCCESS));
@@ -111,13 +115,14 @@ export class BGSRole implements Command {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN]);
             if (argsArray.length === 1) {
                 let guildId = message.guild.id;
+                let bgsRoleId = argsArray[1];
 
                 try {
                     let guild = await this.db.model.guild.findOneAndUpdate(
                         {guild_id: guildId},
                         {
                             updated_at: new Date(),
-                            $unset: {bgs_role_id: 1}
+                            $pull: {bgs_roles_id: bgsRoleId}
                         });
                     if (guild) {
                         message.channel.send(Responses.getResponse(Responses.SUCCESS));
@@ -146,6 +151,10 @@ export class BGSRole implements Command {
     }
 
     async show(message: Message, argsArray: string[]) {
+        this.list(message, argsArray)
+    }
+
+    async list(message: Message, argsArray: string[]) {
         try {
             await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN]);
             if (argsArray.length === 1) {
@@ -154,19 +163,21 @@ export class BGSRole implements Command {
                 try {
                     let guild = await this.db.model.guild.findOne({guild_id: guildId});
                     if (guild) {
-                        if (guild.bgs_role_id && guild.bgs_role_id.length !== 0) {
+                        if (guild.bgs_roles_id && guild.bgs_roles_id.length !== 0) {
                             let flags = Permissions.FLAGS;
                             if (message.guild.me.permissionsIn(message.channel).has([flags.EMBED_LINKS])) {
                                 let embed = new MessageEmbed();
                                 embed.setTitle("BGS Role");
                                 embed.setColor([255, 0, 255]);
-                                let id = "";
-                                if (message.guild.channels.cache.has(guild.bgs_channel_id)) {
-                                    id = `${guild.bgs_role_id} - @${message.guild.roles.cache.get(guild.bgs_role_id).name}\n`;
-                                } else {
-                                    id = `${guild.bgs_role_id} - Does not exist in Discord. Please delete this from BGSBot`;
-                                }
-                                embed.addField("Ids and Names", id);
+                                let idList = "";
+                                guild.bgs_roles_id.forEach(id => {
+                                    if (message.guild.roles.cache.has(id)) {
+                                        idList = `${id} - @${message.guild.roles.cache.get(id).name}\n`;
+                                    } else {
+                                        idList = `${id} - Does not exist in Discord. Please delete this from BGSBot`;
+                                    }
+                                });
+                                embed.addField("Ids and Names", idList);
                                 embed.setTimestamp(new Date());
                                 try {
                                     message.channel.send(embed);
@@ -227,16 +238,16 @@ export class BGSRole implements Command {
 
     help(): [string, string, string, string[]] {
         return [
-            'bgsrole(aliases: brl)',
-            'Sets, removes or shows the role set up for using the general commands of BGSBot',
-            'bgsrole <set|remove|show> <role id>\nbgsrole <s|r|sh> <role id>',
+            'bgsroles(aliases: brl)',
+            'Adds, removes or lists the roles set up for using the general commands of BGSBot',
+            'bgsroles <add|remove|list> <role id>\nbgsroles <a|r|l> <role id>',
             [
-                '`@BGSBot bgsrole set 123456789012345678`',
-                '`@BGSBot brl s 123456789012345678`',
-                '`@BGSBot bgsrole remove`',
+                '`@BGSBot bgsroles set 123456789012345678`',
+                '`@BGSBot brl a 123456789012345678`',
+                '`@BGSBot bgsroles remove`',
                 '`@BGSBot brl remove`',
-                '`@BGSBot bgsrole show`',
-                '`@BGSBot bgsrole sh`'
+                '`@BGSBot bgsroles list`',
+                '`@BGSBot bgsroles l`'
             ]
         ];
     }

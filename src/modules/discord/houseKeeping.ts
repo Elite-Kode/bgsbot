@@ -54,11 +54,11 @@ export class HouseKeeping {
                 let guild = await this.db.model.guild.findOneAndUpdate(
                     {
                         guild_id: guildId,
-                        bgs_role_id: role.id
+                        bgs_roles_id: role.id
                     },
                     {
                         updated_at: new Date(),
-                        $unset: { bgs_role_id: 1 }
+                        $pull: { bgs_roles_id: 1 }
                     });
                 if (guild) {
                     console.log("Role deleted");

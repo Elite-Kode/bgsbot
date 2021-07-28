@@ -22,7 +22,7 @@ export let guildSchema: Schema = new Schema({
         unique: true
     },
     bgs_channel_id: String,
-    bgs_role_id: String,
+    bgs_roles_id: [String],
     bgs_time: String,
     announce_tick: Boolean,
     sort: String,
