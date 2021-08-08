@@ -71,7 +71,7 @@ Please address any errors you see, such as installing missing node modules, such
     foo@bar:~$ npm install --save <module> 
 ```
 
-This will include the package in package.json as well as install it locally. This should then allow a clean `npm i' with no errors. Please [report missing packages as an issue](https://github.com/SayakMukhopadhyay/bgsbot/issues).
+This will include the package in package.json as well as install it locally. This should then allow a clean `npm i' with no errors. Please [report missing packages as an issue](https://github.com/Elite-Kode/bgsbot/issues).
 
 ## Configure source code
 

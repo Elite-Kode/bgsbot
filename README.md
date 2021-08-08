@@ -2,7 +2,7 @@
 
 A [Discord](https://discordapp.com/ "Discord") bot for Elite Dangerous player groups. Track your player faction in Discord. 
 
-For more details please refer the [wiki](https://github.com/SayakMukhopadhyay/bgsbot/wiki "BGSBot Wiki")
+For more details please refer the [wiki](https://github.com/Elite-Kode/bgsbot/wiki "BGSBot Wiki")
 
 ## Contributing
 
