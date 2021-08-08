@@ -162,7 +162,6 @@ export class DiscordClient {
         this.commandsMap.set("factionstatusdm", factionStatusDm);
         this.commandsMap.set("fsdm", factionStatusDm);
         this.commandsMap.set("bgsreport", bgsReport);
-        this.commandsMap.set("bgsreport", bgsReport);
         this.commandsMap.set("brt", bgsReport);
         this.commandsMap.set("bgsreportdm", bgsReportDm);
         this.commandsMap.set("brtdm", bgsReportDm);
