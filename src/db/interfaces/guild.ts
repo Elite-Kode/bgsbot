@@ -41,9 +41,5 @@ export interface IGuild {
         primary: boolean,
         faction_name: string,
         faction_name_lower: string
-    }[],
-    custom: {
-        set: boolean,
-        requester_user_id: string
-    }
+    }[]
 }

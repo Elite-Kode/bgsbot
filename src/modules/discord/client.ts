@@ -39,7 +39,6 @@ import { HouseKeeping } from './houseKeeping';
 import { HelpSchema } from '../../interfaces/typings';
 import App from '../../server';
 import { DB } from '../../db';
-import { CustomFunctionality } from './custom'
 import { Command } from "../../interfaces/Command";
 
 export class DiscordClient {
@@ -47,7 +46,6 @@ export class DiscordClient {
     public commandsMap: Map<string, Command>;
     private houseKeeping: HouseKeeping;
     private db: DB;
-    private custom: CustomFunctionality;
 
     constructor() {
         this.client = new Client();
@@ -66,7 +64,6 @@ export class DiscordClient {
             this.houseKeeping = new HouseKeeping();
             this.initiateCommands();
             this.createHelp();
-            this.initiateCustom();
         });
 
         this.client.on("message", async (message) => {
@@ -81,15 +78,7 @@ export class DiscordClient {
             }).size > 0) {
                 this.db = App.db;
                 try {
-                    let guild = await this.db.model.guild.findOne({
-                        guild_id: message.guild.id,
-                        'custom.set': true
-                    });
-                    if (guild) {
-                        this.custom[`g${guild.guild_id}`].exec(message);
-                    } else {
-                        this.processNormal(message)
-                    }
+                    this.processNormal(message)
                 } catch (err) {
                     message.channel.send(Responses.getResponse(Responses.FAIL));
                     App.bugsnagClient.call(err);
@@ -183,10 +172,6 @@ export class DiscordClient {
         this.commandsMap.set("theme", new Theme());
         this.commandsMap.set("tick", new Tick());
         this.commandsMap.set("tickdm", new Tick(true));
-    }
-
-    private initiateCustom(): void {
-        this.custom = new CustomFunctionality();
     }
 
     createHelp(): void {
