@@ -35,11 +35,15 @@ export class Help implements Command {
         if (commandArguments.length !== 0) {
             argsArray = commandArguments.split(" ");
         }
-        if (argsArray.length === 0) {
-            message.channel.send("I have DM'd the help documents to you");
-            this.display(message, 1, null);
-        } else {
-            message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+        try {
+            if (argsArray.length === 0) {
+                message.channel.send("I have DM'd the help documents to you");
+                this.display(message, 1, null);
+            } else {
+                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+            }
+        } catch (err) {
+            App.bugsnagClient.call(err);
         }
     }
 

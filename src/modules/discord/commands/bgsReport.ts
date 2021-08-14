@@ -44,16 +44,20 @@ export class BGSReport implements Command {
         if (commandArguments.length !== 0) {
             argsArray = commandArguments.split(" ");
         }
-        if (argsArray.length > 0) {
-            let command = argsArray[0].toLowerCase();
-            command = this.checkAndMapAlias(command);
-            if (this[command]) {
-                this[command](message, argsArray);
+        try {
+            if (argsArray.length > 0) {
+                let command = argsArray[0].toLowerCase();
+                command = this.checkAndMapAlias(command);
+                if (this[command]) {
+                    this[command](message, argsArray);
+                } else {
+                    message.channel.send(Responses.getResponse(Responses.NOTACOMMAND));
+                }
             } else {
-                message.channel.send(Responses.getResponse(Responses.NOTACOMMAND));
+                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
             }
-        } else {
-            message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+        } catch (err) {
+            App.bugsnagClient.call(err);
         }
     }
 
