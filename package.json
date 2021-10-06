@@ -1,6 +1,6 @@
 {
     "name": "bgsbot",
-    "version": "3.2.3",
+    "version": "3.2.4",
     "license": "Apache-2.0",
     "scripts": {
         "start": "gulp scripts && cross-env PORT=4002 pm2 start process.json --env production",
