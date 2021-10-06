@@ -165,7 +165,7 @@ export class BGSRole implements Command {
                                 embed.setTitle("BGS Role");
                                 embed.setColor([255, 0, 255]);
                                 let id = "";
-                                if (message.guild.channels.cache.has(guild.bgs_channel_id)) {
+                                if (message.guild.roles.cache.has(guild.bgs_role_id)) {
                                     id = `${guild.bgs_role_id} - @${message.guild.roles.cache.get(guild.bgs_role_id).name}\n`;
                                 } else {
                                     id = `${guild.bgs_role_id} - Does not exist in Discord. Please delete this from BGSBot`;
