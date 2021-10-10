@@ -1,0 +1,66 @@
+{
+  "name": "bgsbot",
+  "version": "0.1.0",
+  "description": "Discord bot bootstrapper",
+  "keywords": [
+    "typescript",
+    "boot"
+  ],
+  "homepage": "https://github.com/SayakMukhopadhyay/kodeblox#readme",
+  "bugs": {
+    "url": "https://github.com/SayakMukhopadhyay/kodeblox/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SayakMukhopadhyay/kodeblox.git"
+  },
+  "license": "Apache-2.0",
+  "author": "Sayak Mukhopadhyay <mukhopadhyaysayak@gmail.com>",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "prepare": "husky install",
+    "lint": "eslint \"{src,test}/**/*.ts\"",
+    "lint:fix": "eslint \"{src,test}/**/*.ts\" --fix",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage",
+    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test:e2e": "jest --config tests/jest-e2e.json",
+    "prepublishOnly": "npm run build"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "dependencies": {
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.13",
+    "@types/jest": "^27.0.2",
+    "@types/morgan": "^1.9.3",
+    "@types/node": "^16.10.1",
+    "@typescript-eslint/eslint-plugin": "^4.33.0",
+    "@typescript-eslint/parser": "^4.33.0",
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "husky": "^7.0.2",
+    "jest": "^27.2.4",
+    "prettier": "^2.4.1",
+    "ts-jest": "^27.0.5",
+    "ts-node": "^10.2.1",
+    "typescript": "^4.4.3"
+  },
+  "peerDependencies": {
+    "discord.js": "^13.1.0",
+    "express": "^4.17.1"
+  }
+}
