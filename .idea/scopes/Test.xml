@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="Test" pattern="file:test//*.test.ts" />
+</component>
