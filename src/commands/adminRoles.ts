@@ -1,11 +1,11 @@
 /*
- * KodeBlox Copyright 2017 Sayak Mukhopadhyay
+ * Copyright 2021 Sayak Mukhopadhyay
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http: //www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,228 +14,215 @@
  * limitations under the License.
  */
 
-import App from '../../../server';
-import { Responses } from '../responseDict';
-import { DB } from '../../../db';
-import { Access } from '../access';
 import { Message, MessageEmbed, Permissions } from 'discord.js';
-import { Command } from "../../../interfaces/Command";
+import { Access, ADMIN, Command, FORBIDDEN, GuildModel, LoggingClient, Responses } from 'kodeblox';
 
 export class AdminRoles implements Command {
-    db: DB;
-    dmAble = false;
+  respondDm = false;
+  sendDm = false;
+  respondAsDm: boolean;
+  calls = ['adminroles', 'arl'];
+  dmCalls = [];
+  arguments = {
+    add: this.add.bind(this),
+    a: this.add.bind(this),
+    remove: this.remove.bind(this),
+    r: this.remove.bind(this),
+    list: this.list.bind(this),
+    l: this.list.bind(this)
+  };
 
-    constructor() {
-        this.db = App.db;
-    }
+  constructor() {
+    this.respondAsDm = false;
+  }
 
-    exec(message: Message, commandArguments: string): void {
-        let argsArray: string[] = [];
-        if (commandArguments.length !== 0) {
-            argsArray = commandArguments.split(" ");
+  exec(message: Message, _commandArguments: string, argsArray: string[]): void {
+    try {
+      if (argsArray.length > 0) {
+        type ArgumentKeys = keyof typeof this.arguments;
+        const allowedArguments = Object.keys(this.arguments) as Array<ArgumentKeys>;
+        const command = argsArray[0].toLowerCase() as ArgumentKeys;
+        if (!allowedArguments.includes(command)) {
+          message.channel.send(Responses.getResponse(Responses.NOT_A_COMMAND));
+          return;
         }
-        try {
-            if (argsArray.length > 0) {
-                let command = argsArray[0].toLowerCase();
-                command = this.checkAndMapAlias(command);
-                if (this[command]) {
-                    this[command](message, argsArray);
-                } else {
-                    message.channel.send(Responses.getResponse(Responses.NOTACOMMAND));
-                }
+        this.arguments[command](message, argsArray);
+      } else {
+        message.channel.send(Responses.getResponse(Responses.NO_PARAMS));
+      }
+    } catch (err) {
+      LoggingClient.error(err);
+    }
+  }
+
+  async add(message: Message, argsArray: string[]): Promise<void> {
+    // Only the server admins can set the admin roles
+    if (message.member?.permissions.has(Permissions.FLAGS.ADMINISTRATOR)) {
+      if (argsArray.length === 2) {
+        const guildId = message.guild?.id;
+        const adminRoleId = argsArray[1];
+
+        if (guildId && message.guild?.roles.cache.has(adminRoleId)) {
+          try {
+            const guild = await GuildModel.findOneAndUpdate(
+              { guild_id: guildId },
+              {
+                $addToSet: { admin_roles_id: adminRoleId }
+              }
+            );
+            if (guild) {
+              message.channel.send(Responses.getResponse(Responses.SUCCESS));
             } else {
-                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+              try {
+                await message.channel.send(Responses.getResponse(Responses.FAIL));
+                message.channel.send(Responses.getResponse(Responses.GUILD_NOT_SETUP));
+              } catch (err) {
+                LoggingClient.error(err);
+              }
             }
-        } catch (err) {
-            App.bugsnagClient.call(err);
-        }
-    }
-
-    checkAndMapAlias(command: string) {
-        switch (command) {
-            case 'a':
-                return 'add';
-            case 'r':
-                return 'remove';
-            case 'l':
-                return 'list';
-            default:
-                return command;
-        }
-    }
-
-    async add(message: Message, argsArray: string[]) {
-        // Only the server admins can set the admin roles
-        let member = message.member;
-        if (member.hasPermission(Permissions.FLAGS.ADMINISTRATOR)) {
-            if (argsArray.length === 2) {
-                let guildId = message.guild.id;
-                let adminRoleId = argsArray[1];
-
-                if (message.guild.roles.cache.has(adminRoleId)) {
-                    try {
-                        let guild = await this.db.model.guild.findOneAndUpdate(
-                            {guild_id: guildId},
-                            {
-                                updated_at: new Date(),
-                                $addToSet: {admin_roles_id: adminRoleId}
-                            });
-                        if (guild) {
-                            message.channel.send(Responses.getResponse(Responses.SUCCESS));
-                        } else {
-                            try {
-                                await message.channel.send(Responses.getResponse(Responses.FAIL));
-                                message.channel.send(Responses.GUILDNOTSETUP);
-                            } catch (err) {
-                                App.bugsnagClient.call(err, {
-                                    metaData: {
-                                        guild: guild._id
-                                    }
-                                });
-                            }
-                        }
-                    } catch (err) {
-                        message.channel.send(Responses.getResponse(Responses.FAIL));
-                        App.bugsnagClient.call(err);
-                    }
-                } else {
-                    message.channel.send(Responses.getResponse(Responses.IDNOTFOUND));
-                }
-            } else if (argsArray.length > 2) {
-                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
-            } else {
-                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
-            }
+          } catch (err) {
+            message.channel.send(Responses.getResponse(Responses.FAIL));
+            LoggingClient.error(err);
+          }
         } else {
-            message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
+          message.channel.send(Responses.getResponse(Responses.ID_NOT_FOUND));
         }
+      } else if (argsArray.length > 2) {
+        message.channel.send(Responses.getResponse(Responses.TOO_MANY_PARAMS));
+      } else {
+        message.channel.send(Responses.getResponse(Responses.NO_PARAMS));
+      }
+    } else {
+      message.channel.send(Responses.getResponse(Responses.INSUFFICIENT_PERMS));
     }
+  }
 
-    async remove(message: Message, argsArray: string[]) {
+  async remove(message: Message, argsArray: string[]): Promise<void> {
+    try {
+      await Access.has(message.author, message.guild, [ADMIN, FORBIDDEN], true);
+      if (argsArray.length === 2) {
+        const guildId = message.guild?.id;
+        const adminRoleId = argsArray[1];
         try {
-            await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN], true);
-            if (argsArray.length === 2) {
-                let guildId = message.guild.id;
-                let adminRoleId = argsArray[1];
-
-                try {
-                    let guild = await this.db.model.guild.findOneAndUpdate(
-                        {guild_id: guildId},
-                        {
-                            updated_at: new Date(),
-                            $pull: {admin_roles_id: adminRoleId}
-                        });
-                    if (guild) {
-                        message.channel.send(Responses.getResponse(Responses.SUCCESS));
-                    } else {
-                        try {
-                            await message.channel.send(Responses.getResponse(Responses.FAIL));
-                            message.channel.send(Responses.GUILDNOTSETUP);
-                        } catch (err) {
-                            App.bugsnagClient.call(err, {
-                                metaData: {
-                                    guild: guild._id
-                                }
-                            });
-                        }
-                    }
-                } catch (err) {
-                    message.channel.send(Responses.getResponse(Responses.FAIL));
-                    App.bugsnagClient.call(err);
-                }
-            } else if (argsArray.length > 2) {
-                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+          if (guildId) {
+            const guild = await GuildModel.findOneAndUpdate(
+              { guild_id: guildId },
+              {
+                $pull: { admin_roles_id: adminRoleId }
+              }
+            );
+            if (guild) {
+              message.channel.send(Responses.getResponse(Responses.SUCCESS));
             } else {
-                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+              try {
+                await message.channel.send(Responses.getResponse(Responses.FAIL));
+                message.channel.send(Responses.getResponse(Responses.GUILD_NOT_SETUP));
+              } catch (err) {
+                LoggingClient.error(err);
+              }
             }
+          } else {
+            await message.channel.send(Responses.getResponse(Responses.FAIL));
+            message.channel.send(Responses.getResponse(Responses.GUILD_NOT_SETUP));
+          }
         } catch (err) {
-            message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
+          message.channel.send(Responses.getResponse(Responses.FAIL));
+          LoggingClient.error(err);
         }
+      } else if (argsArray.length > 2) {
+        message.channel.send(Responses.getResponse(Responses.TOO_MANY_PARAMS));
+      } else {
+        message.channel.send(Responses.getResponse(Responses.NO_PARAMS));
+      }
+    } catch (err) {
+      message.channel.send(Responses.getResponse(Responses.INSUFFICIENT_PERMS));
     }
+  }
 
-    async list(message: Message, argsArray: string[]) {
+  async list(message: Message, argsArray: string[]): Promise<void> {
+    try {
+      await Access.has(message.author, message.guild, [ADMIN, FORBIDDEN], true);
+      if (argsArray.length === 1) {
+        const guildId = message.guild?.id;
+
         try {
-            await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN], true);
-            if (argsArray.length === 1) {
-                let guildId = message.guild.id;
-
+          if (guildId) {
+            const guild = await GuildModel.findOne({ guild_id: guildId });
+            if (guild) {
+              if (guild.admin_roles_id && guild.admin_roles_id.length !== 0) {
+                const embed = new MessageEmbed();
+                embed.setTitle('Admin Roles');
+                embed.setColor([255, 0, 255]);
+                let idList = '';
+                guild.admin_roles_id.forEach((id) => {
+                  if (message.guild?.roles.cache.has(id)) {
+                    idList += `${id} - @${message.guild?.roles?.cache?.get(id)?.name}\n`;
+                  } else {
+                    idList += `${id} - Does not exist in Discord. Please delete this from BGSBot`;
+                  }
+                });
+                embed.addField('Ids and Names', idList);
+                embed.setTimestamp(new Date());
                 try {
-                    let guild = await this.db.model.guild.findOne({guild_id: guildId});
-                    if (guild) {
-                        if (guild.admin_roles_id && guild.admin_roles_id.length !== 0) {
-                            let embed = new MessageEmbed();
-                            embed.setTitle("Admin Roles");
-                            embed.setColor([255, 0, 255]);
-                            let idList = "";
-                            guild.admin_roles_id.forEach(id => {
-                                if (message.guild.roles.cache.has(id)) {
-                                    idList += `${id} - @${message.guild.roles.cache.get(id).name}\n`;
-                                } else {
-                                    idList += `${id} - Does not exist in Discord. Please delete this from BGSBot`;
-                                }
-                            });
-                            embed.addField("Ids and Names", idList);
-                            embed.setTimestamp(new Date());
-                            try {
-                                message.channel.send(embed);
-                            } catch (err) {
-                                App.bugsnagClient.call(err, {
-                                    metaData: {
-                                        guild: guild._id
-                                    }
-                                });
-                            }
-                        } else {
-                            try {
-                                await message.channel.send(Responses.getResponse(Responses.FAIL));
-                                message.channel.send("You don't have any admin roles set up");
-                            } catch (err) {
-                                App.bugsnagClient.call(err, {
-                                    metaData: {
-                                        guild: guild._id
-                                    }
-                                });
-                            }
-                        }
-                    } else {
-                        try {
-                            await message.channel.send(Responses.getResponse(Responses.FAIL));
-                            message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
-                        } catch (err) {
-                            App.bugsnagClient.call(err, {
-                                metaData: {
-                                    guild: guild._id
-                                }
-                            });
-                        }
-                    }
+                  message.channel.send({ embeds: [embed] });
                 } catch (err) {
-                    message.channel.send(Responses.getResponse(Responses.FAIL));
-                    App.bugsnagClient.call(err);
+                  LoggingClient.error(err, {
+                    metaData: {
+                      guild: guild._id
+                    }
+                  });
                 }
-            } else if (argsArray.length > 1) {
-                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+              } else {
+                try {
+                  await message.channel.send(Responses.getResponse(Responses.FAIL));
+                  message.channel.send("You don't have any admin roles set up");
+                } catch (err) {
+                  LoggingClient.error(err, {
+                    metaData: {
+                      guild: guild._id
+                    }
+                  });
+                }
+              }
             } else {
-                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+              try {
+                await message.channel.send(Responses.getResponse(Responses.FAIL));
+                message.channel.send(Responses.getResponse(Responses.GUILD_NOT_SETUP));
+              } catch (err) {
+                LoggingClient.error(err);
+              }
             }
+          } else {
+            await message.channel.send(Responses.getResponse(Responses.FAIL));
+            message.channel.send(Responses.getResponse(Responses.GUILD_NOT_SETUP));
+          }
         } catch (err) {
-            message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
+          message.channel.send(Responses.getResponse(Responses.FAIL));
+          LoggingClient.error(err);
         }
+      } else if (argsArray.length > 1) {
+        message.channel.send(Responses.getResponse(Responses.TOO_MANY_PARAMS));
+      } else {
+        message.channel.send(Responses.getResponse(Responses.NO_PARAMS));
+      }
+    } catch (err) {
+      message.channel.send(Responses.getResponse(Responses.INSUFFICIENT_PERMS));
     }
+  }
 
-    help(): [string, string, string, string[]] {
-        return [
-            'adminroles(aliases: arl)',
-            'Adds, removes or lists the roles that should have administering capability over BGSBot',
-            'adminroles <add|remove|list> <role id>\nadminroles <a|r|l> <role id>',
-            [
-                '`@BGSBot adminroles add 1234564789012345678`',
-                '`@BGSBot arl a 1234564789012345678`',
-                '`@BGSBot adminroles remove 123456789012345678`',
-                '`@BGSBot arl remove 123456789012345678`',
-                '`@BGSBot adminroles list`',
-                '`@BGSBot adminroles l`'
-            ]
-        ];
-    }
+  help(): [string, string, string, string[]] {
+    return [
+      'adminroles(aliases: arl)',
+      'Adds, removes or lists the roles that should have administering capability over BGSBot',
+      'adminroles <add|remove|list> <role id>\nadminroles <a|r|l> <role id>',
+      [
+        '`@BGSBot adminroles add 1234564789012345678`',
+        '`@BGSBot arl a 1234564789012345678`',
+        '`@BGSBot adminroles remove 123456789012345678`',
+        '`@BGSBot arl remove 123456789012345678`',
+        '`@BGSBot adminroles list`',
+        '`@BGSBot adminroles l`'
+      ]
+    ];
+  }
 }
