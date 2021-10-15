@@ -15,11 +15,25 @@
  * limitations under the License.
  */
 
-import { AppServer } from 'kodeblox';
+import { Access, AppServer, Bugsnag, LoggingClient } from 'kodeblox';
 import { config } from 'dotenv';
 import { Intents } from 'discord.js';
+import { Bgs } from './accesses/bgs';
 
 config();
+
+LoggingClient.registerLogger(
+  new Bugsnag({
+    // @ts-ignore
+    apiKey: process.env.BGSBOT_BUGSNAG_TOKEN ?? '',
+    appVersion: '0.0.1',
+    // @ts-ignore
+    disabled: process.env.BGSBOT_BUGSNAG_ENABLED !== 'true'
+  }),
+  true
+);
+
+Access.registerAccessChecker(new Bgs());
 
 const appServer = new AppServer({
   // @ts-ignore
@@ -35,6 +49,14 @@ const appServer = new AppServer({
         Intents.FLAGS.DIRECT_MESSAGE_REACTIONS
       ]
     }
+  },
+  db: {
+    // @ts-ignore
+    username: process.env.BGSBOT_DB_USER,
+    // @ts-ignore
+    password: process.env.BGSBOT_DB_PASSWORD,
+    // @ts-ignore
+    host: process.env.BGSBOT_DB_HOST
   }
 });
 appServer.server.on('listening', () => {
