@@ -15,242 +15,235 @@
  */
 
 import { Message, MessageEmbed, Permissions } from 'discord.js';
-import App from '../../../server';
-import { Responses } from '../responseDict';
-import { DB } from '../../../db';
-import { Access } from '../access';
-import { Command } from "../../../interfaces/Command";
+import { Access, ADMIN, Command, FORBIDDEN, LoggingClient, Responses } from 'kodeblox';
+import { ChannelTypes } from 'discord.js/typings/enums';
+import { Schema } from 'mongoose';
 
-export class BGSChannel implements Command {
-    db: DB;
-    dmAble = false;
+import { BgsModel } from '../schemas/bgs';
 
-    constructor() {
-        this.db = App.db;
-    }
+export class BgsChannel implements Command {
+  respondDm = false;
+  sendDm = false;
+  respondAsDm: boolean;
+  calls = ['adminroles', 'arl'];
+  dmCalls = [];
+  arguments = {
+    set: this.set.bind(this),
+    s: this.set.bind(this),
+    remove: this.remove.bind(this),
+    r: this.remove.bind(this),
+    show: this.show.bind(this),
+    sh: this.show.bind(this)
+  };
 
-    exec(message: Message, commandArguments: string): void {
-        let argsArray: string[] = [];
-        if (commandArguments.length !== 0) {
-            argsArray = commandArguments.split(" ");
+  constructor() {
+    this.respondAsDm = false;
+  }
+
+  exec(message: Message, _commandArguments: string, argsArray: string[]): void {
+    try {
+      if (argsArray.length > 0) {
+        type ArgumentKeys = keyof typeof this.arguments;
+        const allowedArguments = Object.keys(this.arguments) as Array<ArgumentKeys>;
+        const command = argsArray[0].toLowerCase() as ArgumentKeys;
+        if (!allowedArguments.includes(command)) {
+          message.channel.send(Responses.getResponse(Responses.NOT_A_COMMAND));
+          return;
         }
+        this.arguments[command](message, argsArray);
+      } else {
+        message.channel.send(Responses.getResponse(Responses.NO_PARAMS));
+      }
+    } catch (err) {
+      LoggingClient.error(err);
+    }
+  }
+
+  async set(message: Message, argsArray: string[]): Promise<void> {
+    try {
+      await Access.has(message.author, message.guild, [ADMIN, FORBIDDEN]);
+      if (argsArray.length === 2) {
+        const guildId = message.guild?.id;
+        const bgsChannelId = argsArray[1];
+
+        if (guildId && message.guild?.channels.cache.has(bgsChannelId)) {
+          try {
+            const channel = message.guild.channels.cache.get(bgsChannelId);
+            if (channel && channel.type !== ChannelTypes.GUILD_TEXT.toString()) {
+              try {
+                await message.channel.send(Responses.getResponse(Responses.FAIL));
+                message.channel.send(Responses.getResponse(Responses.NOT_A_TEXT_CHANNEL));
+              } catch (err) {
+                LoggingClient.error(err);
+              }
+            } else {
+              await message.channel.send(Responses.getResponse(Responses.FAIL));
+              message.channel.send(Responses.getResponse(Responses.NOT_A_TEXT_CHANNEL));
+            }
+            const guild = await BgsModel.findOneAndUpdate(
+              { guild_id: new Schema.Types.ObjectId(guildId) },
+              {
+                bgs_channel_id: bgsChannelId
+              }
+            );
+            if (guild) {
+              message.channel.send(Responses.getResponse(Responses.SUCCESS));
+            } else {
+              try {
+                await message.channel.send(Responses.getResponse(Responses.FAIL));
+                message.channel.send(Responses.getResponse(Responses.GUILD_NOT_SETUP));
+              } catch (err) {
+                LoggingClient.error(err);
+              }
+            }
+            const flags = Permissions.FLAGS;
+            if (channel && !message.guild.me?.permissionsIn(channel).has([flags.EMBED_LINKS, flags.SEND_MESSAGES])) {
+              try {
+                message.channel.send(Responses.getResponse(Responses.EMBED_PERMISSION));
+              } catch (err) {
+                LoggingClient.error(err);
+              }
+            }
+          } catch (err) {
+            message.channel.send(Responses.getResponse(Responses.FAIL));
+            LoggingClient.error(err);
+          }
+        } else {
+          message.channel.send(Responses.getResponse(Responses.ID_NOT_FOUND));
+        }
+      } else if (argsArray.length > 2) {
+        message.channel.send(Responses.getResponse(Responses.TOO_MANY_PARAMS));
+      } else {
+        message.channel.send(Responses.getResponse(Responses.NO_PARAMS));
+      }
+    } catch (err) {
+      message.channel.send(Responses.getResponse(Responses.INSUFFICIENT_PERMS));
+    }
+  }
+
+  async remove(message: Message, argsArray: string[]): Promise<void> {
+    try {
+      await Access.has(message.author, message.guild, [ADMIN, FORBIDDEN]);
+      if (argsArray.length === 1) {
+        const guildId = message.guild?.id;
         try {
-            if (argsArray.length > 0) {
-                let command = argsArray[0].toLowerCase();
-                command = this.checkAndMapAlias(command);
-                if (this[command]) {
-                    this[command](message, argsArray);
+          if (guildId) {
+            const guild = await BgsModel.findOneAndUpdate(
+              { guild_id: new Schema.Types.ObjectId(guildId) },
+              {
+                $unset: { bgs_channel_id: 1 }
+              }
+            );
+            if (guild) {
+              message.channel.send(Responses.getResponse(Responses.SUCCESS));
+            } else {
+              try {
+                await message.channel.send(Responses.getResponse(Responses.FAIL));
+                message.channel.send(Responses.getResponse(Responses.GUILD_NOT_SETUP));
+              } catch (err) {
+                LoggingClient.error(err);
+              }
+            }
+          } else {
+            await message.channel.send(Responses.getResponse(Responses.FAIL));
+            message.channel.send(Responses.getResponse(Responses.GUILD_NOT_SETUP));
+          }
+        } catch (err) {
+          message.channel.send(Responses.getResponse(Responses.FAIL));
+          LoggingClient.error(err);
+        }
+      } else {
+        message.channel.send(Responses.getResponse(Responses.TOO_MANY_PARAMS));
+      }
+    } catch (err) {
+      message.channel.send(Responses.getResponse(Responses.INSUFFICIENT_PERMS));
+    }
+  }
+
+  async show(message: Message, argsArray: string[]): Promise<void> {
+    try {
+      await Access.has(message.author, message.guild, [ADMIN, FORBIDDEN]);
+      if (argsArray.length === 1) {
+        const guildId = message.guild?.id;
+
+        try {
+          if (guildId) {
+            const guild = await BgsModel.findOne({ guild_id: new Schema.Types.ObjectId(guildId) });
+            if (guild) {
+              if (guild.bgs_channel_id && guild.bgs_channel_id.length !== 0) {
+                const embed = new MessageEmbed();
+                embed.setTitle('BGS Channel');
+                embed.setColor([255, 0, 255]);
+                let id = '';
+                if (message.guild.channels.cache.has(guild.bgs_channel_id)) {
+                  id = `${guild.bgs_channel_id} - @${
+                    message.guild?.channels?.cache?.get(guild.bgs_channel_id)?.name
+                  }\n`;
                 } else {
-                    message.channel.send(Responses.getResponse(Responses.NOTACOMMAND));
+                  id = `${guild.bgs_channel_id} - Does not exist in Discord. Please delete this from BGSBot`;
                 }
-            } else {
-                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
-            }
-        } catch (err) {
-            App.bugsnagClient.call(err);
-        }
-    }
-
-    checkAndMapAlias(command: string) {
-        switch (command) {
-            case 's':
-                return 'set';
-            case 'r':
-                return 'remove';
-            case 'sh':
-                return 'show';
-            default:
-                return command;
-        }
-    }
-
-    async set(message: Message, argsArray: string[]) {
-        try {
-            await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN]);
-            if (argsArray.length === 2) {
-                let guildId = message.guild.id;
-                let bgsChannelId = argsArray[1];
-
-                if (message.guild.channels.cache.has(bgsChannelId)) {
-                    try {
-                        let channel = message.guild.channels.cache.get(bgsChannelId)
-                        if (channel.type !== 'text') {
-                            try {
-                                await message.channel.send(Responses.getResponse(Responses.FAIL));
-                                message.channel.send(Responses.getResponse(Responses.NOTATEXTCHANNEL));
-                            } catch (err) {
-                                App.bugsnagClient.call(err);
-                            }
-                        }
-                        let guild = await this.db.model.guild.findOneAndUpdate(
-                            {guild_id: guildId},
-                            {
-                                updated_at: new Date(),
-                                bgs_channel_id: bgsChannelId
-                            });
-                        if (guild) {
-                            message.channel.send(Responses.getResponse(Responses.SUCCESS));
-                        } else {
-                            try {
-                                await message.channel.send(Responses.getResponse(Responses.FAIL));
-                                message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
-                            } catch (err) {
-                                App.bugsnagClient.call(err, {
-                                    metaData: {
-                                        guild: guild._id
-                                    }
-                                });
-                            }
-                        }
-                        let flags = Permissions.FLAGS;
-                        if (!message.guild.me.permissionsIn(channel).has([flags.EMBED_LINKS, flags.SEND_MESSAGES])) {
-                            try {
-                                message.channel.send(Responses.getResponse(Responses.EMBEDPERMISSION));
-                            } catch (err) {
-                                App.bugsnagClient.call(err, {
-                                    metaData: {
-                                        guild: guild._id
-                                    }
-                                });
-                            }
-                        }
-                    } catch (err) {
-                        message.channel.send(Responses.getResponse(Responses.FAIL));
-                        App.bugsnagClient.call(err);
-                    }
-                } else {
-                    message.channel.send(Responses.getResponse(Responses.IDNOTFOUND));
-                }
-            } else if (argsArray.length > 2) {
-                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
-            } else {
-                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
-            }
-        } catch (err) {
-            message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
-        }
-    }
-
-    async remove(message: Message, argsArray: string[]) {
-        try {
-            await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN]);
-            if (argsArray.length === 1) {
-                let guildId = message.guild.id;
-
+                embed.addField('Ids and Names', id);
+                embed.setTimestamp(new Date());
                 try {
-                    let guild = await this.db.model.guild.findOneAndUpdate(
-                        {guild_id: guildId},
-                        {
-                            updated_at: new Date(),
-                            $unset: {bgs_channel_id: 1}
-                        });
-                    if (guild) {
-                        message.channel.send(Responses.getResponse(Responses.SUCCESS));
-                    } else {
-                        try {
-                            await message.channel.send(Responses.getResponse(Responses.FAIL));
-                            message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
-                        } catch (err) {
-                            App.bugsnagClient.call(err, {
-                                metaData: {
-                                    guild: guild._id
-                                }
-                            });
-                        }
-                    }
+                  message.channel.send({ embeds: [embed] });
                 } catch (err) {
-                    message.channel.send(Responses.getResponse(Responses.FAIL));
-                    App.bugsnagClient.call(err);
+                  LoggingClient.error(err, {
+                    metaData: {
+                      guild: guild._id
+                    }
+                  });
                 }
-            } else {
-                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
-            }
-        } catch (err) {
-            message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
-        }
-    }
-
-    async show(message: Message, argsArray: string[]) {
-        try {
-            await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN]);
-            if (argsArray.length === 1) {
-                let guildId = message.guild.id;
-
+              } else {
                 try {
-                    let guild = await this.db.model.guild.findOne({guild_id: guildId});
-                    if (guild) {
-                        if (guild.bgs_channel_id && guild.bgs_channel_id.length !== 0) {
-                            let embed = new MessageEmbed();
-                            embed.setTitle("BGS Channel");
-                            embed.setColor([255, 0, 255]);
-                            let id = "";
-                            if (message.guild.channels.cache.has(guild.bgs_channel_id)) {
-                                id = `${guild.bgs_channel_id} - @${message.guild.channels.cache.get(guild.bgs_channel_id).name}\n`;
-                            } else {
-                                id = `${guild.bgs_channel_id} - Does not exist in Discord. Please delete this from BGSBot`;
-                            }
-                            embed.addField("Ids and Names", id);
-                            embed.setTimestamp(new Date());
-                            try {
-                                message.channel.send(embed);
-                            } catch (err) {
-                                App.bugsnagClient.call(err, {
-                                    metaData: {
-                                        guild: guild._id
-                                    }
-                                });
-                            }
-                        } else {
-                            try {
-                                await message.channel.send(Responses.getResponse(Responses.FAIL));
-                                message.channel.send("You don't have a bgs channel set up");
-                            } catch (err) {
-                                App.bugsnagClient.call(err, {
-                                    metaData: {
-                                        guild: guild._id
-                                    }
-                                });
-                            }
-                        }
-                    } else {
-                        try {
-                            await message.channel.send(Responses.getResponse(Responses.FAIL));
-                            message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
-                        } catch (err) {
-                            App.bugsnagClient.call(err, {
-                                metaData: {
-                                    guild: guild._id
-                                }
-                            });
-                        }
-                    }
+                  await message.channel.send(Responses.getResponse(Responses.FAIL));
+                  message.channel.send("You don't have a bgs channel set up");
                 } catch (err) {
-                    message.channel.send(Responses.getResponse(Responses.FAIL));
-                    App.bugsnagClient.call(err);
+                  LoggingClient.error(err, {
+                    metaData: {
+                      guild: guild._id
+                    }
+                  });
                 }
-            } else if (argsArray.length > 1) {
-                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
+              }
             } else {
-                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
+              try {
+                await message.channel.send(Responses.getResponse(Responses.FAIL));
+                message.channel.send(Responses.getResponse(Responses.GUILD_NOT_SETUP));
+              } catch (err) {
+                LoggingClient.error(err);
+              }
             }
+          } else {
+            await message.channel.send(Responses.getResponse(Responses.FAIL));
+            message.channel.send(Responses.getResponse(Responses.GUILD_NOT_SETUP));
+          }
         } catch (err) {
-            message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
+          message.channel.send(Responses.getResponse(Responses.FAIL));
+          LoggingClient.error(err);
         }
+      } else if (argsArray.length > 1) {
+        message.channel.send(Responses.getResponse(Responses.TOO_MANY_PARAMS));
+      } else {
+        message.channel.send(Responses.getResponse(Responses.NO_PARAMS));
+      }
+    } catch (err) {
+      message.channel.send(Responses.getResponse(Responses.INSUFFICIENT_PERMS));
     }
+  }
 
-    help(): [string, string, string, string[]] {
-        return [
-            'bgschannel(aliases: bcl)',
-            'Sets, removes or shows the channel set up for BGS reporting',
-            'bgschannel <set|remove|show> <channel id>\nbgschannel <s|r|sh> <channel id>',
-            [
-                '`@BGSBot bgschannel set 1234564789012345678`',
-                '`@BGSBot bcl s 1234564789012345678`',
-                '`@BGSBot bgschannel remove`',
-                '`@BGSBot bcl remove`',
-                '`@BGSBot bgschannel show`',
-                '`@BGSBot bgschannel sh`'
-            ]
-        ];
-    }
+  help(): [string, string, string, string[]] {
+    return [
+      'bgschannel(aliases: bcl)',
+      'Sets, removes or shows the channel set up for BGS reporting',
+      'bgschannel <set|remove|show> <channel id>\nbgschannel <s|r|sh> <channel id>',
+      [
+        '`@BGSBot bgschannel set 1234564789012345678`',
+        '`@BGSBot bcl s 1234564789012345678`',
+        '`@BGSBot bgschannel remove`',
+        '`@BGSBot bcl remove`',
+        '`@BGSBot bgschannel show`',
+        '`@BGSBot bgschannel sh`'
+      ]
+    ];
+  }
 }
