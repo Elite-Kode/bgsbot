@@ -19,6 +19,8 @@ import { Access, AppServer, Bugsnag, LoggingClient } from 'kodeblox';
 import { config } from 'dotenv';
 import { Intents } from 'discord.js';
 import { Bgs } from './accesses/bgs';
+import { generateBgsReportCallback } from './bgsReport';
+import { allCommands } from './commands';
 
 config();
 
@@ -57,8 +59,17 @@ const appServer = new AppServer({
     password: process.env.BGSBOT_DB_PASSWORD,
     // @ts-ignore
     host: process.env.BGSBOT_DB_HOST
-  }
+  },
+  scheduler: [
+    {
+      collectionName: 'bgsReport',
+      scheduleName: 'bgsReport',
+      callback: generateBgsReportCallback
+    }
+  ]
 });
 appServer.server.on('listening', () => {
   console.log('weeheee');
 });
+
+appServer.discordClient.registerCommands(allCommands(appServer));
