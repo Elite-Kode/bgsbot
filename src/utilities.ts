@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-export const BGS = 'bgs';
-
 export function getTrendIcon(trend: number): string {
   if (trend > 0) {
     return '⬆️';

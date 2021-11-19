@@ -16,7 +16,7 @@
 
 import { Message, MessageEmbed } from 'discord.js';
 import { Access, ADMIN, Command, FORBIDDEN, LoggingClient, Responses } from 'kodeblox';
-import { BGS } from '../utilities';
+import { BGS } from '../accesses/bgs';
 import { BgsModel, IBgsSchema } from '../schemas/bgs';
 import { Schema } from 'mongoose';
 import { generateBgsReport } from '../bgsReport';

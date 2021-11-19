@@ -18,7 +18,7 @@ import { Job } from 'agenda';
 import { MessageEmbed, TextChannel } from 'discord.js';
 import { getTickData } from './tick';
 import { BgsModel, IBgsSchema } from './schemas/bgs';
-import { LoggingClient, Responses } from 'kodeblox';
+import { GuildNotSetupException, LoggingClient, Responses } from 'kodeblox';
 import { Schema } from 'mongoose';
 import { FDevIds, IngameIdsSchema } from './fDevIds';
 import axios, { AxiosRequestConfig } from 'axios';
@@ -26,7 +26,6 @@ import { EBGSFactions, EBGSSystemsDetailed } from './typings/elitebgs';
 import { FieldRecordSchema } from './typings/embed';
 import moment from 'moment';
 import { acronym, getTrendIcon } from './utilities';
-import { GuildNotSetupException } from 'kodeblox/typings/discord/errors';
 
 export type BgsFunctionParams = {
   guildId: string;

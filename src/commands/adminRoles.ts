@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Message, MessageEmbed, Permissions } from 'discord.js';
+import { Message, MessageEmbed } from 'discord.js';
 import { Access, ADMIN, Command, FORBIDDEN, GuildModel, IGuildSchema, LoggingClient, Responses } from 'kodeblox';
 
 export class AdminRoles implements Command {
@@ -57,7 +57,8 @@ export class AdminRoles implements Command {
       return;
     }
     // Only the server admins can set the admin roles
-    if (!message.member.permissions.has(Permissions.FLAGS.ADMINISTRATOR)) {
+    const permission = await Access.has(message.author, message.guild, [], true);
+    if (!permission) {
       message.channel.send(Responses.getResponse(Responses.INSUFFICIENT_PERMS));
       return;
     }

@@ -16,9 +16,9 @@
 
 import { GuildModel, IAccess } from 'kodeblox';
 import { Guild, Permissions, User } from 'discord.js';
-import { Schema } from 'mongoose';
-
 import { BgsModel } from '../schemas/bgs';
+
+export const BGS = 'bgs';
 
 export class Bgs implements IAccess {
   public priority = 2;
@@ -32,10 +32,10 @@ export class Bgs implements IAccess {
       const roles = member.roles.cache;
       const dbGuild = await GuildModel.findOne({ guild_id: guildId });
       if (dbGuild) {
-        const dbBgs = await BgsModel.findOne({ guild_id: new Schema.Types.ObjectId(guildId) });
+        const dbBgs = await BgsModel.findById(dbGuild._id);
         if (dbBgs) {
           for (const perm of perms) {
-            if (perm === 'bgs') {
+            if (perm === BGS) {
               const adminRoles = dbBgs.bgs_roles_id;
               for (const role of adminRoles) {
                 if (roles.has(role)) {
@@ -47,6 +47,6 @@ export class Bgs implements IAccess {
         }
       }
     }
-    throw new Error('Access Denied');
+    return false;
   }
 }
