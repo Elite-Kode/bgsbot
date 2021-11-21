@@ -56,7 +56,6 @@ export class AdminRoles implements Command {
       message.channel.send(Responses.getResponse(Responses.NOT_A_GUILD));
       return;
     }
-    // Only the server admins can set the admin roles
     const permission = await Access.has(message.author, message.guild, [], true);
     if (!permission) {
       message.channel.send(Responses.getResponse(Responses.INSUFFICIENT_PERMS));
@@ -97,6 +96,10 @@ export class AdminRoles implements Command {
   }
 
   async remove(message: Message, argsArray: string[]): Promise<void> {
+    if (!message.member || !message.guild || !message.guildId) {
+      message.channel.send(Responses.getResponse(Responses.NOT_A_GUILD));
+      return;
+    }
     const permission = await Access.has(message.author, message.guild, [ADMIN, FORBIDDEN], true);
     if (!permission) {
       message.channel.send(Responses.getResponse(Responses.INSUFFICIENT_PERMS));
@@ -110,16 +113,12 @@ export class AdminRoles implements Command {
       message.channel.send(Responses.getResponse(Responses.NO_PARAMS));
       return;
     }
-    const guildId = message.guildId;
     const adminRoleId = argsArray[1];
-    if (!guildId) {
-      message.channel.send(Responses.getResponse(Responses.NOT_A_GUILD));
-      return;
-    }
+
     let guild: IGuildSchema | null;
     try {
       guild = await GuildModel.findOneAndUpdate(
-        { guild_id: guildId },
+        { guild_id: message.guildId },
         {
           $pull: { admin_roles_id: adminRoleId }
         }
@@ -137,6 +136,10 @@ export class AdminRoles implements Command {
   }
 
   async list(message: Message, argsArray: string[]): Promise<void> {
+    if (!message.member || !message.guild || !message.guildId) {
+      message.channel.send(Responses.getResponse(Responses.NOT_A_GUILD));
+      return;
+    }
     const permission = await Access.has(message.author, message.guild, [ADMIN, FORBIDDEN], true);
     if (!permission) {
       message.channel.send(Responses.getResponse(Responses.INSUFFICIENT_PERMS));
@@ -146,14 +149,9 @@ export class AdminRoles implements Command {
       message.channel.send(Responses.getResponse(Responses.TOO_MANY_PARAMS));
       return;
     }
-    const guildId = message.guildId;
-    if (!message.guild || !guildId) {
-      message.channel.send(Responses.getResponse(Responses.NOT_A_GUILD));
-      return;
-    }
     let guild: IGuildSchema | null;
     try {
-      guild = await GuildModel.findOne({ guild_id: guildId });
+      guild = await GuildModel.findOne({ guild_id: message.guildId });
     } catch (err) {
       message.channel.send(Responses.getResponse(Responses.FAIL));
       LoggingClient.error(err);

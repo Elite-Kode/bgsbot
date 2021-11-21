@@ -15,10 +15,8 @@
  */
 
 import { Message, MessageEmbed } from 'discord.js';
-import { Access, ADMIN, Command, FORBIDDEN, LoggingClient, Responses } from 'kodeblox';
+import { Access, ADMIN, Command, FORBIDDEN, GuildModel, IGuildSchema, LoggingClient, Responses } from 'kodeblox';
 import { ChannelTypes } from 'discord.js/typings/enums';
-import { Schema } from 'mongoose';
-
 import { BgsModel, IBgsSchema } from '../schemas/bgs';
 
 export class BgsChannel implements Command {
@@ -56,6 +54,10 @@ export class BgsChannel implements Command {
   }
 
   async set(message: Message, argsArray: string[]): Promise<void> {
+    if (!message.member || !message.guild || !message.guildId) {
+      message.channel.send(Responses.getResponse(Responses.NOT_A_GUILD));
+      return;
+    }
     const permission = await Access.has(message.author, message.guild, [ADMIN, FORBIDDEN]);
     if (!permission) {
       message.channel.send(Responses.getResponse(Responses.INSUFFICIENT_PERMS));
@@ -69,12 +71,8 @@ export class BgsChannel implements Command {
       message.channel.send(Responses.getResponse(Responses.NO_PARAMS));
       return;
     }
-    const guildId = message.guildId;
     const bgsChannelId = argsArray[1];
-    if (!guildId || !message.guild) {
-      message.channel.send(Responses.getResponse(Responses.NOT_A_GUILD));
-      return;
-    }
+
     if (!message.guild.channels.cache.has(bgsChannelId)) {
       message.channel.send(Responses.getResponse(Responses.ID_NOT_FOUND));
       return;
@@ -84,10 +82,21 @@ export class BgsChannel implements Command {
       message.channel.send(Responses.getResponse(Responses.NOT_A_TEXT_CHANNEL));
       return;
     }
-    let bgs: IBgsSchema | null;
+    let guild: IGuildSchema | null;
     try {
-      bgs = await BgsModel.findOneAndUpdate(
-        { guild_id: new Schema.Types.ObjectId(guildId) },
+      guild = await GuildModel.findOne({ guild_id: message.guildId });
+    } catch (err) {
+      message.channel.send(Responses.getResponse(Responses.FAIL));
+      LoggingClient.error(err);
+      return;
+    }
+    if (!guild) {
+      message.channel.send(Responses.getResponse(Responses.GUILD_NOT_SETUP));
+      return;
+    }
+    try {
+      await BgsModel.findOneAndUpdate(
+        { guild_id: guild._id },
         {
           bgs_channel_id: bgsChannelId
         }
@@ -97,14 +106,14 @@ export class BgsChannel implements Command {
       LoggingClient.error(err);
       return;
     }
-    if (!bgs) {
-      message.channel.send(Responses.getResponse(Responses.GUILD_NOT_SETUP));
-      return;
-    }
     message.channel.send(Responses.getResponse(Responses.SUCCESS));
   }
 
   async remove(message: Message, argsArray: string[]): Promise<void> {
+    if (!message.member || !message.guild || !message.guildId) {
+      message.channel.send(Responses.getResponse(Responses.NOT_A_GUILD));
+      return;
+    }
     const permission = await Access.has(message.author, message.guild, [ADMIN, FORBIDDEN]);
     if (!permission) {
       message.channel.send(Responses.getResponse(Responses.INSUFFICIENT_PERMS));
@@ -114,15 +123,21 @@ export class BgsChannel implements Command {
       message.channel.send(Responses.getResponse(Responses.TOO_MANY_PARAMS));
       return;
     }
-    const guildId = message.guildId;
-    if (!guildId) {
-      message.channel.send(Responses.getResponse(Responses.NOT_A_GUILD));
+    let guild: IGuildSchema | null;
+    try {
+      guild = await GuildModel.findOne({ guild_id: message.guildId });
+    } catch (err) {
+      message.channel.send(Responses.getResponse(Responses.FAIL));
+      LoggingClient.error(err);
       return;
     }
-    let bgs: IBgsSchema | null;
+    if (!guild) {
+      message.channel.send(Responses.getResponse(Responses.GUILD_NOT_SETUP));
+      return;
+    }
     try {
-      bgs = await BgsModel.findOneAndUpdate(
-        { guild_id: new Schema.Types.ObjectId(guildId) },
+      await BgsModel.findOneAndUpdate(
+        { guild_id: guild._id },
         {
           $unset: { bgs_channel_id: 1 }
         }
@@ -132,14 +147,14 @@ export class BgsChannel implements Command {
       LoggingClient.error(err);
       return;
     }
-    if (!bgs) {
-      message.channel.send(Responses.getResponse(Responses.GUILD_NOT_SETUP));
-      return;
-    }
     message.channel.send(Responses.getResponse(Responses.SUCCESS));
   }
 
   async show(message: Message, argsArray: string[]): Promise<void> {
+    if (!message.member || !message.guild || !message.guildId) {
+      message.channel.send(Responses.getResponse(Responses.NOT_A_GUILD));
+      return;
+    }
     const permission = await Access.has(message.author, message.guild, [ADMIN, FORBIDDEN]);
     if (!permission) {
       message.channel.send(Responses.getResponse(Responses.INSUFFICIENT_PERMS));
@@ -149,25 +164,27 @@ export class BgsChannel implements Command {
       message.channel.send(Responses.getResponse(Responses.TOO_MANY_PARAMS));
       return;
     }
-    const guildId = message.guildId;
-
-    if (!message.guild || !guildId) {
-      message.channel.send(Responses.getResponse(Responses.NOT_A_GUILD));
-      return;
-    }
-    let bgs: IBgsSchema | null;
+    let guild: IGuildSchema | null;
     try {
-      bgs = await BgsModel.findOne({ guild_id: new Schema.Types.ObjectId(guildId) });
+      guild = await GuildModel.findOne({ guild_id: message.guildId });
     } catch (err) {
       message.channel.send(Responses.getResponse(Responses.FAIL));
       LoggingClient.error(err);
       return;
     }
-    if (!bgs) {
+    if (!guild) {
       message.channel.send(Responses.getResponse(Responses.GUILD_NOT_SETUP));
       return;
     }
-    if (!bgs.bgs_channel_id || bgs.bgs_channel_id.length === 0) {
+    let bgs: IBgsSchema | null;
+    try {
+      bgs = await BgsModel.findOne({ guild_id: guild._id });
+    } catch (err) {
+      message.channel.send(Responses.getResponse(Responses.FAIL));
+      LoggingClient.error(err);
+      return;
+    }
+    if (!bgs || !bgs.bgs_channel_id || bgs.bgs_channel_id.length === 0) {
       message.channel.send("You don't have a bgs channel set up");
       return;
     }
