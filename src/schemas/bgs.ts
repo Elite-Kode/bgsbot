@@ -22,6 +22,7 @@ export interface Bgs {
   bgs_roles_id: string[];
   bgs_time: string;
   announce_tick: boolean;
+  tick_channel_id: string;
   sort: string;
   sort_order: number;
   theme: string;
@@ -56,6 +57,7 @@ export const BgsSchema = new Schema<IBgsSchema>(
     bgs_roles_id: [String],
     bgs_time: String,
     announce_tick: Boolean,
+    tick_channel_id: String,
     sort: String,
     sort_order: Number, // 1 of increasing and -1 for decreasing and 0 for disable
     theme: String,

@@ -1,11 +1,11 @@
 /*
- * KodeBlox Copyright 2017 Sayak Mukhopadhyay
+ * Copyright 2021 Sayak Mukhopadhyay
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http: //www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,274 +14,237 @@
  * limitations under the License.
  */
 
-import App from '../../../server';
-import { Responses } from '../responseDict';
-import { DB } from '../../../db';
-import { Access } from '../access';
-import { Message, MessageEmbed, Permissions } from "discord.js";
-import { EBGSSystemsMinimal } from "../../../interfaces/typings";
-import { Command } from "../../../interfaces/Command";
-import axios, { AxiosRequestConfig } from "axios";
+import { Message, MessageEmbed } from 'discord.js';
+import axios, { AxiosRequestConfig } from 'axios';
+import { Access, ADMIN, Command, FORBIDDEN, GuildModel, IGuildSchema, LoggingClient, Responses } from 'kodeblox';
+import { EBGSSystemsMinimal } from '../typings/elitebgs';
+import { BgsModel, IBgsSchema } from '../schemas/bgs';
+import { BGS } from '../accesses/bgs';
 
 export class MonitorSystems implements Command {
-    db: DB;
-    dmAble = false;
+  respondDm = false;
+  sendDm = false;
+  respondAsDm: boolean;
+  calls = ['monitorsystems', 'ms'];
+  dmCalls = [];
+  arguments = {
+    add: this.add.bind(this),
+    a: this.add.bind(this),
+    addprimary: this.addprimary.bind(this),
+    ap: this.addprimary.bind(this),
+    remove: this.remove.bind(this),
+    r: this.remove.bind(this),
+    list: this.list.bind(this),
+    l: this.list.bind(this)
+  };
 
-    constructor() {
-        this.db = App.db;
+  constructor() {
+    this.respondAsDm = false;
+  }
+
+  exec(message: Message, _commandArguments: string, argsArray: string[]): void {
+    if (argsArray.length <= 0) {
+      message.channel.send(Responses.getResponse(Responses.NO_PARAMS));
+      return;
     }
+    type ArgumentKeys = keyof typeof this.arguments;
+    const allowedArguments = Object.keys(this.arguments) as Array<ArgumentKeys>;
+    const command = argsArray[0].toLowerCase() as ArgumentKeys;
+    if (!allowedArguments.includes(command)) {
+      message.channel.send(Responses.getResponse(Responses.NOT_A_COMMAND));
+      return;
+    }
+    this.arguments[command](message, argsArray);
+  }
 
-    exec(message: Message, commandArguments: string): void {
-        let argsArray: string[] = [];
-        if (commandArguments.length !== 0) {
-            argsArray = commandArguments.split(" ");
+  addprimary(message: Message, argsArray: string[]): Promise<void> {
+    return this.add(message, argsArray, true);
+  }
+
+  async add(message: Message, argsArray: string[], primary = false): Promise<void> {
+    if (!message.member || !message.guild || !message.guildId) {
+      message.channel.send(Responses.getResponse(Responses.NOT_A_GUILD));
+      return;
+    }
+    const permission = await Access.has(message.author, message.guild, [ADMIN, BGS, FORBIDDEN], true);
+    if (!permission) {
+      message.channel.send(Responses.getResponse(Responses.INSUFFICIENT_PERMS));
+      return;
+    }
+    if (argsArray.length < 2) {
+      message.channel.send(Responses.getResponse(Responses.NO_PARAMS));
+      return;
+    }
+    let systemName = argsArray.slice(1).join(' ').toLowerCase();
+    const url = 'https://elitebgs.app/api/ebgs/v5/systems';
+    const requestOptions: AxiosRequestConfig = {
+      params: {
+        name: systemName,
+        minimal: true
+      }
+    };
+
+    const response = await axios.get<EBGSSystemsMinimal>(url, requestOptions);
+    if (response.status !== 200) {
+      message.channel.send(Responses.getResponse(Responses.FAIL));
+      LoggingClient.error(response.statusText);
+      return;
+    }
+    const body = response.data;
+    if (body.total === 0) {
+      await message.channel.send(Responses.getResponse(Responses.FAIL));
+      message.channel.send('System not found');
+      return;
+    }
+    const responseSystem = body.docs[0];
+    systemName = responseSystem.name;
+    const systemNameLower = responseSystem.name_lower;
+    const monitorSystems = {
+      system_name: systemName,
+      system_name_lower: systemNameLower,
+      primary: primary,
+      system_pos: {
+        x: responseSystem.x,
+        y: responseSystem.y,
+        z: responseSystem.z
+      }
+    };
+    let guild: IGuildSchema | null;
+    try {
+      guild = await GuildModel.findOne({ guild_id: message.guildId });
+    } catch (err) {
+      message.channel.send(Responses.getResponse(Responses.FAIL));
+      LoggingClient.error(err);
+      return;
+    }
+    if (!guild) {
+      message.channel.send(Responses.getResponse(Responses.GUILD_NOT_SETUP));
+      return;
+    }
+    try {
+      await BgsModel.findOneAndUpdate(
+        { guild_id: guild._id },
+        {
+          $addToSet: { monitor_systems: monitorSystems }
         }
-        try {
-            if (argsArray.length > 0) {
-                let command = argsArray[0].toLowerCase();
-                command = this.checkAndMapAlias(command);
-                if (this[command]) {
-                    this[command](message, argsArray);
-                } else {
-                    message.channel.send(Responses.getResponse(Responses.NOTACOMMAND));
-                }
-            } else {
-                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
-            }
-        } catch (err) {
-            App.bugsnagClient.call(err);
+      );
+    } catch (err) {
+      message.channel.send(Responses.getResponse(Responses.FAIL));
+      LoggingClient.error(err);
+      return;
+    }
+    message.channel.send(Responses.getResponse(Responses.SUCCESS));
+  }
+
+  async remove(message: Message, argsArray: string[]): Promise<void> {
+    if (!message.member || !message.guild || !message.guildId) {
+      message.channel.send(Responses.getResponse(Responses.NOT_A_GUILD));
+      return;
+    }
+    const permission = await Access.has(message.author, message.guild, [ADMIN, BGS, FORBIDDEN], true);
+    if (!permission) {
+      message.channel.send(Responses.getResponse(Responses.INSUFFICIENT_PERMS));
+      return;
+    }
+    if (argsArray.length < 2) {
+      message.channel.send(Responses.getResponse(Responses.NO_PARAMS));
+      return;
+    }
+    let guild: IGuildSchema | null;
+    try {
+      guild = await GuildModel.findOne({ guild_id: message.guildId });
+    } catch (err) {
+      message.channel.send(Responses.getResponse(Responses.FAIL));
+      LoggingClient.error(err);
+      return;
+    }
+    if (!guild) {
+      message.channel.send(Responses.getResponse(Responses.GUILD_NOT_SETUP));
+      return;
+    }
+    const systemName = argsArray.slice(1).join(' ').toLowerCase();
+    try {
+      await BgsModel.findOneAndUpdate(
+        { guild_id: guild._id },
+        {
+          $pull: { monitor_systems: { system_name_lower: systemName } }
         }
+      );
+    } catch (err) {
+      message.channel.send(Responses.getResponse(Responses.FAIL));
+      LoggingClient.error(err);
+      return;
     }
+  }
 
-    checkAndMapAlias(command: string) {
-        switch (command) {
-            case 'a':
-                return 'add';
-            case 'ap':
-                return 'addprimary';
-            case 'r':
-                return 'remove';
-            case 'l':
-                return 'list';
-            default:
-                return command;
-        }
+  async list(message: Message, argsArray: string[]): Promise<void> {
+    if (!message.member || !message.guild || !message.guildId) {
+      message.channel.send(Responses.getResponse(Responses.NOT_A_GUILD));
+      return;
     }
-
-    async add(message: Message, argsArray: string[], primary: boolean = false) {
-        try {
-            await Access.has(message.author, message.guild, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
-            if (argsArray.length >= 2) {
-                let guildId = message.guild.id;
-                let systemName = argsArray.slice(1).join(" ");
-                let url = "https://elitebgs.app/api/ebgs/v5/systems";
-                let requestOptions: AxiosRequestConfig = {
-                    params: {
-                        name: systemName,
-                        minimal: true
-                    }
-                };
-
-                let response = await axios.get(url, requestOptions);
-                if (response.status == 200) {
-                    let body: EBGSSystemsMinimal = response.data;
-                    if (body.total === 0) {
-                        try {
-                            await message.channel.send(Responses.getResponse(Responses.FAIL));
-                            message.channel.send("System not found");
-                        } catch (err) {
-                            App.bugsnagClient.call(err);
-                        }
-                    } else {
-                        let responseSystem = body.docs[0];
-                        let systemName = responseSystem.name;
-                        let systemNameLower = responseSystem.name_lower;
-                        let monitorSystems = {
-                            system_name: systemName,
-                            system_name_lower: systemNameLower,
-                            primary: primary,
-                            system_pos: {
-                                x: responseSystem.x,
-                                y: responseSystem.y,
-                                z: responseSystem.z
-                            }
-                        }
-                        try {
-                            let guild = await this.db.model.guild.findOneAndUpdate(
-                                {guild_id: guildId},
-                                {
-                                    updated_at: new Date(),
-                                    $addToSet: {monitor_systems: monitorSystems}
-                                });
-                            if (guild) {
-                                message.channel.send(Responses.getResponse(Responses.SUCCESS));
-                            } else {
-                                try {
-                                    await message.channel.send(Responses.getResponse(Responses.FAIL));
-                                    message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
-                                } catch (err) {
-                                    App.bugsnagClient.call(err, {
-                                        metaData: {
-                                            guild: guild._id
-                                        }
-                                    });
-                                }
-                            }
-                        } catch (err) {
-                            message.channel.send(Responses.getResponse(Responses.FAIL));
-                            App.bugsnagClient.call(err);
-                        }
-                    }
-                } else {
-                    App.bugsnagClient.call(response.statusText);
-                }
-            } else {
-                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
-            }
-        } catch (err) {
-            message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
-        }
+    const permission = await Access.has(message.author, message.guild, [ADMIN, BGS, FORBIDDEN], true);
+    if (!permission) {
+      message.channel.send(Responses.getResponse(Responses.INSUFFICIENT_PERMS));
+      return;
     }
-
-    addprimary(message: Message, argsArray: string[]) {
-        this.add(message, argsArray, true);
+    if (argsArray.length > 1) {
+      message.channel.send(Responses.getResponse(Responses.TOO_MANY_PARAMS));
+      return;
     }
-
-    async remove(message: Message, argsArray: string[]) {
-        try {
-            await Access.has(message.author, message.guild, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
-            if (argsArray.length >= 2) {
-                let guildId = message.guild.id;
-                let systemName = argsArray.slice(1).join(" ").toLowerCase();
-
-                try {
-                    let guild = await this.db.model.guild.findOneAndUpdate(
-                        {guild_id: guildId},
-                        {
-                            updated_at: new Date(),
-                            $pull: {monitor_systems: {system_name_lower: systemName}}
-                        });
-                    if (guild) {
-                        message.channel.send(Responses.getResponse(Responses.SUCCESS));
-                    } else {
-                        try {
-                            await message.channel.send(Responses.getResponse(Responses.FAIL));
-                            message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
-                        } catch (err) {
-                            App.bugsnagClient.call(err, {
-                                metaData: {
-                                    guild: guild._id
-                                }
-                            });
-                        }
-                    }
-                } catch (err) {
-                    message.channel.send(Responses.getResponse(Responses.FAIL));
-                    App.bugsnagClient.call(err);
-                }
-            } else {
-                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
-            }
-        } catch (err) {
-            message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
-        }
+    let guild: IGuildSchema | null;
+    try {
+      guild = await GuildModel.findOne({ guild_id: message.guildId });
+    } catch (err) {
+      message.channel.send(Responses.getResponse(Responses.FAIL));
+      LoggingClient.error(err);
+      return;
     }
-
-    async list(message: Message, argsArray: string[]) {
-        try {
-            await Access.has(message.author, message.guild, [Access.ADMIN, Access.BGS, Access.FORBIDDEN]);
-            if (argsArray.length === 1) {
-                let guildId = message.guild.id;
-
-                try {
-                    let guild = await this.db.model.guild.findOne({guild_id: guildId});
-                    if (guild) {
-                        if (guild.monitor_systems && guild.monitor_systems.length !== 0) {
-                            let flags = Permissions.FLAGS;
-                            if (message.guild.me.permissionsIn(message.channel).has([flags.EMBED_LINKS])) {
-                                let embed = new MessageEmbed();
-                                embed.setTitle("MONITORED SYSTEMS");
-                                embed.setColor([255, 0, 255]);
-                                let systemList = "";
-                                guild.monitor_systems.forEach(system => {
-                                    systemList += `${system.system_name}`;
-                                    if (system.primary) {
-                                        systemList += ` | PRIMARY`;
-                                    }
-                                    systemList += `\n`;
-                                });
-                                embed.addField("Systems", systemList);
-                                embed.setTimestamp(new Date());
-                                try {
-                                    message.channel.send(embed);
-                                } catch (err) {
-                                    App.bugsnagClient.call(err, {
-                                        metaData: {
-                                            guild: guild._id
-                                        }
-                                    });
-                                }
-                            } else {
-                                try {
-                                    message.channel.send(Responses.getResponse(Responses.EMBEDPERMISSION));
-                                } catch (err) {
-                                    App.bugsnagClient.call(err, {
-                                        metaData: {
-                                            guild: guild._id
-                                        }
-                                    });
-                                }
-                            }
-                        } else {
-                            try {
-                                await message.channel.send(Responses.getResponse(Responses.FAIL));
-                                message.channel.send("You don't have any monitored system set up");
-                            } catch (err) {
-                                App.bugsnagClient.call(err, {
-                                    metaData: {
-                                        guild: guild._id
-                                    }
-                                });
-                            }
-                        }
-                    } else {
-                        try {
-                            await message.channel.send(Responses.getResponse(Responses.FAIL));
-                            message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
-                        } catch (err) {
-                            App.bugsnagClient.call(err, {
-                                metaData: {
-                                    guild: guild._id
-                                }
-                            });
-                        }
-                    }
-                } catch (err) {
-                    message.channel.send(Responses.getResponse(Responses.FAIL));
-                    App.bugsnagClient.call(err);
-                }
-            } else {
-                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
-            }
-        } catch (err) {
-            message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
-        }
+    if (!guild) {
+      message.channel.send(Responses.getResponse(Responses.GUILD_NOT_SETUP));
+      return;
     }
-
-    help(): [string, string, string, string[]] {
-        return [
-            'monitorsystems(aliases: ms)',
-            'Adds a system to monitor for displaying in the BGS Report. A system can be optionally added as a primary for more detailed results',
-            'monitorsystems <add|addprimary|remove|list> <system name>\nmonitorsystems <a|ap|r|l> <system name>',
-            [
-                '`@BGSBot monitorsystems add qa\'wakana`',
-                '`@BGSBot ms a qa\'wakana`',
-                '`@BGSBot monitorsystems addprimary qa\'wakana`',
-                '`@BGSBot monitorsystems ap qa\'wakana`',
-                '`@BGSBot monitorsystems remove qa\'wakana`',
-                '`@BGSBot mf remove qa\'wakana`',
-                '`@BGSBot monitorsystems list`'
-            ]
-        ];
+    let bgs: IBgsSchema | null;
+    try {
+      bgs = await BgsModel.findOne({ guild_id: guild._id });
+    } catch (err) {
+      message.channel.send(Responses.getResponse(Responses.FAIL));
+      LoggingClient.error(err);
+      return;
     }
+    if (!bgs || !bgs.monitor_systems || bgs.monitor_systems.length === 0) {
+      message.channel.send("You don't have any monitored system set up");
+      return;
+    }
+    const embed = new MessageEmbed();
+    embed.setTitle('MONITORED SYSTEMS');
+    embed.setColor([255, 0, 255]);
+    let systemList = '';
+    for (const system of bgs.monitor_systems) {
+      systemList += `${system.system_name}`;
+      if (system.primary) {
+        systemList += ` | PRIMARY`;
+      }
+      systemList += `\n`;
+    }
+    embed.addField('Systems', systemList);
+    embed.setTimestamp(new Date());
+    message.channel.send({ embeds: [embed] });
+  }
+
+  help(): [string, string, string, string[]] {
+    return [
+      'monitorsystems(aliases: ms)',
+      'Adds a system to monitor for displaying in the BGS Report. A system can be optionally added as a primary for more detailed results',
+      'monitorsystems <add|addprimary|remove|list> <system name>\nmonitorsystems <a|ap|r|l> <system name>',
+      [
+        "`@BGSBot monitorsystems add qa'wakana`",
+        "`@BGSBot ms a qa'wakana`",
+        "`@BGSBot monitorsystems addprimary qa'wakana`",
+        "`@BGSBot monitorsystems ap qa'wakana`",
+        "`@BGSBot monitorsystems remove qa'wakana`",
+        "`@BGSBot mf remove qa'wakana`",
+        '`@BGSBot monitorsystems list`'
+      ]
+    ];
+  }
 }

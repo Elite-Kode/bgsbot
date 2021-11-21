@@ -26,6 +26,7 @@ import { EBGSFactions, EBGSSystemsDetailed } from './typings/elitebgs';
 import { FieldRecordSchema } from './typings/embed';
 import moment from 'moment';
 import { acronym, getTrendIcon } from './utilities';
+import assert from 'assert';
 
 export type BgsFunctionParams = {
   guildId: string;
@@ -182,7 +183,7 @@ export async function generateBgsReport(guildId: string): Promise<MessageEmbed[]
 
   if (bgs.sort && bgs.sort_order && bgs.sort_order !== 0) {
     primaryFieldRecord.sort((a, b) => {
-      bgs = bgs as IBgsSchema; // For some reason not casting to the type is still considering bgs to be nullable
+      assert(bgs !== null); // See https://github.com/microsoft/TypeScript/issues/46853
       if (bgs.sort === 'name') {
         if (bgs.sort_order === -1) {
           if (a.name.toLowerCase() < b.name.toLowerCase()) {
@@ -207,7 +208,7 @@ export async function generateBgsReport(guildId: string): Promise<MessageEmbed[]
       return 0;
     });
     secondaryFieldRecord.sort((a, b) => {
-      bgs = bgs as IBgsSchema; // For some reason not casting to the type is still considering bgs to be nullable
+      assert(bgs !== null); // See https://github.com/microsoft/TypeScript/issues/46853
       if (bgs.sort === 'name') {
         if (bgs.sort_order === -1) {
           if (a.name.toLowerCase() < b.name.toLowerCase()) {

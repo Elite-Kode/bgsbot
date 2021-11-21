@@ -27,3 +27,15 @@ export function getTrendIcon(trend: number): string {
 export function acronym(text: string): string {
   return text.split(/\s/).reduce((accumulator, word) => accumulator + word.charAt(0), '');
 }
+
+export function titlify(title: string): string {
+  let revised = title.charAt(0).toUpperCase();
+  for (let i = 1; i < title.length; i++) {
+    if (title.charAt(i - 1) === ' ') {
+      revised += title.charAt(i).toUpperCase();
+    } else {
+      revised += title.charAt(i).toLowerCase();
+    }
+  }
+  return revised;
+}

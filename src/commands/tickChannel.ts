@@ -14,28 +14,28 @@
  * limitations under the License.
  */
 
-import moment from 'moment';
 import { Message, MessageEmbed } from 'discord.js';
 import { Access, ADMIN, Command, FORBIDDEN, GuildModel, IGuildSchema, LoggingClient, Responses } from 'kodeblox';
-import { BgsModel } from '../schemas/bgs';
-import { BGS } from '../accesses/bgs';
-import { getTickData } from '../tick';
+import { ChannelTypes } from 'discord.js/typings/enums';
+import { BgsModel, IBgsSchema } from '../schemas/bgs';
 
-export class Tick implements Command {
+export class TickChannel implements Command {
   respondDm = false;
-  sendDm = true;
+  sendDm = false;
   respondAsDm: boolean;
-  calls = ['tick'];
-  dmCalls = ['tickdm'];
+  calls = ['tickchannel', 'tcl'];
+  dmCalls = [];
   arguments = {
-    get: this.get.bind(this),
-    g: this.get.bind(this),
-    detect: this.detect.bind(this),
-    stopdetect: this.stopdetect.bind(this)
+    set: this.set.bind(this),
+    s: this.set.bind(this),
+    remove: this.remove.bind(this),
+    r: this.remove.bind(this),
+    show: this.show.bind(this),
+    sh: this.show.bind(this)
   };
 
-  constructor(respondAsDm: boolean) {
-    this.respondAsDm = respondAsDm;
+  constructor() {
+    this.respondAsDm = false;
   }
 
   exec(message: Message, _commandArguments: string, argsArray: string[]): void {
@@ -53,12 +53,68 @@ export class Tick implements Command {
     this.arguments[command](message, argsArray);
   }
 
-  async get(message: Message, argsArray: string[]): Promise<void> {
+  async set(message: Message, argsArray: string[]): Promise<void> {
     if (!message.member || !message.guild || !message.guildId) {
       message.channel.send(Responses.getResponse(Responses.NOT_A_GUILD));
       return;
     }
-    const permission = await Access.has(message.author, message.guild, [ADMIN, BGS, FORBIDDEN]);
+    const permission = await Access.has(message.author, message.guild, [ADMIN, FORBIDDEN]);
+    if (!permission) {
+      message.channel.send(Responses.getResponse(Responses.INSUFFICIENT_PERMS));
+      return;
+    }
+    if (argsArray.length > 2) {
+      message.channel.send(Responses.getResponse(Responses.TOO_MANY_PARAMS));
+      return;
+    }
+    if (argsArray.length < 2) {
+      message.channel.send(Responses.getResponse(Responses.NO_PARAMS));
+      return;
+    }
+    const tickChannelId = argsArray[1];
+
+    if (!message.guild.channels.cache.has(tickChannelId)) {
+      message.channel.send(Responses.getResponse(Responses.ID_NOT_FOUND));
+      return;
+    }
+    const channel = message.guild.channels.cache.get(tickChannelId);
+    if (channel && channel.type !== ChannelTypes.GUILD_TEXT.toString()) {
+      message.channel.send(Responses.getResponse(Responses.NOT_A_TEXT_CHANNEL));
+      return;
+    }
+    let guild: IGuildSchema | null;
+    try {
+      guild = await GuildModel.findOne({ guild_id: message.guildId });
+    } catch (err) {
+      message.channel.send(Responses.getResponse(Responses.FAIL));
+      LoggingClient.error(err);
+      return;
+    }
+    if (!guild) {
+      message.channel.send(Responses.getResponse(Responses.GUILD_NOT_SETUP));
+      return;
+    }
+    try {
+      await BgsModel.findOneAndUpdate(
+        { guild_id: guild._id },
+        {
+          tick_channel_id: tickChannelId
+        }
+      );
+    } catch (err) {
+      message.channel.send(Responses.getResponse(Responses.FAIL));
+      LoggingClient.error(err);
+      return;
+    }
+    message.channel.send(Responses.getResponse(Responses.SUCCESS));
+  }
+
+  async remove(message: Message, argsArray: string[]): Promise<void> {
+    if (!message.member || !message.guild || !message.guildId) {
+      message.channel.send(Responses.getResponse(Responses.NOT_A_GUILD));
+      return;
+    }
+    const permission = await Access.has(message.author, message.guild, [ADMIN, FORBIDDEN]);
     if (!permission) {
       message.channel.send(Responses.getResponse(Responses.INSUFFICIENT_PERMS));
       return;
@@ -67,108 +123,96 @@ export class Tick implements Command {
       message.channel.send(Responses.getResponse(Responses.TOO_MANY_PARAMS));
       return;
     }
-    const lastTick = await getTickData();
+    let guild: IGuildSchema | null;
+    try {
+      guild = await GuildModel.findOne({ guild_id: message.guildId });
+    } catch (err) {
+      message.channel.send(Responses.getResponse(Responses.FAIL));
+      LoggingClient.error(err);
+      return;
+    }
+    if (!guild) {
+      message.channel.send(Responses.getResponse(Responses.GUILD_NOT_SETUP));
+      return;
+    }
+    try {
+      await BgsModel.findOneAndUpdate(
+        { guild_id: guild._id },
+        {
+          $unset: { tick_channel_id: 1 }
+        }
+      );
+    } catch (err) {
+      message.channel.send(Responses.getResponse(Responses.FAIL));
+      LoggingClient.error(err);
+      return;
+    }
+    message.channel.send(Responses.getResponse(Responses.SUCCESS));
+  }
+
+  async show(message: Message, argsArray: string[]): Promise<void> {
+    if (!message.member || !message.guild || !message.guildId) {
+      message.channel.send(Responses.getResponse(Responses.NOT_A_GUILD));
+      return;
+    }
+    const permission = await Access.has(message.author, message.guild, [ADMIN, FORBIDDEN]);
+    if (!permission) {
+      message.channel.send(Responses.getResponse(Responses.INSUFFICIENT_PERMS));
+      return;
+    }
+    if (argsArray.length > 1) {
+      message.channel.send(Responses.getResponse(Responses.TOO_MANY_PARAMS));
+      return;
+    }
+    let guild: IGuildSchema | null;
+    try {
+      guild = await GuildModel.findOne({ guild_id: message.guildId });
+    } catch (err) {
+      message.channel.send(Responses.getResponse(Responses.FAIL));
+      LoggingClient.error(err);
+      return;
+    }
+    if (!guild) {
+      message.channel.send(Responses.getResponse(Responses.GUILD_NOT_SETUP));
+      return;
+    }
+    let bgs: IBgsSchema | null;
+    try {
+      bgs = await BgsModel.findOne({ guild_id: guild._id });
+    } catch (err) {
+      message.channel.send(Responses.getResponse(Responses.FAIL));
+      LoggingClient.error(err);
+      return;
+    }
+    if (!bgs || !bgs.tick_channel_id || bgs.tick_channel_id.length === 0) {
+      message.channel.send("You don't have a tick channel set up");
+      return;
+    }
     const embed = new MessageEmbed();
-    embed.setTitle('Tick');
+    embed.setTitle('BGS Channel');
     embed.setColor([255, 0, 255]);
-    const lastTickFormattedTime = moment(lastTick.time).utc().format('HH:mm');
-    const lastTickFormattedDate = moment(lastTick.time).utc().format('Do MMM');
-    embed.addField('Last Tick', lastTickFormattedTime + ' UTC - ' + lastTickFormattedDate);
-    embed.setTimestamp(new Date(lastTick.time));
-    if (this.respondAsDm) {
-      await message.channel.send("I have DM'd the result to you");
-      message.author.send({ embeds: [embed] });
-    } else {
-      message.channel.send({ embeds: [embed] });
-    }
-  }
-
-  async detect(message: Message, argsArray: string[]): Promise<void> {
-    if (!message.member || !message.guild || !message.guildId) {
-      message.channel.send(Responses.getResponse(Responses.NOT_A_GUILD));
-      return;
-    }
-    const permission = await Access.has(message.author, message.guild, [ADMIN, BGS, FORBIDDEN]);
-    if (!permission) {
-      message.channel.send(Responses.getResponse(Responses.INSUFFICIENT_PERMS));
-      return;
-    }
-    if (argsArray.length > 1) {
-      message.channel.send(Responses.getResponse(Responses.TOO_MANY_PARAMS));
-      return;
-    }
-    let guild: IGuildSchema | null;
-    try {
-      guild = await GuildModel.findOne({ guild_id: message.guildId });
-    } catch (err) {
-      message.channel.send(Responses.getResponse(Responses.FAIL));
-      LoggingClient.error(err);
-      return;
-    }
-    if (!guild) {
-      message.channel.send(Responses.getResponse(Responses.GUILD_NOT_SETUP));
-      return;
-    }
-    try {
-      await BgsModel.findOneAndUpdate(
-        { guild_id: guild._id },
-        {
-          announce_tick: true
-        }
-      );
-    } catch (err) {
-      message.channel.send(Responses.getResponse(Responses.FAIL));
-      LoggingClient.error(err);
-      return;
-    }
-  }
-
-  async stopdetect(message: Message, argsArray: string[]): Promise<void> {
-    if (!message.member || !message.guild || !message.guildId) {
-      message.channel.send(Responses.getResponse(Responses.NOT_A_GUILD));
-      return;
-    }
-    const permission = await Access.has(message.author, message.guild, [ADMIN, BGS, FORBIDDEN]);
-    if (!permission) {
-      message.channel.send(Responses.getResponse(Responses.INSUFFICIENT_PERMS));
-      return;
-    }
-    if (argsArray.length > 1) {
-      message.channel.send(Responses.getResponse(Responses.TOO_MANY_PARAMS));
-      return;
-    }
-    let guild: IGuildSchema | null;
-    try {
-      guild = await GuildModel.findOne({ guild_id: message.guildId });
-    } catch (err) {
-      message.channel.send(Responses.getResponse(Responses.FAIL));
-      LoggingClient.error(err);
-      return;
-    }
-    if (!guild) {
-      message.channel.send(Responses.getResponse(Responses.GUILD_NOT_SETUP));
-      return;
-    }
-    try {
-      await BgsModel.findOneAndUpdate(
-        { guild_id: guild._id },
-        {
-          announce_tick: false
-        }
-      );
-    } catch (err) {
-      message.channel.send(Responses.getResponse(Responses.FAIL));
-      LoggingClient.error(err);
-      return;
-    }
+    let id = '';
+    id = message.guild.channels.cache.has(bgs.tick_channel_id)
+      ? `${bgs.bgs_channel_id} - @${message.guild.channels.cache.get(bgs.tick_channel_id)?.name}\n`
+      : `${bgs.bgs_channel_id} - Does not exist in Discord. Please delete this from BGSBot`;
+    embed.addField('Ids and Names', id);
+    embed.setTimestamp(new Date());
+    message.channel.send({ embeds: [embed] });
   }
 
   help(): [string, string, string, string[]] {
     return [
-      'tick, tickdm',
-      'Gets the last tick or sets and removes the automatic announcement of the tick',
-      'tick <get|detect|stopdetect>',
-      ['`@BGSBot tick get`', '`@BGSBot tickdm get`', '`@BGSBot tick detect`', '`@BGSBot tick stopdetect`']
+      'tickchannel(aliases: tcl)',
+      'Sets, removes or shows the channel set up for Tick reporting',
+      'tickchannel <set|remove|show> <channel id>\ntickchannel <s|r|sh> <channel id>',
+      [
+        '`@BGSBot tickchannel set 1234564789012345678`',
+        '`@BGSBot tcl s 1234564789012345678`',
+        '`@BGSBot tickchannel remove`',
+        '`@BGSBot tcl remove`',
+        '`@BGSBot tickchannel show`',
+        '`@BGSBot tickchannel sh`'
+      ]
     ];
   }
 }

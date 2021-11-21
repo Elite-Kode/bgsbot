@@ -1,11 +1,11 @@
 /*
- * KodeBlox Copyright 2017 Sayak Mukhopadhyay
+ * Copyright 2021 Sayak Mukhopadhyay
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http: //www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,227 +15,218 @@
  */
 
 import { Message, MessageEmbed } from 'discord.js';
-import App from '../../../server';
-import { Responses } from '../responseDict';
-import { DB } from '../../../db';
-import { Access } from '../access';
-import { Command } from "../../../interfaces/Command";
+import { Access, ADMIN, Command, FORBIDDEN, GuildModel, IGuildSchema, LoggingClient, Responses } from 'kodeblox';
+import { BgsModel, IBgsSchema } from '../schemas/bgs';
 
 export class Sort implements Command {
-    db: DB;
-    dmAble = false;
+  respondDm = false;
+  sendDm = false;
+  respondAsDm: boolean;
+  calls = ['sort'];
+  dmCalls = [];
+  arguments = {
+    set: this.set.bind(this),
+    s: this.set.bind(this),
+    remove: this.remove.bind(this),
+    r: this.remove.bind(this),
+    show: this.show.bind(this),
+    sh: this.show.bind(this)
+  };
 
-    constructor() {
-        this.db = App.db;
+  constructor() {
+    this.respondAsDm = false;
+  }
+
+  exec(message: Message, _commandArguments: string, argsArray: string[]): void {
+    if (argsArray.length <= 0) {
+      message.channel.send(Responses.getResponse(Responses.NO_PARAMS));
+      return;
     }
+    type ArgumentKeys = keyof typeof this.arguments;
+    const allowedArguments = Object.keys(this.arguments) as Array<ArgumentKeys>;
+    const command = argsArray[0].toLowerCase() as ArgumentKeys;
+    if (!allowedArguments.includes(command)) {
+      message.channel.send(Responses.getResponse(Responses.NOT_A_COMMAND));
+      return;
+    }
+    this.arguments[command](message, argsArray);
+  }
 
-    exec(message: Message, commandArguments: string): void {
-        let argsArray: string[] = [];
-        if (commandArguments.length !== 0) {
-            argsArray = commandArguments.split(" ");
+  async set(message: Message, argsArray: string[]): Promise<void> {
+    if (!message.member || !message.guild || !message.guildId) {
+      message.channel.send(Responses.getResponse(Responses.NOT_A_GUILD));
+      return;
+    }
+    const permission = await Access.has(message.author, message.guild, [ADMIN, FORBIDDEN]);
+    if (!permission) {
+      message.channel.send(Responses.getResponse(Responses.INSUFFICIENT_PERMS));
+      return;
+    }
+    if (argsArray.length > 3) {
+      message.channel.send(Responses.getResponse(Responses.TOO_MANY_PARAMS));
+      return;
+    }
+    if (argsArray.length < 3) {
+      message.channel.send(Responses.getResponse(Responses.NO_PARAMS));
+      return;
+    }
+    const sortType = argsArray[1].toLowerCase();
+    const sortOrder = argsArray[2].toLowerCase();
+    if (
+      (sortType !== 'name' && sortType !== 'influence') ||
+      (sortOrder !== 'increasing' && sortOrder !== 'decreasing' && sortOrder !== 'disable')
+    ) {
+      await message.channel.send('Sort Order and/or Type is incorrect.');
+      return;
+    }
+    let sortOrderNumber = 0;
+    if (sortOrder === 'increasing') {
+      sortOrderNumber = 1;
+    }
+    if (sortOrder === 'decreasing') {
+      sortOrderNumber = -1;
+    }
+    if (sortOrder === 'disable') {
+      sortOrderNumber = 0;
+    }
+    let guild: IGuildSchema | null;
+    try {
+      guild = await GuildModel.findOne({ guild_id: message.guildId });
+    } catch (err) {
+      message.channel.send(Responses.getResponse(Responses.FAIL));
+      LoggingClient.error(err);
+      return;
+    }
+    if (!guild) {
+      message.channel.send(Responses.getResponse(Responses.GUILD_NOT_SETUP));
+      return;
+    }
+    try {
+      await BgsModel.findOneAndUpdate(
+        { guild_id: guild._id },
+        {
+          sort: sortType,
+          sort_order: sortOrderNumber
         }
-        try {
-            if (argsArray.length > 0) {
-                let command = argsArray[0].toLowerCase();
-                if (this[command]) {
-                    this[command](message, argsArray);
-                } else {
-                    message.channel.send(Responses.getResponse(Responses.NOTACOMMAND));
-                }
-            } else {
-                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
-            }
-        } catch (err) {
-            App.bugsnagClient.call(err);
+      );
+    } catch (err) {
+      message.channel.send(Responses.getResponse(Responses.FAIL));
+      LoggingClient.error(err);
+      return;
+    }
+    message.channel.send(Responses.getResponse(Responses.SUCCESS));
+  }
+
+  async remove(message: Message, argsArray: string[]): Promise<void> {
+    if (!message.member || !message.guild || !message.guildId) {
+      message.channel.send(Responses.getResponse(Responses.NOT_A_GUILD));
+      return;
+    }
+    const permission = await Access.has(message.author, message.guild, [ADMIN, FORBIDDEN]);
+    if (!permission) {
+      message.channel.send(Responses.getResponse(Responses.INSUFFICIENT_PERMS));
+      return;
+    }
+    if (argsArray.length > 1) {
+      message.channel.send(Responses.getResponse(Responses.TOO_MANY_PARAMS));
+      return;
+    }
+    let guild: IGuildSchema | null;
+    try {
+      guild = await GuildModel.findOne({ guild_id: message.guildId });
+    } catch (err) {
+      message.channel.send(Responses.getResponse(Responses.FAIL));
+      LoggingClient.error(err);
+      return;
+    }
+    if (!guild) {
+      message.channel.send(Responses.getResponse(Responses.GUILD_NOT_SETUP));
+      return;
+    }
+    try {
+      await BgsModel.findOneAndUpdate(
+        { guild_id: guild._id },
+        {
+          $unset: {
+            sort: 1,
+            sort_order: 1
+          }
         }
+      );
+    } catch (err) {
+      message.channel.send(Responses.getResponse(Responses.FAIL));
+      LoggingClient.error(err);
+      return;
     }
+    message.channel.send(Responses.getResponse(Responses.SUCCESS));
+  }
 
-    async set(message: Message, argsArray: string[]) {
-        try {
-            await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN]);
-            if (argsArray.length === 3) {
-                let guildId = message.guild.id;
-                let sortType = argsArray[1].toLowerCase();
-                let sortOrder = argsArray[2].toLowerCase();
-
-                if ((sortType === 'name' || sortType === 'influence') && (sortOrder === 'increasing' || sortOrder === 'decreasing' || sortOrder === 'disable')) {
-                    let sortOrderNumber = 0;
-                    if (sortOrder === 'increasing') {
-                        sortOrderNumber = 1;
-                    }
-                    if (sortOrder === 'decreasing') {
-                        sortOrderNumber = -1;
-                    }
-                    if (sortOrder === 'disable') {
-                        sortOrderNumber = 0;
-                    }
-
-                    try {
-                        let guild = await this.db.model.guild.findOneAndUpdate(
-                            {guild_id: guildId},
-                            {
-                                updated_at: new Date(),
-                                sort: sortType,
-                                sort_order: sortOrderNumber
-                            });
-                        if (guild) {
-                            message.channel.send(Responses.getResponse(Responses.SUCCESS));
-                        } else {
-                            try {
-                                await message.channel.send(Responses.getResponse(Responses.FAIL));
-                                message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
-                            } catch (err) {
-                                App.bugsnagClient.call(err, {
-                                    metaData: {
-                                        guild: guild._id
-                                    }
-                                });
-                            }
-                        }
-                    } catch (err) {
-                        message.channel.send(Responses.getResponse(Responses.FAIL));
-                        App.bugsnagClient.call(err);
-                    }
-                } else {
-                    try {
-                        await message.channel.send(Responses.getResponse(Responses.FAIL));
-                        message.channel.send("Sort Order and/or Type is incorrect.");
-                    } catch (err) {
-                        App.bugsnagClient.call(err);
-                    }
-                }
-            } else if (argsArray.length > 3) {
-                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
-            } else {
-                message.channel.send(Responses.getResponse(Responses.NOPARAMS));
-            }
-        } catch (err) {
-            message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
-        }
+  async show(message: Message, argsArray: string[]): Promise<void> {
+    if (!message.member || !message.guild || !message.guildId) {
+      message.channel.send(Responses.getResponse(Responses.NOT_A_GUILD));
+      return;
     }
-
-    async remove(message: Message, argsArray: string[]) {
-        try {
-            await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN]);
-            if (argsArray.length === 1) {
-                let guildId = message.guild.id;
-
-                try {
-                    let guild = await this.db.model.guild.findOneAndUpdate(
-                        {guild_id: guildId},
-                        {
-                            updated_at: new Date(),
-                            $unset: {
-                                sort: 1,
-                                sort_order: 1
-                            }
-                        });
-                    if (guild) {
-                        message.channel.send(Responses.getResponse(Responses.SUCCESS));
-                    } else {
-                        try {
-                            await message.channel.send(Responses.getResponse(Responses.FAIL));
-                            message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
-                        } catch (err) {
-                            App.bugsnagClient.call(err, {
-                                metaData: {
-                                    guild: guild._id
-                                }
-                            });
-                        }
-                    }
-                } catch (err) {
-                    message.channel.send(Responses.getResponse(Responses.FAIL));
-                    App.bugsnagClient.call(err);
-                }
-            } else {
-                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
-            }
-        } catch (err) {
-            message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
-        }
+    const permission = await Access.has(message.author, message.guild, [ADMIN, FORBIDDEN]);
+    if (!permission) {
+      message.channel.send(Responses.getResponse(Responses.INSUFFICIENT_PERMS));
+      return;
     }
-
-    async show(message: Message, argsArray: string[]) {
-        try {
-            await Access.has(message.author, message.guild, [Access.ADMIN, Access.FORBIDDEN]);
-            if (argsArray.length === 1) {
-                let guildId = message.guild.id;
-
-                try {
-                    let guild = await this.db.model.guild.findOne({guild_id: guildId});
-                    if (guild) {
-                        if (guild.sort && guild.sort.length !== 0 && guild.sort_order) {
-                            let embed = new MessageEmbed();
-                            embed.setTitle("Sorting");
-                            embed.setColor([255, 0, 255]);
-                            let sortOrder = 'Disabled';
-                            if (guild.sort_order > 0) {
-                                sortOrder = 'Increasing';
-                            }
-                            if (guild.sort_order < 0) {
-                                sortOrder = 'Decreasing';
-                            }
-                            embed.addField("Sort Type: ", guild.sort);
-                            embed.addField("Sort Order: ", sortOrder);
-                            embed.setTimestamp(new Date());
-                            try {
-                                message.channel.send(embed)
-                            } catch (err) {
-                                App.bugsnagClient.call(err, {
-                                    metaData: {
-                                        guild: guild._id
-                                    }
-                                });
-                            }
-                        } else {
-                            try {
-                                await message.channel.send(Responses.getResponse(Responses.FAIL));
-                                message.channel.send("You don't have sorting set up");
-                            } catch (err) {
-                                App.bugsnagClient.call(err, {
-                                    metaData: {
-                                        guild: guild._id
-                                    }
-                                });
-                            }
-                        }
-                    } else {
-                        try {
-                            await message.channel.send(Responses.getResponse(Responses.FAIL));
-                            message.channel.send(Responses.getResponse(Responses.GUILDNOTSETUP));
-                        } catch (err) {
-                            App.bugsnagClient.call(err, {
-                                metaData: {
-                                    guild: guild._id
-                                }
-                            });
-                        }
-                    }
-                } catch (err) {
-                    message.channel.send(Responses.getResponse(Responses.FAIL));
-                    App.bugsnagClient.call(err);
-                }
-            } else {
-                message.channel.send(Responses.getResponse(Responses.TOOMANYPARAMS));
-            }
-        } catch (err) {
-            message.channel.send(Responses.getResponse(Responses.INSUFFICIENTPERMS));
-        }
+    if (argsArray.length > 1) {
+      message.channel.send(Responses.getResponse(Responses.TOO_MANY_PARAMS));
+      return;
     }
-
-    help(): [string, string, string, string[]] {
-        return [
-            'sort',
-            'Sets, removes or shows your sorting settings. This helps in sorting your reports in a predefined order. Use disable to temporarily disable sorting',
-            'sort <set|remove|show> <name|influence> <increasing|decreasing|disable>',
-            [
-                '`@BGSBot sort set name increasing`',
-                '`@BGSBot sort set influence decreasing`',
-                '`@BGSBot sort set influence disable`',
-                '`@BGSBot sort remove`',
-                '`@BGSBot sort show`'
-            ]
-        ];
+    let guild: IGuildSchema | null;
+    try {
+      guild = await GuildModel.findOne({ guild_id: message.guildId });
+    } catch (err) {
+      message.channel.send(Responses.getResponse(Responses.FAIL));
+      LoggingClient.error(err);
+      return;
     }
+    if (!guild) {
+      message.channel.send(Responses.getResponse(Responses.GUILD_NOT_SETUP));
+      return;
+    }
+    let bgs: IBgsSchema | null;
+    try {
+      bgs = await BgsModel.findOne({ guild_id: guild._id });
+    } catch (err) {
+      message.channel.send(Responses.getResponse(Responses.FAIL));
+      LoggingClient.error(err);
+      return;
+    }
+    if (!bgs || !bgs.sort || bgs.sort.length === 0 || !bgs.sort_order) {
+      message.channel.send("You don't have sorting set up");
+      return;
+    }
+    const embed = new MessageEmbed();
+    embed.setTitle('Sorting');
+    embed.setColor([255, 0, 255]);
+    let sortOrder = 'Disabled';
+    if (bgs.sort_order > 0) {
+      sortOrder = 'Increasing';
+    }
+    if (bgs.sort_order < 0) {
+      sortOrder = 'Decreasing';
+    }
+    embed.addField('Sort Type: ', bgs.sort);
+    embed.addField('Sort Order: ', sortOrder);
+    embed.setTimestamp(new Date());
+    message.channel.send({ embeds: [embed] });
+  }
+
+  help(): [string, string, string, string[]] {
+    return [
+      'sort',
+      'Sets, removes or shows your sorting settings. This helps in sorting your reports in a predefined order. Use disable to temporarily disable sorting',
+      'sort <set|remove|show> <name|influence> <increasing|decreasing|disable>',
+      [
+        '`@BGSBot sort set name increasing`',
+        '`@BGSBot sort set influence decreasing`',
+        '`@BGSBot sort set influence disable`',
+        '`@BGSBot sort remove`',
+        '`@BGSBot sort show`'
+      ]
+    ];
+  }
 }
