@@ -58,8 +58,7 @@ export async function generateBgsReportCallback(job: Job): Promise<void> {
 
 export async function generateBgsReport(guildId: string): Promise<MessageEmbed[]> {
   const tickTime = (await getTickData()).updated_at;
-  let bgs: IBgsSchema | null;
-  bgs = await BgsModel.findOne({ guild_id: new Schema.Types.ObjectId(guildId) });
+  const bgs = await BgsModel.findOne({ guild_id: new Schema.Types.ObjectId(guildId) });
   if (!bgs) {
     throw new GuildNotSetupException();
   }
