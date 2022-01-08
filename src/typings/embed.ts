@@ -14,9 +14,16 @@
  * limitations under the License.
  */
 
+import { Bgs } from '../schemas/bgs';
+import { Guild } from 'kodeblox';
+
 export interface FieldRecordSchema {
   fieldTitle: string;
   fieldDescription: string;
   influence: number;
   name: string;
+}
+
+export interface BgsWithGuild extends Bgs {
+  guild: Guild;
 }

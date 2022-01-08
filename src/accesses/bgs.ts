@@ -23,7 +23,13 @@ export const BGS = 'bgs';
 export class Bgs implements IAccess {
   public priority = 2;
 
-  public async has(author: User, guild: Guild, perms: string[], allowAdmin = false): Promise<boolean> {
+  public async has(
+    author: User,
+    guild: Guild,
+    perms: string[],
+    current: boolean,
+    allowAdmin = false
+  ): Promise<boolean> {
     const member = await guild.members.fetch(author);
     if (allowAdmin && member.permissions.has(Permissions.FLAGS.ADMINISTRATOR)) {
       return true;
@@ -32,7 +38,7 @@ export class Bgs implements IAccess {
       const roles = member.roles.cache;
       const dbGuild = await GuildModel.findOne({ guild_id: guildId });
       if (dbGuild) {
-        const dbBgs = await BgsModel.findById(dbGuild._id);
+        const dbBgs = await BgsModel.findOne({ guild_id: dbGuild._id });
         if (dbBgs) {
           for (const perm of perms) {
             if (perm === BGS) {
@@ -47,6 +53,6 @@ export class Bgs implements IAccess {
         }
       }
     }
-    return false;
+    return current;
   }
 }

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 /*
  * Copyright 2021 Sayak Mukhopadhyay
  *
@@ -14,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 
 import { Access, AppServer, Bugsnag, LoggingClient } from 'kodeblox';
 import { config } from 'dotenv';
@@ -21,6 +21,7 @@ import { Intents } from 'discord.js';
 import { Bgs } from './accesses/bgs';
 import { generateBgsReportCallback } from './bgsReport';
 import { allCommands } from './commands';
+import { initiateSocket } from './tick';
 
 config();
 
@@ -73,3 +74,4 @@ appServer.server.on('listening', () => {
 });
 
 appServer.discordClient.registerCommands(allCommands(appServer));
+initiateSocket(appServer.discordClient.client);

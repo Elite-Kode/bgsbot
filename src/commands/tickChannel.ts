@@ -78,7 +78,11 @@ export class TickChannel implements Command {
       return;
     }
     const channel = message.guild.channels.cache.get(tickChannelId);
-    if (channel && channel.type !== ChannelTypes.GUILD_TEXT.toString()) {
+    if (
+      channel &&
+      channel.type !== ChannelTypes.GUILD_TEXT.toString() &&
+      channel.type !== ChannelTypes.GUILD_NEWS.toString()
+    ) {
       message.channel.send(Responses.getResponse(Responses.NOT_A_TEXT_CHANNEL));
       return;
     }

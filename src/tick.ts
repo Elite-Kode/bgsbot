@@ -13,17 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 
-import { TickSchema, TickType } from './typings/elitebgs';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 import { LoggingClient } from 'kodeblox';
-import { BgsModel } from './schemas/bgs';
-import { GuildChannel, MessageEmbed, TextChannel } from 'discord.js';
+import { BaseGuildTextChannel, Client, MessageEmbed } from 'discord.js';
 import moment from 'moment';
+import { ChannelTypes } from 'discord.js/typings/enums';
+import { BgsModel } from './schemas/bgs';
+import { TickSchema, TickType } from './typings/elitebgs';
+import { BgsWithGuild } from './typings/embed';
 
-export function initiateSocket(): void {
-  const socket = io('http://tick.phelbore.com:31173');
+export function initiateSocket(client: Client): void {
+  // @ts-ignore
+  const socket = io(process.env.TICK_SOCKET);
 
   socket.on('connect', () => {
     console.log('Connected to Tick Detector');
@@ -31,7 +35,7 @@ export function initiateSocket(): void {
 
   socket.on('tick', async (data) => {
     const tickTime = new Date(data);
-    const guilds = await BgsModel.aggregate()
+    const guilds: BgsWithGuild[] = await BgsModel.aggregate()
       .option({
         maxTimeMS: 60000
       })
@@ -49,10 +53,18 @@ export function initiateSocket(): void {
     for (const guild of guilds) {
       try {
         if (guild.announce_tick && guild.bgs_channel_id && guild.bgs_channel_id.length > 0) {
-          const bgsChannel: GuildChannel = client.guilds.cache
-            .get(guild.guild_id)
-            .channels.cache.get(guild.bgs_channel_id);
-          if (bgsChannel && bgsChannel.type === 'text') {
+          const discordGuild = client.guilds.cache.get(guild.guild.guild_id);
+          if (!discordGuild) {
+            LoggingClient.error(`Guild ${guild.guild_id} not found`);
+            continue;
+          }
+          const bgsChannel = discordGuild.channels.cache.get(guild.bgs_channel_id);
+          if (
+            bgsChannel &&
+            bgsChannel.type === ChannelTypes.GUILD_TEXT.toString() &&
+            bgsChannel.type !== ChannelTypes.GUILD_NEWS.toString() &&
+            bgsChannel instanceof BaseGuildTextChannel
+          ) {
             const embed = new MessageEmbed();
             embed.setTitle('Tick Detected');
             embed.setColor([255, 0, 255]);
@@ -60,7 +72,7 @@ export function initiateSocket(): void {
             const lastTickFormattedDate = moment(tickTime).utc().format('Do MMM');
             embed.addField('Latest Tick At', lastTickFormattedTime + ' UTC - ' + lastTickFormattedDate);
             embed.setTimestamp(new Date(tickTime));
-            (bgsChannel as TextChannel).send({ embeds: [embed] });
+            bgsChannel.send({ embeds: [embed] });
           }
         }
       } catch (err) {
