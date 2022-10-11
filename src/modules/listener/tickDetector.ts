@@ -27,7 +27,7 @@ export class TickDetector {
     private static db: DB
 
     public static initiateSocket(db: DB, client: Client) {
-        this.socket = io('http://tick.phelbore.com:31173');
+        this.socket = io('https://tick.edcd.io/');
         this.db = db;
 
         this.socket.on('connect', () => {
