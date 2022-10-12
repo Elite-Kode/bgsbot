@@ -34,6 +34,10 @@ export class TickDetector {
             console.log('Connected to Tick Detector');
         });
 
+        this.socket.on('connect_error', (error) => {
+          console.log('Connection Error', error)
+        });
+
         this.socket.on('tick', async (data) => {
             let tickTime = new Date(data);
             let guilds = await this.db.model.guild.find({
